@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Source-linked RabbitSoftware research reviews on EEG visual decoding and DNA editing, cancer remission, and oncology digital twins.">
+  <meta name="theme-color" content="#f2f4ee">
+  <title>Research library | RabbitSoftware</title>
+  <link rel="icon" type="image/png" href="assets/rabbitsoftware.png">
+  <style>
+    :root { color-scheme: light dark; --paper:#f2f4ee; --panel:#e6ebe2; --ink:#172421; --muted:#53625c; --line:#bdc8bf; --green:#155c49; --orange:#c75f43; --yellow:#e7c96d; --night:#10241f; --night-ink:#f3f5ef; --content:1160px; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--paper); color:var(--ink); font:17px/1.62 "Aptos","Segoe UI",sans-serif; }
+    a { color:var(--green); text-decoration-thickness:1px; text-underline-offset:4px; }
+    a:hover { text-decoration-thickness:2px; }
+    a:focus-visible { outline:3px solid var(--orange); outline-offset:4px; }
+    .wrap { width:min(var(--content),calc(100% - 48px)); margin-inline:auto; }
+    .top { display:flex; align-items:center; justify-content:space-between; gap:18px; min-height:72px; border-bottom:1px solid var(--line); }
+    .brand { display:flex; align-items:center; gap:10px; color:var(--ink); text-decoration:none; font-weight:700; }
+    .brand img { width:34px; height:34px; }
+    .back { font-size:14px; }
+    .hero { padding:62px 0 52px; background:var(--night); color:var(--night-ink); }
+    .eyebrow,.index { color:var(--orange); font:700 12px/1.4 Consolas,monospace; text-transform:uppercase; }
+    .hero .eyebrow { color:var(--yellow); }
+    h1,h2,h3,p { margin-top:0; }
+    h1 { max-width:850px; margin-bottom:18px; font:700 54px/1.08 Georgia,serif; }
+    .hero p:last-child { max-width:760px; margin-bottom:0; color:#c1cec6; font-size:19px; }
+    .toc { display:flex; flex-wrap:wrap; gap:12px 24px; padding:18px 0; border-bottom:1px solid var(--line); font-size:14px; }
+    .notice { margin:30px auto 0; padding:16px 18px; border-left:4px solid var(--orange); background:var(--panel); color:var(--muted); font-size:14px; }
+    .notice strong { color:var(--ink); }
+    .report { padding:64px 0; border-bottom:1px solid var(--line); scroll-margin-top:20px; }
+    .report-head { display:grid; grid-template-columns:170px minmax(0,1fr); gap:24px; margin-bottom:28px; }
+    h2 { margin-bottom:12px; font:700 36px/1.16 Georgia,serif; }
+    h3 { margin:0 0 10px; font:700 21px/1.25 Georgia,serif; }
+    .dek { max-width:780px; margin-bottom:14px; color:var(--muted); font-size:17px; }
+    .meta { display:flex; flex-wrap:wrap; gap:8px 18px; color:var(--muted); font-size:13px; }
+    .report-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(300px,.83fr); gap:34px; align-items:start; }
+    .findings { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); border-top:1px solid var(--line); }
+    .finding { padding:17px 18px 17px 0; border-bottom:1px solid var(--line); }
+    .finding:nth-child(even) { padding-left:18px; border-left:1px solid var(--line); }
+    .finding b { display:block; margin-bottom:5px; color:var(--green); font:700 12px/1.4 Consolas,monospace; text-transform:uppercase; }
+    .finding p { margin:0; color:var(--muted); font-size:14px; }
+    .chart { margin:0; padding:20px; border:1px solid var(--line); background:var(--panel); }
+    .chart figcaption { margin-bottom:18px; font-size:14px; font-weight:700; }
+    .axis { display:flex; justify-content:space-between; margin:0 0 7px 128px; color:var(--muted); font:11px Consolas,monospace; }
+    .bar-row { display:grid; grid-template-columns:118px minmax(0,1fr) 42px; align-items:center; gap:10px; margin:12px 0; }
+    .bar-label { color:var(--muted); font-size:12px; }
+    .track { height:14px; background:var(--paper); border:1px solid var(--line); }
+    .bar { height:100%; background:var(--green); }
+    .bar.preprint { background:var(--orange); }
+    .bar-value { font:700 12px Consolas,monospace; text-align:right; }
+    .chart-note { margin:16px 0 0; color:var(--muted); font-size:12px; }
+    .diagram { display:grid; gap:0; margin:22px 0; border-top:1px solid var(--line); }
+    .diagram-row { display:grid; grid-template-columns:48px 190px minmax(0,1fr); gap:14px; align-items:start; padding:14px 0; border-bottom:1px solid var(--line); }
+    .diagram-row b { color:var(--orange); font:700 12px Consolas,monospace; }
+    .diagram-row strong { font-size:14px; }
+    .diagram-row span { color:var(--muted); font-size:14px; }
+    .caution { margin-top:20px; padding:18px; border:1px solid var(--line); background:var(--panel); color:var(--muted); font-size:14px; }
+    .caution strong { color:var(--ink); }
+    .sources { margin-top:22px; padding-top:16px; border-top:1px solid var(--line); font-size:14px; }
+    .sources p { margin:0 0 8px; color:var(--muted); }
+    .sources a { margin-right:14px; }
+    .full-report { display:inline-block; margin-top:9px; font-weight:700; }
+    footer { padding:30px 0 48px; color:var(--muted); font-size:13px; }
+    @media(max-width:800px) { .report-grid { grid-template-columns:1fr; } .report-head { grid-template-columns:1fr; gap:8px; } }
+    @media(max-width:520px) { .wrap { width:calc(100% - 32px); } h1 { font-size:38px; } h2 { font-size:30px; } .hero { padding:46px 0 38px; } .report { padding:48px 0; } .findings { grid-template-columns:1fr; } .finding,.finding:nth-child(even) { padding:15px 0; border-left:0; } .bar-row { grid-template-columns:95px minmax(0,1fr) 37px; gap:7px; } .axis { margin-left:102px; } .diagram-row { grid-template-columns:28px 1fr; gap:8px 12px; } .diagram-row span { grid-column:2; } .chart { padding:14px; } }
+    @media(prefers-color-scheme:dark) { :root { --paper:#17211e; --panel:#202d28; --ink:#f0f3ec; --muted:#bac7c0; --line:#52645a; --green:#9dd7b4; --night:#0d1815; --night-ink:#f3f5ef; } .track { background:#17211e; } }
+    @media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
+  </style>
+</head>
+<body>
+  <header class="top wrap">
+    <a class="brand" href="index.html"><img src="assets/rabbitsoftware.png" width="34" height="34" alt="">RabbitSoftware</a>
+    <a class="back" href="index.html">Back to project overview</a>
+  </header>
+  <section class="hero">
+    <div class="wrap">
+      <p class="eyebrow">Research library / reviewed reports</p>
+      <h1>Evidence, with its limits attached.</h1>
+      <p>Source-linked summaries behind the RabbitSoftware research prototypes. Figures below describe the cited studies, not product performance or individual outcomes. Each report links to its full analysis and research notes.</p>
+    </div>
+  </section>
+  <nav class="toc wrap" aria-label="Research reports">
+    <a href="#eeg">EEG visual decoding</a>
+    <a href="#oncology">DNA editing and oncology</a>
+    <a href="https://github.com/DNA-Blockchain/Helloworld/tree/master/docs/research">All research reports</a>
+  </nav>
+  <div class="notice wrap"><strong>Research only, not medical advice.</strong> These reviews do not diagnose, recommend treatment, or establish clinical benefit for RabbitSoftware. Consult qualified clinicians for personal care. Personal genomes and biosignals are not collected by this website.</div>
+
+  <main>
+    <article class="report" id="eeg">
+      <div class="report-head wrap">
+        <span class="index">01 / NEUROVISUAL</span>
+        <div>
+          <h2>EEG can retrieve a category better than it can reconstruct a picture.</h2>
+          <p class="dek">Recent systems align brain signals with image embeddings, then use a pretrained generator to supply visual detail. The image is not a literal readout of the EEG.</p>
+          <div class="meta"><span>Reviewed October 2026</span><span>Benchmark: THINGS-EEG2</span><span>Application: neurovisual research prototype</span></div>
+        </div>
+      </div>
+      <div class="report-grid wrap">
+        <div>
+          <div class="findings">
+            <div class="finding"><b>Perception</b><p>On a 200-way retrieval task, the established UBP reference reports 50.9% top-1 with repeated trials averaged.</p></div>
+            <div class="finding"><b>New preprint</b><p>MB2L reports 80.5% top-1 under averaged-trial evaluation; it is an unreplicated 2026 preprint without released code.</p></div>
+            <div class="finding"><b>Single trial</b><p>Performance falls substantially without averaging. A separate report gives about 14.0% top-1, rising to 19.8% with a denoiser.</p></div>
+            <div class="finding"><b>Imagery and memory</b><p>Evidence supports small closed-set categories and recall gist, not reconstruction of a specific imagined or remembered scene.</p></div>
+          </div>
+          <div class="caution"><strong>Interpretation:</strong> the chart compares reported top-1 retrieval figures, not image fidelity. Protocol, repetitions, and study maturity differ; the preprint result is not independently reproduced.</div>
+        </div>
+        <figure class="chart" aria-labelledby="eeg-chart-title">
+          <figcaption id="eeg-chart-title">Reported top-1 retrieval / 200-way task</figcaption>
+          <div class="axis" aria-hidden="true"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
+          <div class="bar-row"><span class="bar-label">NICE-GA / averaged</span><span class="track"><span class="bar" style="display:block;width:15.6%"></span></span><span class="bar-value">15.6</span></div>
+          <div class="bar-row"><span class="bar-label">ATM-S / averaged</span><span class="track"><span class="bar" style="display:block;width:28.6%"></span></span><span class="bar-value">28.6</span></div>
+          <div class="bar-row"><span class="bar-label">UBP / averaged</span><span class="track"><span class="bar" style="display:block;width:50.9%"></span></span><span class="bar-value">50.9</span></div>
+          <div class="bar-row"><span class="bar-label">MB2L / averaged</span><span class="track"><span class="bar preprint" style="display:block;width:80.5%"></span></span><span class="bar-value">80.5</span></div>
+          <p class="chart-note">Percent correct; repeated trials are averaged in these benchmark headline figures. Orange marks the unreplicated preprint. Chance is 0.5% for 200 classes.</p>
+        </figure>
+      </div>
+      <div class="wrap sources">
+        <p>Selected sources and benchmark material:</p>
+        <a href="https://arxiv.org/html/2308.13234">NICE-GA</a>
+        <a href="https://arxiv.org/html/2403.07721">ATM-S</a>
+        <a href="https://arxiv.org/html/2503.04207">UBP</a>
+        <a href="https://arxiv.org/html/2605.04680">MB2L preprint</a>
+        <a href="https://arxiv.org/abs/2508.00531">Benchmark leakage audit</a>
+        <br><a class="full-report" href="https://github.com/DNA-Blockchain/Helloworld/blob/master/docs/research/eeg-to-image-reconstruction.md">Full review, methods, legal analysis, and limits</a>
+        <a href="https://github.com/DNA-Blockchain/Helloworld/tree/master/docs/research/eeg-to-image-reconstruction/notes">Source notes</a>
+      </div>
+    </article>
+
+    <article class="report" id="oncology">
+      <div class="report-head wrap">
+        <span class="index">02 / GENOMICS</span>
+        <div>
+          <h2>Genomic data informs care through physical treatments and clinical decisions.</h2>
+          <p class="dek">The review separates cell-based gene editing, blood-based residual-disease testing, tumour-matched drugs, and digital modelling. None supports a digital twin or radio signal directly changing a body.</p>
+          <div class="meta"><span>Reviewed October 2026</span><span>Sources include trials, reviews, and dataset records</span><span>Application: genomics research tooling</span></div>
+        </div>
+      </div>
+      <div class="wrap">
+        <div class="diagram" role="group" aria-label="Evidence pathway from genomic data to clinical action">
+          <div class="diagram-row"><b>01</b><strong>Measure</strong><span>Sequence tumour material or detect tumour-derived DNA in blood.</span></div>
+          <div class="diagram-row"><b>02</b><strong>Interpret</strong><span>Use validated assays and evidence to identify risk, targets, or trial eligibility.</span></div>
+          <div class="diagram-row"><b>03</b><strong>Act physically</strong><span>A clinician selects a drug, vaccine, cell therapy, radiation, or monitoring plan. The digital layer itself does not treat cancer.</span></div>
+        </div>
+        <div class="findings">
+          <div class="finding"><b>Edited immune cells</b><p>Early allogeneic CAR-T studies report responses in small cohorts, mainly for blood cancers. Results are not head-to-head comparisons, and CRISPR cancer treatments are not established as approved therapies in this review.</p></div>
+          <div class="finding"><b>Earlier detection</b><p>In the cited colorectal cohort, circulating tumour DNA became positive a median 142 days before imaging relapse. Detection is prognostic; an effective intervention after a positive test remains a separate question.</p></div>
+          <div class="finding"><b>Personalized vaccine</b><p>A phase 3 melanoma trial reported meeting recurrence-free and distant-metastasis-free endpoints in August 2026. Detailed effect estimates and regulatory approval are not implied by that announcement.</p></div>
+          <div class="finding"><b>Data access</b><p>Processed public datasets can support reproducible research. Controlled-access raw genomes require authorization; personal genomes belong in a private encrypted vault, never a public chain.</p></div>
+        </div>
+        <div class="caution"><strong>Not a treatment tool.</strong> Candidate CRISPR guides are untested laboratory hypotheses. Variant comparisons do not diagnose disease. Decisions about testing or treatment belong with an oncology care team.</div>
+      </div>
+      <div class="wrap sources">
+        <p>Selected sources:</p>
+        <a href="https://www.nature.com/articles/s41591-024-03254-6">GALAXY ctDNA study</a>
+        <a href="https://www.nature.com/articles/s41591-025-04030-w">DYNAMIC-III</a>
+        <a href="https://www.nejm.org/doi/pdf/10.1056/nejmoa2200075">DYNAMIC trial</a>
+        <a href="https://www.merck.com/news/merck-and-moderna-announce-phase-3-interpath-001-trial-of-intismeran-autogene-plus-keytruda-met-endpoints-of-recurrence-free-survival-rfs-and-distant-metastasis-free-survival-dmfs-in-patient/">INTerpath-001 announcement</a>
+        <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12768121/">In-vivo delivery review</a>
+        <a href="https://www.ncbi.nlm.nih.gov/books/NBK605515/">National Academies: digital twins</a>
+        <br><a class="full-report" href="https://github.com/DNA-Blockchain/Helloworld/blob/master/docs/research/dna-editing-and-cancer-remission.md">Full review, evidence tables, datasets, and limits</a>
+        <a href="https://github.com/DNA-Blockchain/Helloworld/tree/master/docs/research/dna-editing-and-cancer-remission/notes">Source notes</a>
+      </div>
+    </article>
+  </main>
+  <footer class="wrap">
+    <p>Research summaries are dated snapshots; consult the linked full reports and original sources for methods, caveats, and updates.</p>
+    <p><a href="index.html">RabbitSoftware home</a> · <a href="https://github.com/DNA-Blockchain/Helloworld/blob/master/PRIVACY.md">Privacy policy</a> · <a href="mailto:contact@rabbitsoftware.io">Contact</a></p>
+  </footer>
+</body>
+</html>

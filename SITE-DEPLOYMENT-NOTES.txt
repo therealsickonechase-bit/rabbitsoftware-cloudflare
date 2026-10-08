@@ -1,0 +1,103 @@
+RabbitSoftware website recovery - October 8, 2026
+
+PUBLISHED
+Main website: https://rabbitsoftware.io/
+Alternate address: https://rabbitsoftware-site.pages.dev/
+Recovery limitations: https://rabbitsoftware.io/recovery
+www.rabbitsoftware.io redirects to rabbitsoftware.io with HTTP 301.
+Paths and query strings are preserved, including requests arriving over HTTP.
+
+Cloudflare Pages project: rabbitsoftware-site
+Final production deployment: 35231e91-ffe3-45f2-b918-55f8a29bf986
+Deployment status: success
+Immutable production URL: https://35231e91.rabbitsoftware-site.pages.dev/
+Tested repair preview: https://703fda21.rabbitsoftware-site.pages.dev/
+Original recovery preview: https://b0f5f430.rabbitsoftware-site.pages.dev/
+Both custom domains: active; verification active; certificates active.
+
+DNS AND INFRASTRUCTURE
+Added two proxied CNAME records pointing to rabbitsoftware-site.pages.dev:
+  rabbitsoftware.io
+  www.rabbitsoftware.io
+Verified all seven original MX/TXT/API/agent records unchanged after adding
+these records. No mail settings, API/agent bindings, or gateway secrets changed.
+api.rabbitsoftware.io continued returning HTTP 200.
+agent.rabbitsoftware.io root continued returning its pre-existing HTTP 404.
+
+Canonical redirect is a Cloudflare Single Redirect, NOT a Pages _redirects file.
+Rule ID: 714a0636f23b4b4f9a434a678ee7b4d8
+Rule name: RabbitSoftware www to main domain
+Match: http.request.full_uri wildcard r"*://www.rabbitsoftware.io/*"
+Target expression:
+  wildcard_replace(http.request.full_uri,
+    r"*://www.rabbitsoftware.io/*", r"https://rabbitsoftware.io/${2}")
+Status: 301; enabled.
+The wildcard replacement preserves the query string as part of its suffix.
+
+VERIFICATION
+- All ten publicly served files matched local SHA-256 hashes exactly on the
+  production Pages hostname.
+- Custom-domain JavaScript, encryption module, image, and public notices
+  matched the local files exactly.
+- Custom-domain HTML returns the correct page titles but is not byte-identical:
+  Cloudflare adds JavaScript detection and email protection. These existing
+  Cloudflare protections were preserved, not disabled.
+- Homepage, research, reporting, recovery, script, module and image returned 200.
+- chat-record.mjs returned application/javascript; charset=utf-8.
+- Nonexistent module returned real HTTP 404 rather than homepage HTML.
+- Redirect checks passed for homepage, subpaths, query strings, HTTP and HTTPS.
+- Public Cloudflare DNS resolver returned A records for both custom domains.
+- Custom-domain HTTPS was checked against those resolved edge addresses,
+  with normal certificate validation enabled.
+- At the last check, this computer's ordinary resolver still returned an old
+  name-resolution failure. No system DNS settings were changed. Use the Pages
+  address while resolver caches/propagation catch up.
+- Site editor diagnostics: no errors.
+- Production preview browser: chat dialog and Research AI tab opened,
+  Send remained disabled without consent, encryption roundtrip passed.
+- Local module tests passed: roundtrip, fresh salt/IV, wrong passphrase,
+  modified ciphertext, old format, short passphrase, oversized payload,
+  altered KDF.
+- Local browser tests passed: per-message consent, reset on edit/failure,
+  blocking apparent email without a request, visible mocked service failure,
+  and opening a new encrypted record.
+- Save UI reported an encrypted download, but automation did not capture a
+  download event; an actual saved file from that UI test is not claimed.
+- Gateway OPTIONS allows the main domain. It rejects www and repair-preview
+  origins. The www redirect avoids expanding the gateway allowlist.
+- No real research prompt was sent. Hosted model inference remains unverified.
+
+RECOVERED AND RECONSTRUCTED
+The public website was preserved from the surviving Cloudflare preview.
+The missing chat-record.mjs module was reconstructed and clearly labeled.
+New format: rabbitsoftware.recovered-encrypted-record.v1
+Encryption: AES-256-GCM with PBKDF2-SHA256, 600,000 iterations,
+random 16-byte salt and 12-byte IV. Passphrases are not uploaded.
+Historical encrypted-file/.dvault compatibility is NOT restored or claimed.
+Old encrypted records should remain unchanged.
+Recovery notices distinguish the website from the missing Python application.
+Broken historical installer instructions are no longer presented as runnable.
+
+STILL MISSING
+The original complete application repository, run_agent.py, TwinOS services,
+signed-node application, vault integration and chain viewer are not restored.
+Publishing this website does not restore those services.
+The portable local model is saved separately in Rabbit-Model-Recovery.
+AWS backup recovery remains blocked by account access.
+No private recovery backups or model credentials were published.
+
+PACKAGE CONTENTS
+site/ contains only the eleven deployment files.
+website-deploy.zip is the exact archive uploaded for the final production.
+original/ and original-preview.zip preserve the original public responses,
+including fallback responses retained as recovery evidence.
+Do not publish original/ or this entire backup folder as the public website.
+production-file-verification.json contains per-file hashes and check results.
+
+RESTORING THIS WEBSITE AGAIN
+Upload website-deploy.zip as Production in Cloudflare Pages.
+Associate the two custom domains with the Pages project.
+If using a new Cloudflare zone, recreate the canonical redirect above and
+separately preserve/recover its mail, API and agent records.
+The deployment ZIP does not contain Cloudflare DNS, redirects or secrets.
+Keep the original DNA and Hugging Face recovery ZIPs unchanged.

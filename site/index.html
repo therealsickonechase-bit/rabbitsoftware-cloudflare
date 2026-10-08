@@ -1,0 +1,670 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="RabbitSoftware is local-first research, operating-system, and blockchain software with inspectable provenance and explicit data boundaries.">
+  <meta name="theme-color" content="#f2f4ee">
+  <title>RabbitSoftware | Research systems, built to be inspected</title>
+  <link rel="icon" type="image/png" href="assets/rabbitsoftware.png">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --paper: #f2f4ee;
+      --paper-strong: #e6ebe2;
+      --ink: #172421;
+      --muted: #53625c;
+      --line: #bdc8bf;
+      --green: #155c49;
+      --green-light: #b8d7c5;
+      --orange: #c75f43;
+      --yellow: #e7c96d;
+      --night: #10241f;
+      --night-ink: #f3f5ef;
+      --night-muted: #c1cec6;
+      --content: 1160px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 18px/1.6 "Aptos", "Segoe UI", sans-serif;
+    }
+    a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+    a:hover { text-decoration-thickness: 2px; }
+    a:focus-visible { outline: 3px solid var(--orange); outline-offset: 5px; }
+    img { display: block; max-width: 100%; }
+    code, pre { font-family: Consolas, "Courier New", monospace; }
+    .skip-link {
+      position: absolute;
+      left: 16px;
+      top: -80px;
+      z-index: 5;
+      padding: 10px 14px;
+      background: var(--yellow);
+      color: var(--ink);
+    }
+    .skip-link:focus { top: 12px; }
+    .wrap { width: min(var(--content), calc(100% - 48px)); margin-inline: auto; }
+    .topbar {
+      min-height: 74px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      border-bottom: 1px solid var(--line);
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 11px;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .brand img { width: 36px; height: 36px; object-fit: contain; }
+    .brand span { display: grid; line-height: 1.15; }
+    .brand small {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .nav { display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: flex-end; }
+    .nav a { color: var(--muted); font-size: 14px; text-decoration: none; }
+    .nav a:hover { color: var(--green); text-decoration: underline; }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      background: var(--night);
+      color: var(--night-ink);
+    }
+    .hero::after {
+      position: absolute;
+      inset: 0 0 auto auto;
+      width: 40%;
+      height: 100%;
+      border-left: 1px solid rgb(243 245 239 / 16%);
+      background: repeating-linear-gradient(0deg, transparent 0 39px, rgb(243 245 239 / 8%) 40px);
+      content: "";
+      pointer-events: none;
+    }
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 300px;
+      align-items: center;
+      gap: 40px;
+      min-height: 440px;
+      padding-block: 58px;
+    }
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 20px;
+      color: var(--green-light);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .eyebrow::before {
+      width: 8px;
+      height: 8px;
+      background: var(--orange);
+      content: "";
+    }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 {
+      max-width: 780px;
+      margin-bottom: 18px;
+      font: 700 64px/1.02 Georgia, serif;
+    }
+    .hero-lede {
+      max-width: 640px;
+      margin-bottom: 28px;
+      color: var(--night-muted);
+      font-size: 22px;
+      line-height: 1.45;
+    }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+    .button {
+      display: inline-flex;
+      min-height: 48px;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 17px;
+      border: 1px solid var(--green-light);
+      color: var(--night-ink);
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .button.primary { border-color: var(--yellow); background: var(--yellow); color: var(--ink); }
+    .button:hover { border-color: var(--orange); }
+    .hero-note { margin: 23px 0 0; color: var(--night-muted); font-size: 13px; }
+    .hero-index {
+      align-self: center;
+      margin: 0;
+      border-top: 1px solid rgb(243 245 239 / 28%);
+      border-bottom: 1px solid rgb(243 245 239 / 28%);
+      animation: arrive 650ms ease-out both;
+    }
+    .hero-index-label {
+      margin: 0;
+      padding: 13px 0 7px;
+      color: var(--yellow);
+      font: 700 11px/1.4 Consolas, monospace;
+      text-transform: uppercase;
+    }
+    .hero-index dl { margin: 0; }
+    .hero-index dl div {
+      display: grid;
+      grid-template-columns: 100px 1fr;
+      gap: 12px;
+      align-items: baseline;
+      padding: 13px 0;
+      border-top: 1px solid rgb(243 245 239 / 16%);
+    }
+    .hero-index dt { color: var(--night-muted); font-size: 12px; }
+    .hero-index dd { margin: 0; color: var(--night-ink); font: 700 16px/1.3 Georgia, serif; text-align: right; }
+    .hero-copy { animation: arrive 550ms ease-out both; }
+    @keyframes arrive { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .signals { background: var(--yellow); color: var(--ink); }
+    .signals-inner {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      padding-block: 19px;
+    }
+    .signal { display: flex; align-items: baseline; gap: 10px; font-size: 13px; font-weight: 700; }
+    .signal b { color: var(--green); font: 700 12px/1 Consolas, monospace; }
+
+    main section { scroll-margin-top: 24px; }
+    .section { padding-block: 82px; border-bottom: 1px solid var(--line); }
+    .section-head {
+      display: grid;
+      grid-template-columns: 190px minmax(0, 1fr);
+      gap: 30px;
+      margin-bottom: 34px;
+    }
+    .section-index { color: var(--orange); font: 700 13px/1.4 Consolas, monospace; }
+    h2 { max-width: 700px; margin-bottom: 12px; font: 700 38px/1.14 Georgia, serif; }
+    .section-intro { max-width: 700px; margin-bottom: 0; color: var(--muted); }
+    .local-note { margin: 22px 0 0; color: var(--muted); font-size: 14px; }
+    .capabilities {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      border-top: 1px solid var(--line);
+    }
+    .capability { padding: 22px 22px 20px 0; border-bottom: 1px solid var(--line); }
+    .capability + .capability { padding-left: 22px; border-left: 1px solid var(--line); }
+    .capability h3 { margin-bottom: 9px; font: 700 20px/1.2 Georgia, serif; }
+    .capability p { margin: 0; color: var(--muted); font-size: 15px; }
+    .capability pre {
+      margin: 16px 0;
+      padding: 13px;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+      background: var(--night);
+      color: var(--night-ink);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .source-list { margin: 18px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; list-style: none; }
+    .source-list li { padding: 3px 8px; border: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+
+    .boundary {
+      background: var(--paper-strong);
+      border-bottom: 1px solid var(--line);
+    }
+    .boundary-grid {
+      display: grid;
+      grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.2fr);
+      gap: 60px;
+      padding-block: 76px;
+    }
+    .boundary h2 { margin-bottom: 0; }
+    .boundary-list { margin: 0; padding: 0; list-style: none; }
+    .boundary-list li { display: grid; grid-template-columns: 28px 1fr; gap: 13px; padding: 15px 0; border-bottom: 1px solid var(--line); }
+    .boundary-list li:first-child { border-top: 1px solid var(--line); }
+    .boundary-list b { color: var(--green); font: 700 12px/1.8 Consolas, monospace; }
+    .boundary-list span { color: var(--muted); font-size: 15px; }
+    .boundary-list strong { color: var(--ink); }
+
+    .install { padding-block: 82px; border-bottom: 1px solid var(--line); }
+    .install-grid { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 54px; }
+    .install-grid > div:first-child p { max-width: 430px; color: var(--muted); }
+    .install-list { border-top: 1px solid var(--line); }
+    .install-row { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 14px; padding: 17px 0; border-bottom: 1px solid var(--line); }
+    .install-row h3 { margin: 0; font-size: 14px; }
+    .install-row pre { grid-column: 2; margin: 0; padding: 12px; overflow-wrap: anywhere; white-space: pre-wrap; background: var(--night); color: var(--night-ink); font-size: 12px; line-height: 1.55; }
+    .install-row a { grid-column: 2; width: fit-content; color: var(--green); font-size: 13px; }
+
+    .caveat { padding-block: 62px; border-bottom: 1px solid var(--line); }
+    .caveat-inner { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 30px; }
+    .caveat h2 { font-size: 28px; }
+    .caveat p { max-width: 790px; margin-bottom: 10px; color: var(--muted); font-size: 15px; }
+    .caveat p:last-child { margin-bottom: 0; }
+
+    footer { padding-block: 34px 44px; }
+    .footer-inner { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px; }
+    .footer-brand { margin: 0; font: 700 16px Georgia, serif; }
+    .footer-note { margin: 6px 0 0; color: var(--muted); font-size: 12px; }
+    .footer-links { display: flex; flex-wrap: wrap; gap: 10px 20px; }
+    .footer-links a { color: var(--muted); font-size: 13px; }
+
+    .chat-launcher {
+      position: fixed;
+      z-index: 10;
+      right: max(20px, env(safe-area-inset-right));
+      bottom: max(20px, env(safe-area-inset-bottom));
+      display: grid;
+      width: 60px;
+      height: 60px;
+      place-items: center;
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+      background: var(--yellow);
+      box-shadow: 0 4px 18px rgb(0 0 0 / 22%);
+      cursor: pointer;
+    }
+    .chat-launcher img { width: 36px; height: 36px; object-fit: contain; }
+    .chat-launcher:hover { background: var(--green-light); }
+    .chat-launcher:focus-visible, .chat-close:focus-visible, .chat-tabs button:focus-visible,
+    .chat-send:focus-visible, .chat-clear:focus-visible, .chat-copy:focus-visible {
+      outline: 3px solid var(--orange);
+      outline-offset: 3px;
+    }
+    .chat-dialog {
+      width: min(620px, calc(100% - 24px));
+      max-width: none;
+      max-height: min(820px, calc(100dvh - 24px));
+      padding: 0;
+      border: 1px solid var(--line);
+      background: var(--paper);
+      color: var(--ink);
+      box-shadow: 0 18px 70px rgb(0 0 0 / 35%);
+    }
+    .chat-dialog::backdrop { background: rgb(10 20 16 / 68%); backdrop-filter: blur(2px); }
+    .chat-shell { display: flex; max-height: min(820px, calc(100dvh - 24px)); flex-direction: column; }
+    .chat-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 19px 22px 15px; border-bottom: 1px solid var(--line); }
+    .chat-head h2 { margin: 0; font-size: 25px; }
+    .chat-head p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
+    .chat-close { display: grid; width: 40px; height: 40px; flex: 0 0 40px; place-items: center; border: 1px solid var(--line); background: transparent; color: var(--ink); font-size: 24px; cursor: pointer; }
+    .chat-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-bottom: 1px solid var(--line); }
+    .chat-tabs button { min-height: 48px; border: 0; border-right: 1px solid var(--line); background: transparent; color: var(--muted); font-family: inherit; font-size: 13px; font-weight: 700; line-height: 1.2; cursor: pointer; }
+    .chat-tabs button:last-child { border-right: 0; }
+    .chat-tabs button[aria-selected="true"] { background: var(--night); color: var(--night-ink); }
+    .chat-view { display: flex; min-height: 0; flex: 1; flex-direction: column; overflow: auto; }
+    .chat-pane { padding: 20px 22px 22px; }
+    .chat-pane[hidden] { display: none; }
+    .chat-pane h3 { margin: 0 0 8px; font: 700 20px/1.25 Georgia, serif; }
+    .chat-pane p { margin: 0 0 13px; color: var(--muted); font-size: 14px; }
+    .chat-command { display: flex; align-items: center; gap: 12px; margin: 16px 0; padding: 12px; border: 1px solid var(--line); background: var(--night); color: var(--night-ink); }
+    .chat-command code { flex: 1; overflow-wrap: anywhere; font-size: 13px; }
+    .chat-copy, .chat-clear { min-height: 38px; padding: 7px 10px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .chat-links { display: grid; gap: 8px; margin: 14px 0 0; padding: 0; list-style: none; }
+    .chat-links a { display: block; padding: 8px 0; border-bottom: 1px solid var(--line); color: var(--green); font-size: 14px; }
+    .chat-notice { margin: 14px 0 0 !important; padding: 11px 12px; border-left: 3px solid var(--orange); background: var(--paper-strong); color: var(--ink) !important; font-size: 12px !important; }
+    .chat-log { display: grid; gap: 12px; min-height: 120px; max-height: 310px; overflow-y: auto; margin: 14px 0; padding: 0 2px 0 0; }
+    .chat-message { max-width: 90%; padding: 10px 12px; border: 1px solid var(--line); overflow-wrap: anywhere; white-space: pre-wrap; font-size: 14px; }
+    .chat-message.user { justify-self: end; background: var(--green); color: white; }
+    .chat-message.assistant { justify-self: start; background: var(--paper-strong); }
+    .chat-message.error { border-color: var(--orange); }
+    .chat-form { display: grid; gap: 10px; }
+    .chat-form label { color: var(--muted); font-size: 12px; }
+    .chat-form textarea { width: 100%; min-height: 92px; resize: vertical; padding: 11px; border: 1px solid var(--line); border-radius: 0; background: var(--paper); color: var(--ink); font: inherit; font-size: 14px; }
+    .chat-form input[type="password"], .chat-form input[type="file"] { width: 100%; min-width: 0; padding: 9px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font-family: inherit; font-size: 14px; }
+    .chat-record-preview { margin: 10px 0 0; max-height: 220px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; }
+    .chat-consent { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 9px; align-items: start; }
+    .chat-consent input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--green); }
+    .chat-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .chat-send { min-height: 42px; padding: 9px 15px; border: 1px solid var(--ink); background: var(--yellow); color: var(--ink); font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .chat-send:disabled { cursor: not-allowed; opacity: .5; }
+    .chat-status { min-height: 20px; margin: 0 !important; font-size: 12px !important; }
+    .chat-sources { margin-top: 13px; padding-top: 12px; border-top: 1px solid var(--line); }
+    .chat-sources summary { color: var(--green); cursor: pointer; font-size: 13px; font-weight: 700; }
+    .chat-sources .chat-links { margin-top: 8px; }
+
+    @media (max-width: 760px) {
+      .wrap { width: min(var(--content), calc(100% - 36px)); }
+      .topbar { align-items: flex-start; flex-direction: column; padding-block: 14px; gap: 13px; }
+      .nav { justify-content: flex-start; gap: 8px 18px; }
+      .hero-inner { grid-template-columns: 1fr; gap: 24px; min-height: 0; padding-block: 50px; }
+      .hero::after { width: 100%; border-left: 0; background: repeating-linear-gradient(0deg, transparent 0 39px, rgb(243 245 239 / 6%) 40px); }
+      .hero-index { width: min(100%, 420px); }
+      .signals-inner { grid-template-columns: 1fr; gap: 7px; }
+      .section { padding-block: 58px; }
+      .section-head, .boundary-grid, .install-grid, .caveat-inner { grid-template-columns: 1fr; gap: 20px; }
+      .capabilities { grid-template-columns: 1fr; }
+      .capability, .capability + .capability { padding: 18px 0; border-left: 0; }
+      .capability:first-child { border-top: 0; }
+      .boundary-grid { padding-block: 56px; }
+    }
+    @media (max-width: 480px) {
+      body { font-size: 16px; }
+      .wrap { width: min(var(--content), calc(100% - 32px)); }
+      h1 { font-size: 36px; line-height: 1.08; }
+      h2 { font-size: 31px; }
+      .hero-lede { font-size: 18px; }
+      .hero-actions { align-items: stretch; flex-direction: column; }
+      .button { width: 100%; }
+      .install-row { grid-template-columns: 1fr; gap: 8px; }
+      .install-row pre, .install-row a { grid-column: 1; }
+      .footer-inner { flex-direction: column; }
+      .chat-launcher { right: 14px; bottom: max(14px, env(safe-area-inset-bottom)); width: 54px; height: 54px; }
+      .chat-launcher img { width: 32px; height: 32px; }
+      .chat-head { padding: 15px 16px 12px; }
+      .chat-pane { padding: 16px; }
+      .chat-tabs button { font-size: 11px; }
+      .chat-log { max-height: 34dvh; }
+      .chat-actions { flex-wrap: wrap; justify-content: flex-start; }
+      .chat-send { margin-left: auto; }
+    }
+    @media (max-width: 360px) {
+      h1 { font-size: 32px; }
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --paper: #17211e;
+        --paper-strong: #202d28;
+        --ink: #f0f3ec;
+        --muted: #bac7c0;
+        --line: #52645a;
+        --green: #9dd7b4;
+        --green-light: #b8d7c5;
+        --night: #0d1815;
+        --night-ink: #f3f5ef;
+        --night-muted: #bac7c0;
+      }
+      .install-row pre { background: #0b1411; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="topbar wrap">
+    <a class="brand" href="#top" aria-label="RabbitSoftware home">
+      <img src="assets/rabbitsoftware.png" width="36" height="36" alt="">
+      <span>RabbitSoftware<small>Research systems / 0.12.0</small></span>
+    </a>
+    <nav class="nav" aria-label="Primary navigation">
+      <a href="#system">The system</a>
+      <a href="research.html">Research</a>
+      <a href="#boundaries">Data boundaries</a>
+      <a href="#agents-chains">Agents &amp; chains</a>
+      <a href="#start">Get started</a>
+      <a href="#resources">Resources</a>
+    </nav>
+  </header>
+
+  <section class="hero" id="top" aria-labelledby="site-title">
+    <div class="hero-inner wrap">
+      <div class="hero-copy">
+        <p class="eyebrow">Local-first research / experimental systems</p>
+        <h1 id="site-title">RabbitSoftware</h1>
+        <p class="hero-lede">Research software, operating-system experiments, and signed provenance - built to run locally and make its boundaries visible.</p>
+        <div class="hero-actions">
+          <a class="button primary" href="https://github.com/DNA-Blockchain/Helloworld">Explore the source</a>
+          <a class="button" href="#start">Install the project</a>
+        </div>
+        <p class="hero-note">Active research software. Version 0.12.0. The experimental kernel runs in QEMU.</p>
+      </div>
+      <aside class="hero-index" aria-label="Project snapshot">
+        <p class="hero-index-label">Project snapshot</p>
+        <dl>
+          <div><dt>Host runtime</dt><dd>Python</dd></div>
+          <div><dt>Kernel tests</dt><dd>QEMU only</dd></div>
+          <div><dt>Cloud sharing</dt><dd>Opt-in</dd></div>
+        </dl>
+      </aside>
+    </div>
+  </section>
+
+  <div class="signals" aria-label="Project principles">
+    <div class="signals-inner wrap">
+      <span class="signal"><b>01</b> Local by default</span>
+      <span class="signal"><b>02</b> Sources stay inspectable</span>
+      <span class="signal"><b>03</b> Sharing waits for consent</span>
+    </div>
+  </div>
+
+  <main id="main">
+    <section class="section wrap" id="system" aria-labelledby="system-title">
+      <div class="section-head">
+        <span class="section-index">01 / SYSTEM</span>
+        <div>
+          <h2 id="system-title">A research system with visible boundaries.</h2>
+          <p class="section-intro">RabbitSoftware connects public-source research, local analysis, signed records, and experimental runtimes without pretending they are one thing.</p>
+        </div>
+      </div>
+      <div class="capabilities">
+        <article class="capability">
+          <h3>Research pipeline</h3>
+          <p>Retrieve public records, preserve their source identifiers, index them locally, and produce answers with citations.</p>
+          <ul class="source-list" aria-label="Research sources">
+            <li>PubMed</li><li>Europe PMC</li><li>ClinicalTrials.gov</li><li>ClinVar</li><li>NIH RePORTER</li><li>arXiv</li>
+          </ul>
+        </article>
+        <article class="capability">
+          <h3>Signed provenance</h3>
+          <p>Nodes keep their own signed chains and replicate a research ledger. Validators reject events that contain personal data.</p>
+        </article>
+        <article class="capability">
+          <h3>Host and guest</h3>
+          <p>The Python application runs on the host. The experimental Rust kernel and bounded guest workflows run in QEMU; they do not replace the host OS.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="boundary" id="boundaries" aria-labelledby="boundary-title">
+      <div class="boundary-grid wrap">
+        <div>
+          <p class="section-index">02 / DATA BOUNDARIES</p>
+          <h2 id="boundary-title">Your device is the default boundary.</h2>
+        </div>
+        <ul class="boundary-list">
+          <li><b>A</b><span><strong>Local first.</strong> Conversations, settings, research records, integrity reports, node keys, chains, and the local model stay on the device by default.</span></li>
+          <li><b>B</b><span><strong>Consent before transfer.</strong> Public searches, hosted-model questions, publishing, and sharing wait for an explicit yes and are recorded locally.</span></li>
+          <li><b>C</b><span><strong>Public chain, public data.</strong> The chain is permanent. Personal data belongs in the encrypted local vault, never in a public event.</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="install wrap" id="start" aria-labelledby="start-title">
+      <div class="install-grid">
+        <div>
+          <p class="section-index">03 / GET STARTED</p>
+          <h2 id="start-title">Start with the source.</h2>
+          <p>This website was recovered from a surviving Cloudflare preview. The original GitHub repository and installers are currently unavailable; the Python application is only partially recovered.</p>
+          <p><strong>Do not run the historical install commands below.</strong> They are retained as recovery references, not working installation instructions. <a href="recovery.html">Read the recovery status</a>.</p>
+        </div>
+        <div class="install-list" aria-label="Install commands">
+          <div class="install-row">
+            <h3>Windows / PowerShell</h3>
+            <pre><code>irm https://raw.githubusercontent.com/DNA-Blockchain/Helloworld/master/install.ps1 | iex</code></pre>
+            <a href="https://github.com/DNA-Blockchain/Helloworld/blob/master/install.ps1">Review install.ps1</a>
+          </div>
+          <div class="install-row">
+            <h3>Linux / WSL</h3>
+            <pre><code>curl -fsSL https://raw.githubusercontent.com/DNA-Blockchain/Helloworld/master/install.sh | bash</code></pre>
+            <a href="https://github.com/DNA-Blockchain/Helloworld/blob/master/install.sh">Review install.sh</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section wrap" id="agents-chains" aria-labelledby="agents-chains-title">
+      <div class="section-head">
+        <span class="section-index">04 / LOCAL TOOLS</span>
+        <div>
+          <h2 id="agents-chains-title">Run the agents. Read the chain locally.</h2>
+          <p class="section-intro">The website offers consent-gated research chat, not a hosted agent console or public chain explorer. RabbitSoftware’s local assistant, literature-research agent, and chain viewer run on your own machine.</p>
+        </div>
+      </div>
+      <div class="capabilities">
+        <article class="capability">
+          <h3>RabbitSoftware assistant</h3>
+          <p>Ask about local nodes, research status, or published chain entries. Chain lookups search public entries already stored in your local node data.</p>
+          <pre><code>python rabbit.py chat
+python rabbit.py ask "what's on the chain"
+python rabbit.py ask "find BRCA1 on the chain"</code></pre>
+        </article>
+        <article class="capability">
+          <h3>Literature research agent</h3>
+          <p>Run the host-side agent from the repository. The explicit loopback bind keeps its node on this computer; live collection queries public research sources and uses network access.</p>
+          <pre><code>python run_agent.py --host 127.0.0.1 --port 8765</code></pre>
+          <p>Stop it with <code>Ctrl+C</code>. The default interval is hourly; upstream services impose request limits.</p>
+        </article>
+        <article class="capability">
+          <h3>Browse chain entries</h3>
+          <p>Read the merged local research chain in a loopback-only viewer, or list, search, and inspect entries through the assistant.</p>
+          <pre><code>python research_viewer.py
+python rabbit.py ask "what's on the chain"
+python rabbit.py ask "show entry 2"</code></pre>
+          <p>The viewer listens on <code>127.0.0.1:8791</code>. The chain holds public events and fingerprints; it is not an online public endpoint for this website.</p>
+        </article>
+      </div>
+      <p class="local-note">These commands describe the original application and require source files that have not yet been recovered. TwinOS peer agents are also local-first. Remote peers require explicit trust and policy approval; this website does not accept agent messages or expose agent credentials.</p>
+    </section>
+
+    <section class="caveat wrap" aria-labelledby="caveat-title">
+      <div class="caveat-inner">
+        <p class="section-index">05 / LIMITS</p>
+        <div>
+          <h2 id="caveat-title">Research tooling, not clinical software.</h2>
+          <p>Genomics utilities produce candidate laboratory hypotheses; they do not diagnose, recommend treatment, or edit DNA in a body. EEG and physiology features are research prototypes, not measurements of thoughts or images.</p>
+          <p>The Rust kernel is experimental and runs in QEMU only. It does not run the Python RabbitSoftware application.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section wrap" id="resources" aria-labelledby="resources-title">
+      <div class="section-head">
+        <span class="section-index">06 / RESOURCES</span>
+        <div>
+          <h2 id="resources-title">Read the evidence and the limits.</h2>
+          <p class="section-intro">Project documentation and policy live with the source, where changes can be reviewed alongside the software.</p>
+        </div>
+      </div>
+      <nav class="footer-links" aria-label="Project resources">
+        <a href="research.html">Research library</a>
+        <a href="reporting.html">Reporting contacts</a>
+        <a href="https://github.com/DNA-Blockchain/Helloworld">Repository</a>
+        <a href="https://github.com/DNA-Blockchain/Helloworld#readme">README</a>
+        <a href="https://github.com/DNA-Blockchain/Helloworld/blob/master/PRIVACY.md">Privacy policy</a>
+        <a href="https://github.com/DNA-Blockchain/Helloworld/blob/master/LICENSE">License</a>
+        <a href="LICENSES.md">License scopes and authorship</a>
+        <a href="chain-identifiers.md">Chain and block identifiers</a>
+        <a href="https://github.com/DNA-Blockchain/Helloworld/blob/master/KNOWN_GAPS.md">Known gaps</a>
+        <a href="https://github.com/DNA-Blockchain/Helloworld/releases">Releases</a>
+        <a href="mailto:contact@rabbitsoftware.io">Contact</a>
+      </nav>
+    </section>
+  </main>
+
+  <footer class="wrap">
+    <div class="footer-inner">
+      <div>
+        <p class="footer-brand">RabbitSoftware</p>
+        <p class="footer-note">Independent research and experimental systems / 0.12.0</p>
+      </div>
+      <p class="footer-note">Recovered website; application restoration is incomplete. <a href="recovery.html">Recovery status</a>. Not a clinical product.</p>
+    </div>
+  </footer>
+  <button class="chat-launcher" id="chat-launcher" type="button" aria-label="Open RabbitSoftware chat" title="Open RabbitSoftware chat">
+    <img src="assets/rabbitsoftware.png" width="36" height="36" alt="">
+  </button>
+  <dialog class="chat-dialog" id="chat-dialog" aria-labelledby="chat-title">
+    <div class="chat-shell">
+      <header class="chat-head">
+        <div><h2 id="chat-title">RabbitSoftware chat</h2><p>Choose where your conversation happens.</p></div>
+        <button class="chat-close" type="button" aria-label="Close chat">&times;</button>
+      </header>
+      <div class="chat-tabs" role="tablist" aria-label="Chat destination">
+        <button id="tab-local" type="button" role="tab" aria-selected="true" aria-controls="pane-local" tabindex="0">Local Twin</button>
+        <button id="tab-research" type="button" role="tab" aria-selected="false" aria-controls="pane-research" tabindex="-1">Research AI</button>
+        <button id="tab-code" type="button" role="tab" aria-selected="false" aria-controls="pane-code" tabindex="-1">Code &amp; Docs</button>
+      </div>
+      <div class="chat-view">
+        <section class="chat-pane" id="pane-local" role="tabpanel" aria-labelledby="tab-local" tabindex="0">
+          <h3>Your Twin stays on your device</h3>
+          <p>Run the RabbitSoftware assistant locally. This public page cannot see your files, personal research, vault, local chains, or terminal.</p>
+          <div class="chat-command"><code>python rabbit.py chat</code><button class="chat-copy" type="button" data-copy="python rabbit.py chat">Copy</button></div>
+          <p>This is a historical application command, not a working installer. The original application source is still incomplete. <a href="recovery.html">Recovery status</a>.</p>
+          <ul class="chat-links">
+            <li><a href="https://github.com/DNA-Blockchain/Helloworld#install-rabbitsoftwareinc" target="_blank" rel="noreferrer">Install and run RabbitSoftware</a></li>
+            <li><a href="https://github.com/DNA-Blockchain/Helloworld/blob/master/docs/twinos/README.md" target="_blank" rel="noreferrer">TwinOS trust and approval guide</a></li>
+          </ul>
+          <p class="chat-notice">The local assistant can use your local setup. Public searches require approval; hosted requests follow your local consent settings. This site does not start commands or connect to your device.</p>
+        </section>
+        <section class="chat-pane" id="pane-research" role="tabpanel" aria-labelledby="tab-research" tabindex="0" hidden>
+          <h3>Ask about the reviewed research</h3>
+          <p>Answers use the two public summaries linked below and the hosted model. This is not a live literature search; new studies are not automatically fetched.</p>
+          <div class="chat-log" id="chat-log" role="log" aria-live="polite" aria-relevant="additions"></div>
+          <form class="chat-form" id="chat-form">
+            <label for="chat-question">Your question</label>
+            <textarea id="chat-question" maxlength="2000" required placeholder="Ask about methods, evidence, or limitations"></textarea>
+            <label class="chat-consent"><input id="chat-consent" type="checkbox"><span>For this message, I approve sending my question and the most recent messages from this tab's conversation, along with the published research summaries, through Cloudflare to RabbitSoftware's Hugging Face hosted model. I will not include personal or identifying health data.</span></label>
+            <div class="chat-actions">
+              <button class="chat-clear" id="chat-clear" type="button">Clear chat</button>
+              <button class="chat-clear" id="chat-download" type="button" disabled>Download plain text</button>
+              <button class="chat-send" id="chat-send" type="submit" disabled>Send with consent</button>
+            </div>
+            <p class="chat-status" id="chat-status" role="status" aria-live="polite"></p>
+          </form>
+          <p class="chat-notice">Messages are kept in this tab's memory only and are not saved by this page. The page blocks common email, phone, ID, birth-date, street-address, and long DNA/RNA patterns before sending; this check can miss personal data. Do not send private, identifying, genomic, or biosignal data. The Cloudflare gateway applies usage limits and does not log prompts or answers; it forwards approved requests to the Hugging Face model endpoint. <a href="https://github.com/DNA-Blockchain/Helloworld/blob/master/PRIVACY.md" target="_blank" rel="noreferrer">Privacy policy</a>. Research is not medical advice.</p>
+          <details class="chat-sources" id="chat-record-details">
+            <summary>Encrypted local research record</summary>
+            <p class="chat-notice">Reconstructed feature: optional local download of inputs, outputs, source context, and request status. No uploads, training sharing, or chain publication. New recovery-format records use AES-256-GCM / PBKDF2-SHA256 (600,000 iterations). Older records and .dvault files are not supported by this rebuilt module; keep their original copies. The passphrase cannot be recovered. Opened records are read-only and are never added to hosted prompts. Model output is unverified.</p>
+            <form class="chat-form" id="chat-record-form">
+              <label for="chat-record-passphrase">Local record passphrase (at least 12 characters)</label>
+              <input id="chat-record-passphrase" type="password" minlength="12" maxlength="1024" autocomplete="new-password" required>
+              <label for="chat-record-confirm">Confirm passphrase for a new download</label>
+              <input id="chat-record-confirm" type="password" minlength="12" maxlength="1024" autocomplete="new-password">
+              <button class="chat-clear" id="chat-record-save" type="submit" disabled>Encrypt &amp; download</button>
+              <label for="chat-record-file">Open an encrypted local record</label>
+              <input id="chat-record-file" type="file" accept=".json,application/json">
+              <button class="chat-clear" id="chat-record-open" type="button">Open locally</button>
+              <p class="chat-status" id="chat-record-status" role="status" aria-live="polite"></p>
+              <pre class="chat-record-preview" id="chat-record-preview" hidden></pre>
+            </form>
+          </details>
+          <details class="chat-sources">
+            <summary>Public sources included with each question</summary>
+            <ul class="chat-links">
+              <li><a href="research.html#eeg" target="_blank" rel="noreferrer">EEG visual-decoding review and cited studies</a></li>
+              <li><a href="research.html#oncology" target="_blank" rel="noreferrer">Genomics and oncology review and cited studies</a></li>
+            </ul>
+          </details>
+        </section>
+        <section class="chat-pane" id="pane-code" role="tabpanel" aria-labelledby="tab-code" tabindex="0" hidden>
+          <h3>Code and documentation, locally</h3>
+          <p>Browse the source and documentation below, or ask the local assistant about project research and supported status checks. This panel is a read-only guide, not a connected coding agent; it cannot inspect your checkout or execute terminal commands.</p>
+          <div class="chat-command"><code>python rabbit.py chat</code><button class="chat-copy" type="button" data-copy="python rabbit.py chat">Copy</button></div>
+          <ul class="chat-links">
+            <li><a href="https://github.com/DNA-Blockchain/Helloworld/blob/master/README.md" target="_blank" rel="noreferrer">Project README</a></li>
+            <li><a href="https://github.com/DNA-Blockchain/Helloworld/tree/master/docs" target="_blank" rel="noreferrer">Documentation index</a></li>
+            <li><a href="https://github.com/DNA-Blockchain/Helloworld/blob/master/docs/research/eeg-to-image-reconstruction.md" target="_blank" rel="noreferrer">EEG research report</a></li>
+            <li><a href="https://github.com/DNA-Blockchain/Helloworld/blob/master/docs/research/dna-editing-and-cancer-remission.md" target="_blank" rel="noreferrer">Genomics research report</a></li>
+          </ul>
+          <p class="chat-notice">This browser page does not upload code or access your terminal. Hosted Research AI is a separate mode and only receives data after a fresh consent for each message.</p>
+        </section>
+      </div>
+    </div>
+  </dialog>
+  <script src="chat.js" type="module"></script>
+</body>
+</html>
