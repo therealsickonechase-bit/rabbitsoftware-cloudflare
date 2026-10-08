@@ -3,3 +3,8 @@ node_modules/
 .dev.vars
 .env
 backup/
+
+.cloudflare/
+.agents/
+.claude/skills/
+skills-lock.json
