@@ -1,0 +1,50 @@
+# rabbitsoftware-sync — main backend API (api.rabbitsoftware.io): accounts, device
+# sync, history, research/Maxwell snapshots, corpus, quotas.
+# Mirrors the live Worker settings as of 2026-10-08.
+name = "rabbitsoftware-sync"
+main = "src/agent-entry.js"
+compatibility_date = "2026-09-01"
+workers_dev = true
+routes = [{ pattern = "api.rabbitsoftware.io", custom_domain = true }]
+
+[vars]
+ACCOUNT_MIGRATION_DESTINATION = ""
+ACCOUNT_MIGRATION_ENABLED = "false"
+ACCOUNT_MIGRATION_NOTICE = ""
+ACCOUNT_MIGRATION_NOTICE_VERSION = ""
+ARCHIVE_AGENT_ENABLED = "true"
+OPEN_SIGNUP = "false"
+PROJECT_EVENTS_ENABLED = "true"
+QUOTAS = '{"history": 500, "corpus": 50, "training": 300, "pairing": 20}'
+
+# Secrets (set with `npx wrangler secret put <NAME>`, never committed):
+#   ADMIN_ACCOUNT
+#   SIGNUP_KEY
+
+[[d1_databases]]
+binding = "DB"
+database_name = "rabbitsoftware-sync"
+database_id = "6abca1c1-784c-4151-bd37-95f9fe30cc52"
+
+[[kv_namespaces]]
+binding = "DNA_BLOCKCHAIN"
+id = "1780c2bce503474b908e43a5d321fbdb"
+
+[[r2_buckets]]
+binding = "SYNC"
+bucket_name = "rabbitsoftware-sync"
+
+# Feeds the rabbitsoftware_project_events pipeline, which writes to the
+# rabbitsoftware-project-events R2 bucket.
+[[pipelines]]
+binding = "PROJECT_EVENTS"
+pipeline = "4165a92b84db4e51951d87fe27f16903"
+
+# The Quota class already exists on the live Worker (SQLite-backed), so no
+# migration block is needed to redeploy. Add one only when creating it fresh:
+#   [[migrations]]
+#   tag = "v1"
+#   new_sqlite_classes = ["Quota"]
+[[durable_objects.bindings]]
+name = "QUOTA"
+class_name = "Quota"
