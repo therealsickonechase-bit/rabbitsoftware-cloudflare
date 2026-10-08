@@ -1,0 +1,15 @@
+{
+  "name": "rabbitsoftware-cloudflare",
+  "private": true,
+  "description": "Rabbitsoftware Cloudflare site and Workers",
+  "scripts": {
+    "dev:site": "wrangler pages dev site --port 8788",
+    "dev:sync": "wrangler dev --config workers/sync/wrangler.toml --local --port 8801",
+    "dev:node-worker": "wrangler dev --config workers/node-worker/wrangler.toml --local --port 8802",
+    "dev:gateway": "wrangler dev --config workers/gateway/wrangler.toml --local --port 8803",
+    "preview:site": "wrangler pages deploy site --project-name rabbitsoftware-site --branch preview"
+  },
+  "devDependencies": {
+    "wrangler": "^4"
+  }
+}
