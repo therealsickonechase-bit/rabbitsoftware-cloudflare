@@ -1,0 +1,45 @@
+# rabbitsoftware-sync — main backend API (api.rabbitsoftware.io): accounts, device
+# sync, history, research/Maxwell snapshots, corpus, quotas.
+# Mirrors the live Worker settings as of 2026-10-08.
+name = "rabbitsoftware-sync-dev"
+main = "src/agent-entry.js"
+compatibility_date = "2026-09-01"
+workers_dev = false
+routes = [{ pattern = "api-dev.rabbitsoftware.io", custom_domain = true }]
+
+[vars]
+ACCOUNT_MIGRATION_DESTINATION = ""
+ACCOUNT_MIGRATION_ENABLED = "false"
+ACCOUNT_MIGRATION_NOTICE = ""
+ACCOUNT_MIGRATION_NOTICE_VERSION = ""
+ARCHIVE_AGENT_ENABLED = "true"
+OPEN_SIGNUP = "false"
+PROJECT_EVENTS_ENABLED = "false"
+QUOTAS = '{"history": 500, "corpus": 50, "training": 300, "pairing": 20}'
+
+# Secrets (set with `npx wrangler secret put <NAME>`, never committed):
+#   ADMIN_ACCOUNT
+#   SIGNUP_KEY
+
+[[d1_databases]]
+binding = "DB"
+database_name = "rabbitsoftware-sync-dev"
+database_id = "b577835c-7e42-41d0-8345-f29b9856b04f"
+
+[[kv_namespaces]]
+binding = "DNA_BLOCKCHAIN"
+id = "0e1a34be36b040e5a3f1ab0692cc2e1e"
+
+[[r2_buckets]]
+binding = "SYNC"
+bucket_name = "rabbitsoftware-sync-dev"
+
+# No events pipeline in dev (code treats PROJECT_EVENTS as optional).
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Quota"]
+
+[[durable_objects.bindings]]
+name = "QUOTA"
+class_name = "Quota"

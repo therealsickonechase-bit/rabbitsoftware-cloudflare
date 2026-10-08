@@ -1,0 +1,25 @@
+# rabbitsoftware-gateway — AI chat gateway in front of a Hugging Face inference endpoint.
+# Mirrors the live Worker settings as of 2026-10-08.
+name = "rabbitsoftware-gateway-dev"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+workers_dev = true
+
+[vars]
+CHAT_ALLOWED_ORIGINS = "https://dev.rabbitsoftware.io,https://dev.rabbitsoftware-site.pages.dev"
+DAILY_LIMIT = "20"
+ENDPOINT_URL = "https://6abda5e90093f0b3703165a8.endpoints.huggingface.cloud"
+MAX_PROMPT_CHARS = "12000"
+MAX_TOKENS = "400"
+PER_CLIENT_PER_HOUR = "20"
+
+# Secrets (set with `npx wrangler secret put <NAME>`, never committed):
+#   HF_TOKEN
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Limits"]
+
+[[durable_objects.bindings]]
+name = "LIMITS"
+class_name = "Limits"

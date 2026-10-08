@@ -1,0 +1,30 @@
+# rabbitsoftware-node-worker — archive-verification agent (agent.rabbitsoftware.io).
+# Mirrors the live Worker settings as of 2026-10-08.
+name = "rabbitsoftware-node-worker-dev"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+workers_dev = false
+routes = [{ pattern = "agent-dev.rabbitsoftware.io", custom_domain = true }]
+
+[vars]
+AGENT_JOBS_ENABLED = "false"
+
+# Calls the ArchiveAgent entrypoint exported by rabbitsoftware-sync.
+[[services]]
+binding = "ARCHIVE"
+service = "rabbitsoftware-sync-dev"
+entrypoint = "ArchiveAgent"
+
+[[workflows]]
+binding = "MY_WORKFLOW"
+name = "workflow-rabbitsoftware-node-worker-dev"
+class_name = "MyWorkflow"
+
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+invocation_logs = true
