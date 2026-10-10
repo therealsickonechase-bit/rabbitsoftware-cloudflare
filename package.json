@@ -7,7 +7,8 @@
     "dev:sync": "wrangler dev --config workers/sync/wrangler.toml --local --port 8801",
     "dev:node-worker": "wrangler dev --config workers/node-worker/wrangler.toml --local --port 8802",
     "dev:gateway": "wrangler dev --config workers/gateway/wrangler.toml --local --port 8803",
-    "preview:site": "wrangler pages deploy site --project-name rabbitsoftware-site --branch preview"
+    "preview:site": "wrangler pages deploy site --project-name rabbitsoftware-site --branch preview",
+    "probe": "node scripts/probe.mjs"
   },
   "devDependencies": {
     "wrangler": "^4"
