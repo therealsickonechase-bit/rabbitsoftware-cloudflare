@@ -9,13 +9,15 @@ Source and deploy config for the Rabbitsoftware platform on Cloudflare (zone `ra
 - `workers/node-worker/` — archive-verification agent (`agent.rabbitsoftware.io`), runs a Workflow and calls sync's `ArchiveAgent`.
 - `workers/gateway/` — rate-limited AI chat gateway to a Hugging Face endpoint.
 - `scripts/dev-smoke.mjs` — dev-only signed smoke test.
+- `scripts/probe.mjs` (`npm run probe`) and `site/status.html` — health checks of the website, RabbitOS console and Workers; `tools/gprobe` is vendored.
+- The RabbitOS console lives in the separate `rabbit-web` repo (`app.rabbitsoftware.io`); the site only links to it (`#rabbitos` section in `site/index.html`).
 - Each Worker has `wrangler.toml` (production) and `wrangler.dev.toml` (`-dev` resources).
 
 ## Commands
 
 - `npm run dev:site | dev:sync | dev:node-worker | dev:gateway` — local only (`--local`, simulated bindings).
 - `npm run preview:site` — deploys `site/` to the Pages `preview` branch; production is untouched.
-- Deploy a Worker: `cd workers/<name> && npx wrangler deploy`. Deploy `sync` before `node-worker`.
+- Deploy the site to production: `npx wrangler pages deploy site --project-name rabbitsoftware-site --branch master` (only when asked). Deploy a Worker: `cd workers/<name> && npx wrangler deploy`. Deploy `sync` before `node-worker`.
 
 ## Rules
 

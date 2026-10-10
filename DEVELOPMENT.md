@@ -39,6 +39,15 @@ Deploys `site/` to the Pages `preview` branch environment of `rabbitsoftware-sit
 Promote to production only after review, from the Cloudflare dashboard or with
 `--branch master`.
 
+## Checking the live site
+
+```powershell
+npm run probe     # website, RabbitOS console, API and agent Worker health, from your computer
+```
+
+The same checks run in the browser at https://rabbitsoftware.io/status. `scripts/dev-smoke.mjs` is a dev-only signed smoke test against the `-dev` resources
+(`wrangler.dev.toml` in each Worker); never point it at production.
+
 ## Rules
 
 - Do not redeploy the Worker bundles blindly; keep existing bindings and secrets.
