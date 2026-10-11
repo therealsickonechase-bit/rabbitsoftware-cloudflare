@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="author" content="Chase Allen Ringquist">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="rabbit-web: consent-gated public web research with inspectable sources and AI summaries.">
+  <meta name="research-endpoint" content="https://rabbitsoftware-research.rabbitsoftware-gateway.workers.dev/v1/search">
+  <title>rabbit-web | RabbitSoftware</title>
+  <link rel="icon" type="image/svg+xml" href="assets/rabbit-mark.svg">
+  <link rel="stylesheet" href="polish.css">
+  <link rel="stylesheet" href="research-agent.css">
+  <script type="module" src="research-agent.js"></script>
+</head>
+<body class="document-page">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="top wrap">
+    <a class="brand" href="index.html"><img src="assets/rabbit-mark.svg" width="34" height="34" alt="">RabbitSoftware</a>
+    <a class="back" href="chain.html">Public corpus and local files</a>
+  </header>
+  <main class="document-main wrap" id="main">
+    <p class="eyebrow">Public web research / RabbitSoftware</p>
+    <h1 class="agent-identity"><img src="assets/rabbit-mark.svg" width="52" height="52" alt="">rabbit-web</h1>
+    <p class="intro">Search public sources. Inspect the evidence. Read a bounded AI summary.</p>
+    <p id="agent-availability" role="status">JavaScript must load before an approved search can begin.</p>
+    <form id="agent-form">
+      <label for="agent-query"><strong>Your public research question</strong></label>
+      <textarea id="agent-query" rows="3" maxlength="600" required placeholder="What evidence supports single-trial EEG visual decoding?"></textarea>
+      <label class="agent-consent"><input id="agent-consent" type="checkbox">
+        <span>I approve sending this question to Tavily through Cloudflare, then sending the question and returned snippets to RabbitSoftware's Hugging Face model. No private data.</span>
+      </label>
+      <div class="agent-actions">
+        <button id="agent-search" type="submit" disabled>Search and summarize</button>
+        <button id="agent-retry-summary" type="button" hidden disabled>Retry AI summary only</button>
+        <button id="agent-clear" type="button" disabled>Clear results</button>
+      </div>
+      <p id="agent-status" role="status" aria-live="polite">JavaScript is loading. Nothing is sent while you type.</p>
+      <noscript><p>This tool needs JavaScript. You can still <a href="research.html">read the research library</a>.</p></noscript>
+    </form>
+    <section id="agent-results" hidden aria-labelledby="agent-sources-title">
+      <h2 id="agent-sources-title">Search sources</h2>
+      <p id="agent-search-info"></p>
+      <ol id="agent-sources"></ol>
+      <h2>AI summary <small>Unverified</small></h2>
+      <p id="agent-answer"></p>
+    </section>
+    <details class="agent-limits">
+      <summary>Skills, tools, and limits</summary>
+      <p><strong>Skills:</strong> compare evidence, distinguish findings from hypotheses, explain uncertainty, and cite numbered sources. These are model instructions, not a guarantee of accuracy.</p>
+      <p><strong>Tools:</strong> one Tavily basic search per approved question, up to five linked snippets, followed by one existing-model request. No full-page fetching, autonomous loops, local-file access, code execution, or original application tools.</p>
+      <p>The site reserves at most 900 search attempts per UTC calendar month and five per network per rolling hour. Failed provider requests still count. Other use of the same Tavily account can exhaust its free allowance sooner. Keep paid overages disabled in Tavily; this site cap does not control account billing or existing model-hosting costs.</p>
+      <p>The model scales to zero after 15 idle minutes to control hosting costs. Waking can take several minutes and return HTTP 503. There are no automatic retries or keep-alive requests. After a failed summary, approve a manual summary-only retry to reuse these sources without another Tavily search. Changing the question requires a new search.</p>
+      <p>Pattern checks cannot detect all private information. Do not submit identifying, genomic, biosignal, or personal health data. Search snippets can be incomplete or misleading; open sources to check claims. Not medical advice. <a href="privacy.html">Read website privacy</a>.</p>
+    </details>
+  </main>
+  <footer class="wrap"><p>By Chase Allen Ringquist &middot; <a href="license.html">Author and license</a> &middot; <a href="privacy.html">Privacy policy</a> &middot; <a href="chain.html">Public corpus and local files</a> &middot; <a href="index.html">RabbitSoftware home</a> &middot; <a href="research.html">Research library</a> &middot; <a href="recovery.html">Project status</a></p></footer>
+</body>
+</html>

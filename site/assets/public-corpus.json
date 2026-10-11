@@ -1,0 +1,214 @@
+{
+    "schema":  "rabbitsoftware.public-corpus-metadata.v1",
+    "classification":  "public",
+    "fetched_at":  "2026-10-08T21:47:21.303Z",
+    "source_api":  {
+                       "base":  "https://api.rabbitsoftware.io/v1/corpus/batches"
+                   },
+    "record_count":  29,
+    "records":  [
+                    {
+                        "source":  "europe_pmc",
+                        "external_id":  "42273255",
+                        "title":  "CRISPR and Fanzor in sickle cell disease: current progress and future prospects.",
+                        "source_url":  "https://pubmed.ncbi.nlm.nih.gov/42273255/",
+                        "published_at":  "2026"
+                    },
+                    {
+                        "source":  "europe_pmc",
+                        "external_id":  "42400217",
+                        "title":  "Efficacy, Safety, and Treatment-Delivery Feasibility of Autologous Gene Therapy for Sickle Cell Disease: A Systematic Review With Descriptive Synthesis of Clinical Trials.",
+                        "source_url":  "https://pubmed.ncbi.nlm.nih.gov/42400217/",
+                        "published_at":  "2026"
+                    },
+                    {
+                        "source":  "europe_pmc",
+                        "external_id":  "42662940",
+                        "title":  "The landscape and trajectory of global CRISPR therapeutics.",
+                        "source_url":  "https://pubmed.ncbi.nlm.nih.gov/42662940/",
+                        "published_at":  "2026"
+                    },
+                    {
+                        "source":  "europe_pmc",
+                        "external_id":  "42755327",
+                        "title":  "CRISPR-Based Mediated Reactivation of Fetal Hemoglobin as a Therapeutic Strategy for Hemoglobinopathies: Evidence from Preclinical to Clinical Trials in Sickle Cell Disease and β-Thalassemia.",
+                        "source_url":  "https://pubmed.ncbi.nlm.nih.gov/42755327/",
+                        "published_at":  "2026"
+                    },
+                    {
+                        "source":  "europe_pmc",
+                        "external_id":  "42756827",
+                        "title":  "Precision Genome Engineering in Human Disease: Expanding Therapeutic Roles of CRISPR Technologies.",
+                        "source_url":  "https://pubmed.ncbi.nlm.nih.gov/42756827/",
+                        "published_at":  "2026"
+                    },
+                    {
+                        "source":  "europe_pmc",
+                        "external_id":  "42758354",
+                        "title":  "CRISPR-Cas9 genome editing: technological advances, delivery strategies and precision engineering of primary cells for therapeutic application in genetic disorders and diabetes mellitus.",
+                        "source_url":  "https://pubmed.ncbi.nlm.nih.gov/42758354/",
+                        "published_at":  "2026"
+                    },
+                    {
+                        "source":  "europe_pmc",
+                        "external_id":  "42781958",
+                        "title":  "CRISPR-Cas9 and precision editing technologies linking functional genomics to clinical translation in genetic diseases.",
+                        "source_url":  "https://pubmed.ncbi.nlm.nih.gov/42781958/",
+                        "published_at":  "2026"
+                    },
+                    {
+                        "source":  "europe_pmc",
+                        "external_id":  "42782748",
+                        "title":  "Beyond Precision: A Multidimensional Framework for Selecting Genetic Medicine Platforms.",
+                        "source_url":  "https://pubmed.ncbi.nlm.nih.gov/42782748/",
+                        "published_at":  "2026"
+                    },
+                    {
+                        "source":  "europe_pmc",
+                        "external_id":  "42787623",
+                        "title":  "Clinical translation of CRISPR-Cas9 therapeutics in cancer and inherited genetic disorders.",
+                        "source_url":  "https://pubmed.ncbi.nlm.nih.gov/42787623/",
+                        "published_at":  "2026"
+                    },
+                    {
+                        "source":  "europe_pmc",
+                        "external_id":  "42798774",
+                        "title":  "A review of genetic modification for ex vivo cellular therapies.",
+                        "source_url":  "https://pubmed.ncbi.nlm.nih.gov/42798774/",
+                        "published_at":  "2026"
+                    },
+                    {
+                        "source":  "nih_reporter",
+                        "external_id":  "1P01HL187309-01",
+                        "title":  "In utero gene editing via LNP delivery for hemoglobinopathies",
+                        "source_url":  "https://reporter.nih.gov/project-details/1P01HL187309-01",
+                        "published_at":  "2026"
+                    },
+                    {
+                        "source":  "nih_reporter",
+                        "external_id":  "1R03DK147724-01",
+                        "title":  "Control of hemoglobin expression by the chromatin remodeler CHD7",
+                        "source_url":  "https://reporter.nih.gov/project-details/1R03DK147724-01",
+                        "published_at":  "2026"
+                    },
+                    {
+                        "source":  "nih_reporter",
+                        "external_id":  "2R01HL136135-10",
+                        "title":  "In vivo gene therapy for hemoglobinopathies with multiplexed virus-like particles",
+                        "source_url":  "https://reporter.nih.gov/project-details/2R01HL136135-10",
+                        "published_at":  "2026"
+                    },
+                    {
+                        "source":  "nih_reporter",
+                        "external_id":  "5R01AG090773-02",
+                        "title":  "Optimization and preclinical evaluation of brain permeant SE-CRISPR to edit ApoE4 after IV infusion in AD models",
+                        "source_url":  "https://reporter.nih.gov/project-details/5R01AG090773-02",
+                        "published_at":  "2026"
+                    },
+                    {
+                        "source":  "nih_reporter",
+                        "external_id":  "5R01AR084841-02",
+                        "title":  "Technologies to enable safe and effective gene editing in skeletal muscle",
+                        "source_url":  "https://reporter.nih.gov/project-details/5R01AR084841-02",
+                        "published_at":  "2025"
+                    },
+                    {
+                        "source":  "nih_reporter",
+                        "external_id":  "5R01AR084841-03",
+                        "title":  "Technologies to enable safe and effective gene editing in skeletal muscle",
+                        "source_url":  "https://reporter.nih.gov/project-details/5R01AR084841-03",
+                        "published_at":  "2026"
+                    },
+                    {
+                        "source":  "nih_reporter",
+                        "external_id":  "5R01HL170629-04",
+                        "title":  "Chemotherapy-free cure of hemoglobin disorders through base editing",
+                        "source_url":  "https://reporter.nih.gov/project-details/5R01HL170629-04",
+                        "published_at":  "2026"
+                    },
+                    {
+                        "source":  "nih_reporter",
+                        "external_id":  "5R01HL172489-03",
+                        "title":  "In vivo hematopoietic stem cell genetic modification by viral particles",
+                        "source_url":  "https://reporter.nih.gov/project-details/5R01HL172489-03",
+                        "published_at":  "2026"
+                    },
+                    {
+                        "source":  "nih_reporter",
+                        "external_id":  "5U01AI176471-03",
+                        "title":  "Ultra-sensitive, unbiased, high-throughput, biochemical CHANGE-seq genome-wide activity and gRNA sequencing assays for therapeutic genome editing INDs",
+                        "source_url":  "https://reporter.nih.gov/project-details/5U01AI176471-03",
+                        "published_at":  "2025"
+                    },
+                    {
+                        "source":  "pubmed",
+                        "external_id":  "42512120",
+                        "title":  "Sickle Cell Disease: From Ancient Origins to Modern Breakthroughs in Gene Therapy.",
+                        "source_url":  "https://pubmed.ncbi.nlm.nih.gov/42512120/",
+                        "published_at":  "2026 Jul 22"
+                    },
+                    {
+                        "source":  "pubmed",
+                        "external_id":  "42518103",
+                        "title":  "Public knowledge, attitudes, and ethical views on CRISPR-Cas9 gene editing for genetic diseases in Taif, Saudi Arabia.",
+                        "source_url":  "https://pubmed.ncbi.nlm.nih.gov/42518103/",
+                        "published_at":  "2026 Jul 28"
+                    },
+                    {
+                        "source":  "pubmed",
+                        "external_id":  "42617141",
+                        "title":  "Translating CRISPR to Practice in the Clinic: Transformative Therapy in Hemoglobinopathies and Emerging Applications in Malignancies.",
+                        "source_url":  "https://pubmed.ncbi.nlm.nih.gov/42617141/",
+                        "published_at":  "2026 Aug 19"
+                    },
+                    {
+                        "source":  "pubmed",
+                        "external_id":  "42657261",
+                        "title":  "Consanguinity-Associated Genetic Disorders in Saudi Arabia: A Hypothesis on the Future Role of CRISPR-Based Gene Editing.",
+                        "source_url":  "https://pubmed.ncbi.nlm.nih.gov/42657261/",
+                        "published_at":  "2026 Jul"
+                    },
+                    {
+                        "source":  "pubmed",
+                        "external_id":  "42662940",
+                        "title":  "The landscape and trajectory of global CRISPR therapeutics.",
+                        "source_url":  "https://pubmed.ncbi.nlm.nih.gov/42662940/",
+                        "published_at":  "2026 Sep 8"
+                    },
+                    {
+                        "source":  "pubmed",
+                        "external_id":  "42710047",
+                        "title":  "Sickle cell disease and hematopoietic stem cell transplantation: donor expansion, gene-modified grafts and prenatal horizons.",
+                        "source_url":  "https://pubmed.ncbi.nlm.nih.gov/42710047/",
+                        "published_at":  "2026 Sep 9"
+                    },
+                    {
+                        "source":  "pubmed",
+                        "external_id":  "42755327",
+                        "title":  "CRISPR-Based Mediated Reactivation of Fetal Hemoglobin as a Therapeutic Strategy for Hemoglobinopathies: Evidence from Preclinical to Clinical Trials in Sickle Cell Disease and β-Thalassemia.",
+                        "source_url":  "https://pubmed.ncbi.nlm.nih.gov/42755327/",
+                        "published_at":  "2026 Sep 18"
+                    },
+                    {
+                        "source":  "pubmed",
+                        "external_id":  "42758354",
+                        "title":  "CRISPR-Cas9 genome editing: technological advances, delivery strategies and precision engineering of primary cells for therapeutic application in genetic disorders and diabetes mellitus.",
+                        "source_url":  "https://pubmed.ncbi.nlm.nih.gov/42758354/",
+                        "published_at":  "2026 Sep 18"
+                    },
+                    {
+                        "source":  "pubmed",
+                        "external_id":  "42760781",
+                        "title":  "Development of CRISPR_SCD001, an Autologous Hematopoietic Stem Cell Gene Therapy for Sickle Cell Disease after CRISPR-Cas9 Mediated Correction.",
+                        "source_url":  "https://pubmed.ncbi.nlm.nih.gov/42760781/",
+                        "published_at":  "2026 Sep 19"
+                    },
+                    {
+                        "source":  "pubmed",
+                        "external_id":  "42787623",
+                        "title":  "Clinical translation of CRISPR-Cas9 therapeutics in cancer and inherited genetic disorders.",
+                        "source_url":  "https://pubmed.ncbi.nlm.nih.gov/42787623/",
+                        "published_at":  "2026"
+                    }
+                ]
+}

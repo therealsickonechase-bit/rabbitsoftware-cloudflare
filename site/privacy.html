@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="author" content="Chase Allen Ringquist">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="How RabbitSoftware's recovered website handles hosted chat, local downloads, and private data.">
+  <meta name="theme-color" content="#f2f4ee">
+  <title>Website privacy policy | RabbitSoftware</title>
+  <link rel="icon" type="image/svg+xml" href="assets/rabbit-mark.svg">
+  <link rel="stylesheet" href="polish.css">
+</head>
+<body class="document-page">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="top wrap">
+    <a class="brand" href="index.html"><img src="assets/rabbit-mark.svg" width="34" height="34" alt="">RabbitSoftware</a>
+    <a class="back" href="index.html">Back to project overview</a>
+  </header>
+  <main class="document-main wrap" id="main">
+    <p class="eyebrow">Website privacy policy / effective October 8, 2026</p>
+    <h1>Website privacy policy</h1>
+    <p>Website operator: Chase Allen Ringquist, RabbitSoftware. Contact: <a href="mailto:contact@rabbitsoftware.io">contact@rabbitsoftware.io</a>. This policy covers the website and its hosted research tools, not the unrecovered original application.</p>
+    <p class="intro">This describes the recovered website's browser controls, not the missing original application's privacy policy or a guarantee about third-party services.</p>
+    <h2>Reading the website</h2>
+    <p>Pages and assets are served through Cloudflare. Requests necessarily reach the hosting service. Cloudflare may apply security checks, email protection, or analytics configured by the site owner. This page does not promise that hosting services collect no request metadata.</p>
+    <h2>Hosted Research AI</h2>
+    <p>Opening chat or typing a question does not send that question to the model. Each message requires a fresh approval. Editing the question, closing chat, or leaving Research AI resets approval.</p>
+    <p>After approval, your question, recent conversation from this tab, and the published research summaries are sent through the Cloudflare gateway to RabbitSoftware's Hugging Face hosted model. Cloudflare and the model provider process these requests; their service policies also apply. Provider retention and training practices have not been independently verified during website recovery.</p>
+    <p>Do not send personal, identifying, genomic, or biosignal data. The page blocks some common patterns before sending, but this check can miss sensitive information. Research answers are unverified and are not medical advice.</p>
+    <h2>rabbit-web public web research</h2>
+    <p>Each approved question in <a href="research-agent.html">rabbit-web</a> goes through a separate Cloudflare Worker to Tavily basic search. The question and up to five returned public snippets then go through the existing gateway to the Hugging Face model. Opening the page or typing never starts a search. No chat history or opened local records are included.</p>
+    <p>Source snippets are untrusted and can contain inaccurate content or malicious instructions. AI summaries are unverified. Tavily's and the hosting/model providers' policies also apply; their retention and training practices have not been independently verified.</p>
+    <p>The research Worker stores a UTC month counter and recent search-attempt times associated with a SHA-256 hash of the visitor's network IP, not query text. Hashing is pseudonymization, not anonymity. Times older than an hour are removed on the next admitted reservation; a new UTC month resets quota state on its first reservation. Until then, quota metadata remains stored. Provider and hosting request metadata may still be retained independently. Clearing the page does not erase provider requests.</p>
+    <h2>Public corpus lookup and local chain files</h2>
+    <p>The separate <a href="chain.html">research corpus and local chain viewer</a> keeps these operations distinct. Its metadata-only public corpus snapshot is served as a same-origin static website asset and searched locally in the current tab. Query text is not sent to the public API or AI. The checked public API does not permit cross-origin browser reads; the viewer avoids that CORS boundary rather than proxying searches or changing a Worker. Static asset requests still reach the website host.</p>
+    <p>The site owner can regenerate the public metadata snapshot with <code>scripts/build-public-corpus.ps1</code>. The script reads public corpus batch endpoints over HTTPS and includes only source, external identifier, title, source URL, and publication date. It excludes abstracts, arbitrary record fields, and account archives. The snapshot is limited to 1 MiB and 1,000 records; update time is displayed by the viewer.</p>
+    <p>Local JSON files are opened only after the visitor selects one, parsed in the current tab, and limited to 1 MiB. File contents are not uploaded, sent to an AI provider, or sent to the corpus API. DNA-format files are treated as private/potentially private, and their account identifier is never rendered. Other files' declared public classifications are not independently verified. Closing the file clears its displayed content from the page, but cannot erase the original file or hosting/request metadata.</p>
+    <h2>Local chat and downloads</h2>
+    <p>The page keeps conversation messages in the tab's memory. It does not automatically save them to browser storage. Clearing chat removes the displayed conversation and local research records from this page's memory; it does not erase requests already sent to a provider or files you downloaded.</p>
+    <p>Plain-text downloads are not encrypted. Optional encrypted-record downloads use AES-256-GCM and PBKDF2-SHA256 with 600,000 iterations. Passphrases are used in the browser and are not included in hosted questions. Opened records are read-only and are never added to model prompts.</p>
+    <p>The reconstructed record module supports only new recovery-format records. Preserve historical encrypted files unchanged. If you lose a passphrase, this page cannot recover it.</p>
+    <h2>Links and local tools</h2>
+    <p>The <a href="agent.html">downloadable local browser agent</a> listens only on 127.0.0.1. Offline mode makes no provider requests; each consented research search sends only the typed public query to Europe PMC or Tavily over HTTPS. Local records are never sent. Optional Tavily keys are entered through a hidden terminal prompt and kept in process memory until exit, not saved to disk or displayed in the browser. The agent keeps hourly attempt times in memory, cleared on restart, and creates no browser storage or persistent application history. Browser history and terminal scrollback may remain. <a href="https://www.ebi.ac.uk/data-protection/privacy-notice/europe-pmc/">Europe PMC privacy notice</a> and Tavily's policy apply to provider requests.</p>
+    <p>The current <a href="cli.html">read-only CLI download (v0.2.1)</a> is delivered through Cloudflare like other files. Its local mode reads only the explicitly selected local file or bundled synthetic demo and makes no network requests. Optional public corpus and signed-account modes make read-only GET requests; no records are uploaded and the CLI does not send questions to AI. Signed-account access has not been verified with a user's device file. The CLI does not log a user into this website, which has no direct account login. It does not store a chat history. Terminal output may remain in terminal scrollback. Its declared public-record check is not a complete sensitive-data detector.</p>
+    <p>External links and email links open another service or your mail application. This site does not receive or forward reports sent through the listed reporting channels. It cannot inspect your terminal, private vault, or local chains, and it does not publish your chat to a chain.</p>
+    <h2>Original policy and questions</h2>
+    <p>To ask about your data, access, correction, or deletion, email the operator without sending private datasets. Clearing this tab removes its displayed results, not provider-held requests or downloaded files. The operator cannot promise deletion of third-party records outside their control. Provider policies: <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare</a>, <a href="https://tavily.com/privacy">Tavily</a>, and <a href="https://huggingface.co/privacy">Hugging Face</a>. Applicable rights depend on your jurisdiction and the relevant provider.</p>
+    <p>The original application's privacy policy has not been recovered. <a href="recovery.html#missing-source">Check project status</a> for that limitation. For website questions, email <a href="mailto:contact@rabbitsoftware.io">contact@rabbitsoftware.io</a>; do not include private datasets, credentials, or health records.</p>
+  </main>
+  <footer class="wrap">
+    <p>Chase Allen Ringquist · <a href="license.html">Author and license</a> · <a href="index.html">RabbitSoftware home</a> · <a href="research.html">Research library</a> · <a href="chain.html">Research corpus and local files</a> · <a href="index.html#tools">Website tools</a> · <a href="recovery.html">Project status</a></p>
+  </footer>
+</body>
+</html>

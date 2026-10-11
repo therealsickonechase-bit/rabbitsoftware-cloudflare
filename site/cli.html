@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Chase Allen Ringquist">
+  <meta name="description" content="Download RabbitSoftware's offline Python CLI for read-only demo and local-record lookup.">
+  <title>Offline CLI download | RabbitSoftware</title>
+  <link rel="icon" type="image/svg+xml" href="assets/rabbit-mark.svg">
+  <link rel="stylesheet" href="polish.css">
+</head>
+<body class="document-page">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="top wrap">
+    <a class="brand" href="index.html"><img src="assets/rabbit-mark.svg" width="34" height="34" alt="">RabbitSoftware</a>
+    <a class="back" href="index.html#tools">All website tools</a>
+  </header>
+  <main class="document-main wrap" id="main">
+    <p class="eyebrow">Read-only terminal tool / version 0.2.1</p>
+    <h1>RabbitSoftware CLI</h1>
+    <p class="intro">Local record lookup, public corpus access, and optional signed account reads. No uploads or hosted AI.</p>
+    <p><a href="downloads/rabbitsoftware-cli-0.2.1.zip" download>Download CLI ZIP</a> &middot; <a href="downloads/rabbitsoftware-cli-0.2.1.sha256">ZIP SHA-256 checksum</a></p>
+    <p>This new reconstruction bundles synthetic demo records, not your real chain. It is not the original RabbitSoftware application, an installer, or an automatic connection to Cloudflare records.</p>
+    <h2>Run in your terminal</h2>
+    <ol>
+      <li>Install <a href="https://www.python.org/downloads/">Python 3.10 or newer</a> if needed. Local/public modes need no extra packages; signed account reads require the optional <code>cryptography</code> dependency.</li>
+      <li>Download the ZIP, check its SHA-256, and extract the whole folder.</li>
+      <li>Open a terminal in the extracted folder containing <code>rabbit.py</code>, then run:</li>
+    </ol>
+    <pre><code>python rabbit.py --demo chat
+python rabbit.py --demo ask "what's on the chain"
+python rabbit.py --demo ask "find BRCA1 on the chain"</code></pre>
+    <p>Windows can use <code>py -3</code>; macOS/Linux can use <code>python3</code> instead of <code>python</code>. Tested on Windows with Python 3.12.10; other platforms have not been tested. No global <code>rabbit</code> command is installed.</p>
+    <p>Interactive chat recognizes list, find/search, and show-entry questions. Type <code>exit</code> to quit. This is deterministic lookup, not free-form AI.</p>
+    <h2>Check the download</h2>
+    <p>On Windows, compare the output below with the linked ZIP checksum:</p>
+    <pre><code>Get-FileHash .\rabbitsoftware-cli-0.2.1.zip -Algorithm SHA256</code></pre>
+    <p>The ZIP includes a per-file checksum manifest, README, and license notice. Checksums detect changed bytes; they are not independent signatures. Review the code before running it. Never pipe a download straight into your shell.</p>
+    <h2>Use your own local records</h2>
+    <pre><code>python rabbit.py --chain "C:\path\to\records.json" ask "find BRCA1 on the chain"</code></pre>
+    <p>The bundled README documents <code>rabbitsoftware.local-public-lookup.v1</code>, existing public research/Maxwell v1 snapshots, and account DNA JSON. Private DNA entries stay local. Ordering and previous-hash linkage are checked where applicable; block hashes, event signatures, and consensus are not independently verified. Do not relabel private records.</p>
+    <h2>Use the original commands with a selected source</h2>
+    <pre><code>python rabbit.py --chain "C:\path\to\existing-chain.json" --remember ask "show entry 2"
+python rabbit.py ask "what's on the chain"
+python rabbit.py ask "show entry 2"</code></pre>
+    <p>Replace the path with an actual existing file. <code>--remember</code> saves only paths and source selection to <code>~/.rabbitsoftware/connection.json</code>, not key values or records. Delete that file to forget. Entry 2 means the second item, not a block/event identifier.</p>
+    <h2>Public research and private accounts remain separate</h2>
+    <pre><code>python rabbit.py --public-corpus ask "what's on the chain"
+python -m pip install -r requirements-account.txt
+python rabbit.py --credentials "C:\private\device.json" --dna "your-chain-name" ask "show entry 2"</code></pre>
+    <p>The public corpus is an existing research collection, not a blockchain or your account chain. See the <a href="chain.html">website corpus and local-file viewer</a>. Account reads require each user's existing registered Ed25519 device credential file, as documented in README. Never enter that file into the website or chat. No account registration or authentication bypass; real device access still needs live verification with your credentials.</p>
+    <p>The previously published <a href="downloads/rabbitsoftware-cli-0.1.0.zip">offline-only CLI 0.1.0</a> remains unchanged.</p>
+    <h2>Author and terms</h2>
+    <p>For a loopback-only browser interface with offline lookup and public literature/web search, see the separate <a href="agent.html">local agent download</a>.</p>
+    <p>By Chase Allen Ringquist. Original CLI work is licensed under <a href="license.html">UPL-1.0 with third-party exclusions</a>. Read the <a href="privacy.html">website privacy policy</a>. Local mode makes no network calls; selected public/account modes contact the sync service only.</p>
+  </main>
+  <footer class="wrap"><p><a href="index.html">RabbitSoftware home</a> &middot; <a href="license.html">Author and license</a> &middot; <a href="privacy.html">Privacy policy</a> &middot; <a href="recovery.html">Project status</a></p></footer>
+</body>
+</html>

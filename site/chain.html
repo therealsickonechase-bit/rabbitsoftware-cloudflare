@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="author" content="Chase Allen Ringquist">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Read-only browser tools for public research corpus queries and explicitly selected local chain files.">
+  <meta name="theme-color" content="#f2f4ee">
+  <title>Read-only research and chain files | RabbitSoftware</title>
+  <link rel="icon" type="image/svg+xml" href="assets/rabbit-mark.svg">
+  <link rel="stylesheet" href="polish.css">
+  <script type="module" src="chain.js"></script>
+  <style>
+    .chain-tool { border-block: 1px solid var(--line); padding-block: 24px; }
+    .chain-tool label { display: block; margin-block: 14px 6px; }
+    .chain-tool input[type="search"], .chain-tool input[type="text"] {
+      width: 100%; min-height: 46px; padding: 10px 12px; color: var(--ink);
+      background: var(--paper); border: 1px solid var(--line); font: inherit;
+    }
+    .chain-tool input[type="file"] { display: block; max-width: 100%; margin-block: 10px; }
+    .chain-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+    .chain-actions button { min-height: 44px; padding: 9px 16px; color: var(--paper); background: var(--green); border: 1px solid var(--green); font: inherit; font-weight: 700; cursor: pointer; }
+    .chain-actions button.secondary { color: var(--green); background: transparent; }
+    .chain-actions button:disabled { opacity: .55; cursor: not-allowed; }
+    .chain-note, .chain-status { color: var(--muted); font-size: 15px; }
+    .chain-warning { border-left: 4px solid var(--focus); padding: 12px 16px; background: color-mix(in srgb, var(--focus) 8%, var(--paper)); }
+    .chain-results { padding-left: 24px; }
+    .chain-results li { padding: 12px 0; border-bottom: 1px solid var(--line); }
+    .chain-results strong { display: block; }
+    .chain-results p { margin: 5px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .chain-results small { display: block; margin-top: 5px; color: var(--muted); overflow-wrap: anywhere; }
+    code { overflow-wrap: anywhere; }
+    @media (prefers-color-scheme: dark) {
+      .chain-warning { background: color-mix(in srgb, var(--focus) 14%, var(--paper)); }
+    }
+  </style>
+</head>
+<body class="document-page">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="top wrap">
+    <a class="brand" href="index.html"><img src="assets/rabbit-mark.svg" width="34" height="34" alt="">RabbitSoftware</a>
+    <a class="back" href="index.html#tools">All website tools</a>
+  </header>
+  <main class="document-main wrap" id="main">
+    <p class="eyebrow">Separate public research and local files / read-only</p>
+    <h1>Research corpus and local chain files</h1>
+    <p class="intro">The public research corpus is not a blockchain. This page keeps the published public metadata snapshot separate from files you explicitly open on this device.</p>
+
+    <section aria-labelledby="corpus-title">
+      <h2 id="corpus-title">Public research corpus</h2>
+      <p>The API exposes public research records, not blocks or an account chain. The site build publishes <code>assets/public-corpus.json</code>, a same-origin metadata-only snapshot regenerated from public batch endpoints. It includes source, external identifier, title, source URL, and publication date only—not abstracts or account archives.</p>
+      <p class="chain-warning">Snapshot searches run locally in this tab. Query text is not sent to the API or any other service; only the static asset request reaches this website's host. The data may be out of date until the snapshot is rebuilt and published. The checked API endpoints do not return CORS permission, so this viewer deliberately does not make browser API searches.</p>
+      <form id="corpus-form" class="chain-tool">
+        <label for="corpus-query"><strong>Public research query</strong></label>
+        <input id="corpus-query" type="search" maxlength="300" required autocomplete="off" placeholder="For example: BRCA1">
+        <div class="chain-actions">
+          <button id="corpus-submit" type="submit" disabled>Search snapshot metadata</button>
+        </div>
+        <p id="corpus-stats" class="chain-status" role="status">Loading snapshot statistics…</p>
+        <p id="corpus-status" class="chain-status" role="status" aria-live="polite">JavaScript is loading. Search text stays in this tab.</p>
+      </form>
+      <section id="corpus-results" hidden aria-labelledby="corpus-results-title">
+        <h3 id="corpus-results-title">Public research matches</h3>
+        <ol id="corpus-list" class="chain-results"></ol>
+      </section>
+    </section>
+
+    <section aria-labelledby="local-title">
+      <h2 id="local-title">Open one local JSON file</h2>
+      <p>Choose a file yourself. This website viewer reads it in this tab only: there is no upload, account login, AI, network request for file contents, or automatic file discovery. Its only network data is the same-origin public metadata snapshot. Files are limited to 1 MiB and 1,000 entries. The viewer does not verify hashes, signatures, or consensus.</p>
+      <p class="chain-warning"><strong>Privacy:</strong> account-scoped DNA files may contain private data and are labeled private here. The account identifier is never displayed or sent. “Public” labels inside other files are declarations, not proof that their contents are safe to share. Use files you trust and are authorized to inspect.</p>
+      <form id="local-form" class="chain-tool">
+        <label for="local-file"><strong>Select a local JSON file</strong></label>
+        <input id="local-file" type="file" accept=".json,application/json">
+        <p id="local-status" class="chain-status" role="status" aria-live="polite">No file is open.</p>
+        <div id="local-controls" hidden>
+          <label for="local-command"><strong>Find a term or inspect an ordinal entry</strong></label>
+          <input id="local-command" type="text" maxlength="300" autocomplete="off" placeholder="find BRCA1 or show entry 2">
+          <div class="chain-actions">
+            <button id="local-submit" type="submit" disabled>Find / show entry</button>
+            <button id="local-clear" class="secondary" type="button">Close file and clear</button>
+          </div>
+        </div>
+      </form>
+      <section id="local-results" hidden aria-labelledby="local-results-title">
+        <h3 id="local-results-title">Local file entries</h3>
+        <ol id="local-list" class="chain-results"></ol>
+      </section>
+    </section>
+    <p>By Chase Allen Ringquist. See the <a href="privacy.html">website privacy policy</a>, <a href="license.html">author and license</a>, and <a href="recovery.html">project recovery status</a>.</p>
+  </main>
+  <footer class="wrap"><p><a href="index.html">RabbitSoftware home</a> · <a href="research.html">Research library</a> · <a href="research-agent.html">rabbit-web</a> · <a href="privacy.html">Privacy policy</a></p></footer>
+</body>
+</html>
