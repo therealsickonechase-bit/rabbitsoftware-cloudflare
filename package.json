@@ -9,7 +9,12 @@
     "dev:gateway": "wrangler dev --config workers/gateway/wrangler.toml --local --port 8803",
     "preview:site": "wrangler pages deploy site --project-name rabbitsoftware-site --branch preview",
     "probe": "node scripts/probe.mjs",
-    "check:csp": "node scripts/check-csp.mjs"
+    "check:csp": "node scripts/check-csp.mjs",
+    "supabase:start": "npx supabase start",
+    "supabase:stop": "npx supabase stop",
+    "supabase:link": "npx supabase link --project-ref ludxbakxpmdqhfgdenwp",
+    "supabase:diff": "npx supabase db diff",
+    "supabase:types": "npx supabase gen types typescript --linked"
   },
   "devDependencies": {
     "wrangler": "^4"

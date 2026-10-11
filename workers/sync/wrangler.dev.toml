@@ -16,10 +16,12 @@ ARCHIVE_AGENT_ENABLED = "true"
 OPEN_SIGNUP = "false"
 PROJECT_EVENTS_ENABLED = "false"
 QUOTAS = '{"history": 500, "corpus": 50, "training": 300, "pairing": 20}'
+SUPABASE_URL = "https://ludxbakxpmdqhfgdenwp.supabase.co"
 
 # Secrets (set with `npx wrangler secret put <NAME>`, never committed):
 #   ADMIN_ACCOUNT
 #   SIGNUP_KEY
+#   SUPABASE_JWT_SECRET   (optional; only for legacy HS256 projects)
 
 [[d1_databases]]
 binding = "DB"
