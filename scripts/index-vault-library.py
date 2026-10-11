@@ -32,13 +32,21 @@ def inventory(vault, sources):
                 if real in visited:
                     continue
                 visited.add(real)
-                with os.scandir(directory) as entries:
+                with os.scandir(real) as entries:
                     for entry in entries:
                         path = Path(entry.path)
                         try:
                             if entry.is_dir():
                                 pending.append(path)
                             elif entry.is_file():
+                                real_file = path.resolve(strict=True)
+                                if real_file == vault or real_file.is_relative_to(vault):
+                                    continue
+                                if not any(real_file.is_relative_to(root) for root in allowed):
+                                    errors.append({
+                                        "path": str(path), "error": "External file link not followed",
+                                    })
+                                    continue
                                 stat = entry.stat()
                                 files.append({
                                     "path": str(path),

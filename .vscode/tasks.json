@@ -1,0 +1,165 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "RabbitOS: validate vault tooling",
+      "type": "process",
+      "command": "pwsh",
+      "args": ["-NoProfile", "-File", "${workspaceFolder}\\scripts\\rabbitos-commands.ps1", "-Area", "cloudflare", "-Action", "Validate"],
+      "inAgents": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "RabbitOS: validate console",
+      "type": "process",
+      "command": "pwsh",
+      "args": ["-NoProfile", "-File", "${workspaceFolder}\\scripts\\rabbitos-commands.ps1", "-Area", "console", "-Action", "Validate"],
+      "inAgents": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "RabbitOS: validate Python core",
+      "type": "process",
+      "command": "pwsh",
+      "args": ["-NoProfile", "-File", "${workspaceFolder}\\scripts\\rabbitos-commands.ps1", "-Area", "core", "-Action", "Validate"],
+      "inAgents": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "RabbitOS: setup Cloudflare dependencies",
+      "type": "process",
+      "command": "pwsh",
+      "args": ["-NoProfile", "-File", "${workspaceFolder}\\scripts\\rabbitos-commands.ps1", "-Area", "cloudflare", "-Action", "Setup"],
+      "inAgents": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "RabbitOS: setup console dependencies",
+      "type": "process",
+      "command": "pwsh",
+      "args": ["-NoProfile", "-File", "${workspaceFolder}\\scripts\\rabbitos-commands.ps1", "-Area", "console", "-Action", "Setup"],
+      "inAgents": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "RabbitOS: check Python prerequisites",
+      "type": "process",
+      "command": "pwsh",
+      "args": ["-NoProfile", "-File", "${workspaceFolder}\\scripts\\rabbitos-commands.ps1", "-Area", "core", "-Action", "Setup"],
+      "inAgents": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "RabbitOS: dev static site",
+      "type": "process",
+      "command": "pwsh",
+      "args": ["-NoProfile", "-File", "${workspaceFolder}\\scripts\\rabbitos-commands.ps1", "-Area", "cloudflare", "-Action", "Dev"],
+      "inAgents": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "RabbitOS: dev sync Worker (local bindings)",
+      "type": "process",
+      "command": "pwsh",
+      "args": ["-NoProfile", "-File", "${workspaceFolder}\\scripts\\rabbitos-commands.ps1", "-Area", "cloudflare", "-Action", "Dev", "-Target", "sync"],
+      "inAgents": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "RabbitOS: dev node-worker (start sync first)",
+      "type": "process",
+      "command": "pwsh",
+      "args": ["-NoProfile", "-File", "${workspaceFolder}\\scripts\\rabbitos-commands.ps1", "-Area", "cloudflare", "-Action", "Dev", "-Target", "node-worker"],
+      "inAgents": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "RabbitOS: dev gateway Worker (local bindings)",
+      "type": "process",
+      "command": "pwsh",
+      "args": ["-NoProfile", "-File", "${workspaceFolder}\\scripts\\rabbitos-commands.ps1", "-Area", "cloudflare", "-Action", "Dev", "-Target", "gateway"],
+      "inAgents": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "RabbitOS: dev console (configured Supabase)",
+      "type": "process",
+      "command": "pwsh",
+      "args": ["-NoProfile", "-File", "${workspaceFolder}\\scripts\\rabbitos-commands.ps1", "-Area", "console", "-Action", "Dev"],
+      "inAgents": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "RabbitOS: show Cloudflare publication commands",
+      "type": "process",
+      "command": "pwsh",
+      "args": ["-NoProfile", "-File", "${workspaceFolder}\\scripts\\rabbitos-commands.ps1", "-Area", "cloudflare", "-Action", "PublishCommands"],
+      "inAgents": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "RabbitOS: show console publication commands",
+      "type": "process",
+      "command": "pwsh",
+      "args": ["-NoProfile", "-File", "${workspaceFolder}\\scripts\\rabbitos-commands.ps1", "-Area", "console", "-Action", "PublishCommands"],
+      "inAgents": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "RabbitOS: show core publication commands",
+      "type": "process",
+      "command": "pwsh",
+      "args": ["-NoProfile", "-File", "${workspaceFolder}\\scripts\\rabbitos-commands.ps1", "-Area", "core", "-Action", "PublishCommands"],
+      "inAgents": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "RabbitOS: show site deployment commands",
+      "type": "process",
+      "command": "pwsh",
+      "args": ["-NoProfile", "-File", "${workspaceFolder}\\scripts\\rabbitos-commands.ps1", "-Area", "cloudflare", "-Action", "DeployCommands"],
+      "inAgents": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "RabbitOS: show console deployment commands",
+      "type": "process",
+      "command": "pwsh",
+      "args": ["-NoProfile", "-File", "${workspaceFolder}\\scripts\\rabbitos-commands.ps1", "-Area", "console", "-Action", "DeployCommands"],
+      "inAgents": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "RabbitOS: show sync deployment commands",
+      "type": "process",
+      "command": "pwsh",
+      "args": ["-NoProfile", "-File", "${workspaceFolder}\\scripts\\rabbitos-commands.ps1", "-Area", "cloudflare", "-Action", "DeployCommands", "-Target", "sync"],
+      "inAgents": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "RabbitOS: show node-worker deployment commands",
+      "type": "process",
+      "command": "pwsh",
+      "args": ["-NoProfile", "-File", "${workspaceFolder}\\scripts\\rabbitos-commands.ps1", "-Area", "cloudflare", "-Action", "DeployCommands", "-Target", "node-worker"],
+      "inAgents": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "RabbitOS: show gateway deployment commands",
+      "type": "process",
+      "command": "pwsh",
+      "args": ["-NoProfile", "-File", "${workspaceFolder}\\scripts\\rabbitos-commands.ps1", "-Area", "cloudflare", "-Action", "DeployCommands", "-Target", "gateway"],
+      "inAgents": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "RabbitOS: show vault maintenance commands",
+      "type": "process",
+      "command": "pwsh",
+      "args": ["-NoProfile", "-File", "${workspaceFolder}\\scripts\\rabbitos-commands.ps1", "-Area", "cloudflare", "-Action", "VaultCommands"],
+      "inAgents": true,
+      "problemMatcher": []
+    }
+  ]
+}

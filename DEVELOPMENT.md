@@ -209,6 +209,95 @@ and recording locations are outside the approved source roots.
 source arguments and records metadata only in `Computer\Library inventory.json`.
 It excludes the vault itself, stops cycles, and reports inaccessible/out-of-scope
 links. It does not read, transcribe, upload, or modify recording contents.
+Directory aliases are scanned through their resolved approved targets and indexed
+once, avoiding legacy Documents-junction access restrictions. Indexed paths use
+that canonical directory. File links are also checked: targets outside approved
+roots are reported and targets inside the vault are excluded.
+
+### RabbitOS command files and VS Code Run button
+
+`scripts\rabbitos-commands.ps1` is the shared PowerShell 7 launcher for the
+Cloudflare repository (`cloudflare`), the separate web console (`console`), and
+the isolated Python repair checkout (`core`). `.vscode\tasks.json` exposes setup,
+validation, development and **show commands only** tasks in the Agents Run
+button and VS Code's **Tasks: Run Task** command. Nothing runs on workspace
+creation. Setup installs pinned npm dependencies only when explicitly selected.
+
+Run from this repository; commands resolve their working directory themselves:
+
+```powershell
+pwsh -NoProfile -File scripts\rabbitos-commands.ps1 -Area cloudflare -Action Setup
+pwsh -NoProfile -File scripts\rabbitos-commands.ps1 -Area console -Action Setup
+pwsh -NoProfile -File scripts\rabbitos-commands.ps1 -Area core -Action Setup
+pwsh -NoProfile -File scripts\rabbitos-commands.ps1 -Area cloudflare -Action Validate
+pwsh -NoProfile -File scripts\rabbitos-commands.ps1 -Area console -Action Validate
+pwsh -NoProfile -File scripts\rabbitos-commands.ps1 -Area core -Action Validate
+pwsh -NoProfile -File scripts\rabbitos-commands.ps1 -Area cloudflare -Action Dev
+pwsh -NoProfile -File scripts\rabbitos-commands.ps1 -Area cloudflare -Action Dev -Target sync
+pwsh -NoProfile -File scripts\rabbitos-commands.ps1 -Area cloudflare -Action Dev -Target node-worker
+pwsh -NoProfile -File scripts\rabbitos-commands.ps1 -Area cloudflare -Action Dev -Target gateway
+pwsh -NoProfile -File scripts\rabbitos-commands.ps1 -Area console -Action Dev
+```
+
+Add `-Preview` to print local setup/validation/development commands without
+executing them. `-Repository <path>` selects a different checkout. Defaults are
+this repository, `%USERPROFILE%\Projects\rabbit-web`, and
+`<vault>\GitHub Live\Repairs\RABBIT-SOFTWARE-pylint`. `-Vault <path>` overrides
+the vault location. Paths containing spaces or quotes are quoted safely.
+Native command failures stop the sequence and produce a nonzero exit status.
+Validation suppresses generated Python bytecode caches.
+
+Worker development uses the `-dev` configuration with `--local`, not production
+bindings. Start sync and node-worker in separate terminals, sync first.
+Local mode does not disable outbound HTTP calls (for example the gateway's
+inference endpoint). Console development uses the existing vinext command and
+may reach configured Supabase resources; do not test remote writes without
+approval. Local secrets must be supplied separately in ignored files; the
+launcher does not generate, read, display or copy their values.
+
+The following actions **only print commands**, even without `-Preview`:
+
+```powershell
+pwsh -NoProfile -File scripts\rabbitos-commands.ps1 -Area cloudflare -Action PublishCommands
+pwsh -NoProfile -File scripts\rabbitos-commands.ps1 -Area console -Action PublishCommands
+pwsh -NoProfile -File scripts\rabbitos-commands.ps1 -Area core -Action PublishCommands
+pwsh -NoProfile -File scripts\rabbitos-commands.ps1 -Area cloudflare -Action DeployCommands
+pwsh -NoProfile -File scripts\rabbitos-commands.ps1 -Area cloudflare -Action DeployCommands -Target sync
+pwsh -NoProfile -File scripts\rabbitos-commands.ps1 -Area console -Action DeployCommands
+pwsh -NoProfile -File scripts\rabbitos-commands.ps1 -Area cloudflare -Action VaultCommands
+```
+
+Publication templates stage only the listed repair files, preserve unrelated
+changes, include the co-author trailer, and use `main` as the observed Git
+default branch. Review staged changes, check for an existing PR and choose a
+stacking/base strategy for the core follow-up to RABBIT-SOFTWARE PR #18.
+These templates are not publication approval. The Pages production branch is
+still `master`, independently of the Git default branch.
+
+Deployment templates preserve the existing Pages/Wrangler and console
+vinext/Cloudflare workflows. Both Pages preview and production are remote
+writes. Review current dashboard bindings/secrets before Worker deployment;
+recover original sources for generated bundles first. No deployment command is
+executed by the launcher.
+
+Known missing areas are explicit rather than guessed:
+
+- The focused core tests need only Python; the workflow tests need Bash.
+  Full application dependency setup and a safe runnable entrypoint remain
+  unverified. Core `Dev` fails explicitly rather than starting unknown code.
+- The two reclassified shell documents do not supply the missing
+  `dna_quantum_crypto.py` and `neural_memory_to_image.py` implementations.
+- Full application Pylint/GitHub matrix validation, historical BrainFlow LFS
+  recovery, and Windows-invalid upstream paths remain separate work.
+- The vault guide `GitHub Live\Coordinator\RabbitOS commands.md` links directly
+  to the local command source, not an older imported snapshot. Existing live
+  sync is inspected, not reinstalled or silently given new publishing scope.
+
+Test the command launcher without installs, application startup or remote writes:
+
+```powershell
+python -B -m unittest scripts\test-rabbitos-commands.py
+```
 
 ### Local repository connecting agent
 

@@ -191,6 +191,59 @@ class LiveSyncTests(unittest.TestCase):
             )
             self.assertTrue((root / "last-completed-status.json").is_file())
 
+    def test_metadata_inventory_checks_file_link_boundaries(self):
+        source = self.folder / "Documents"
+        source.mkdir()
+        vault = source / "RabbitOS Vault"
+        vault.mkdir()
+        outside = self.folder / "Unapproved"
+        outside.mkdir()
+        external = outside / "external.wav"
+        external.write_bytes(b"external")
+        excluded = vault / "excluded.txt"
+        excluded.write_text("vault")
+        approved = source / "approved.wav"
+        approved.write_bytes(b"approved")
+        targets = {
+            source / "external-link.wav": external,
+            source / "vault-link.txt": excluded,
+            source / "approved-link.wav": approved,
+        }
+        for link in targets:
+            link.write_text("stand-in for a Windows file link")
+        original_resolve = Path.resolve
+
+        def resolve(path, *args, **kwargs):
+            return targets.get(path) or original_resolve(path, *args, **kwargs)
+
+        with patch.object(Path, "resolve", resolve):
+            files, errors = library_index.inventory(vault, [source])
+        names = {Path(file["path"]).name for file in files}
+        self.assertEqual(names, {"approved.wav", "approved-link.wav"})
+        self.assertEqual(errors, [{
+            "path": str(source / "external-link.wav"),
+            "error": "External file link not followed",
+        }])
+
+    def test_metadata_inventory_scans_canonical_alias_target_once(self):
+        source = self.folder / "Music"
+        source.mkdir()
+        recording = source / "recording.wav"
+        recording.write_bytes(b"not-read")
+        alias = self.folder / "Documents Music"
+        original_resolve = Path.resolve
+
+        def resolve(path, *args, **kwargs):
+            return source if path == alias else original_resolve(path, *args, **kwargs)
+
+        with patch.object(Path, "resolve", resolve):
+            with patch.object(library_index.os, "scandir", wraps=library_index.os.scandir) as scan:
+                with patch.object(Path, "open", side_effect=AssertionError("Do not read file contents")):
+                    files, errors = library_index.inventory(self.folder / "Vault", [alias, source])
+        self.assertEqual(errors, [])
+        self.assertEqual([file["path"] for file in files], [str(recording)])
+        scan.assert_called_once_with(source)
+
 
 if __name__ == "__main__":
     unittest.main()
