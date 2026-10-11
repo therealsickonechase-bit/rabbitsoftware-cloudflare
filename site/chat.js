@@ -13,6 +13,11 @@ const tabs = [...document.querySelectorAll('[role="tab"]')];
 const form = document.querySelector("#chat-form");
 const question = document.querySelector("#chat-question");
 const consent = document.querySelector("#chat-consent");
+const provider = document.querySelector("#chat-provider");
+const consentText = document.querySelector("#chat-consent-text");
+const hostedConsent = consentText.textContent;
+const localWebsite = location.protocol === "http:" && ["127.0.0.1", "localhost"].includes(location.hostname);
+provider.querySelector('[value="local"]').disabled = !localWebsite;
 const sendButton = document.querySelector("#chat-send");
 const clearButton = document.querySelector("#chat-clear");
 const downloadButton = document.querySelector("#chat-download");
@@ -134,6 +139,16 @@ clearButton.addEventListener("click", () => {
   question.focus();
 });
 
+provider.addEventListener("change", () => {
+  clearButton.click();
+  consentText.textContent = provider.value === "local"
+    ? "For this message, I approve sending this question, recent tab messages and published summaries to Ollama on this computer through the local website server. No hosted fallback. I will not include personal or identifying health data."
+    : hostedConsent;
+  status.textContent = provider.value === "local"
+    ? "Local mode selected. Requires scripts/local-site.py and a running Ollama model; no hosted fallback."
+    : "Hosted mode selected. Fresh consent is required before sending.";
+});
+
 downloadButton.addEventListener("click", () => {
   const messages = [...log.querySelectorAll(".chat-message")];
   if (!messages.length) return;
@@ -148,6 +163,7 @@ downloadButton.addEventListener("click", () => {
 });
 
 function updateRecordControls() {
+  provider.disabled = pending || recordBusy;
   clearButton.disabled = pending || recordBusy;
   recordSave.disabled = pending || recordBusy || !researchAttempts.length;
   recordOpen.disabled = recordBusy;
@@ -247,6 +263,7 @@ form.addEventListener("submit", async (event) => {
   updateRecordControls();
   question.disabled = true;
   consent.disabled = true;
+  provider.disabled = true;
   clearButton.disabled = true;
   sendButton.disabled = true;
   sendButton.textContent = "Sending...";
@@ -255,8 +272,8 @@ form.addEventListener("submit", async (event) => {
   const timeout = setTimeout(() => controller.abort(), 120000);
   const attempt = {
     started_at: new Date().toISOString(),
-    provider: "Cloudflare gateway to Hugging Face",
-    model_alias: "rabbitsoftware",
+    provider: provider.value === "local" ? "Loopback Ollama" : "Cloudflare gateway to Hugging Face",
+    model_alias: provider.value === "local" ? "local server selection" : "rabbitsoftware",
     input: structuredClone([
       { role: "system", content: systemPrompt },
       { role: "system", content: reportContext },
@@ -266,7 +283,7 @@ form.addEventListener("submit", async (event) => {
   };
 
   try {
-    const response = await fetch(gateway, {
+    const response = await fetch(provider.value === "local" ? "/api/local-chat" : gateway, {
       method: "POST",
       signal: controller.signal,
       credentials: "omit",
@@ -305,6 +322,7 @@ form.addEventListener("submit", async (event) => {
     updateRecordControls();
     question.disabled = false;
     consent.disabled = false;
+    provider.disabled = false;
     consent.checked = false;
     sendButton.textContent = "Send with consent";
     sendButton.disabled = true;

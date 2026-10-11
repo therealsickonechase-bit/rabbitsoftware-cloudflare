@@ -53,6 +53,39 @@ The same checks run in the browser at https://rabbitsoftware.io/status. `scripts
 - Do not redeploy the Worker bundles blindly; keep existing bindings and secrets.
 - Never commit `.dev.vars`, `backup/`, or anything under `private-cloud-data`.
 
+## Public application setup
+
+`site/installers/setup.py` replaces the retired Helloworld installer links.
+It pins separate backend, monitor and research source revisions, creates
+component-specific virtual environments and never starts persistent services
+or tunnels. The backend sparse checkout uses a per-command NTFS override to
+index legacy upstream filenames without materializing them on Windows.
+Keep `site/setup.html` and the home-page component descriptions aligned.
+Do not imply that installing the backend installs the hosted RabbitOS console.
+
+Run `python -B scripts\test-site-installers.py` for offline regression checks
+and `npm run check:csp` for changed HTML. Actual setup validation requires
+network downloads; use a fresh isolated `--directory` for each platform.
+The smoke checks cover backend health, monitor help and research dependency
+imports, not the full multi-service research stack.
+
+`site/local.html` describes offline versus hosted capabilities. The static site
+can run over loopback with no internet for bundled research/corpus/local-file
+lookup. Hosted email/account sync and live search are separate services, not
+offline implementations. Optional local Ollama chat uses
+`python scripts\local-site.py --model qwen2.5:3b`; the model must already be
+installed. Only same-origin loopback chat requests are accepted; the upstream
+is fixed to loopback, proxies and redirects are disabled, and there is no
+hosted fallback. Run `python -B scripts\test-local-site.py` for request guards
+and failure/output-shape regressions. The status page checks hosted health only
+on button activation. Historical full reports and the browser-agent ZIP remain
+unavailable; do not fabricate replacement downloads.
+
+`python -B scripts\test-site-installers.py` checks all local HTML file targets.
+`node --test scripts\test-chain-viewer.mjs` checks the restored viewer's bounded
+format adapters and account-scope omission. Published CLI ZIPs and simulation
+source were recovered from the existing public website, not private backups.
+
 ## Obsidian, Copilot, and GitHub
 
 The local `RabbitOS Vault` at `C:\Users\odaat\Documents\RabbitOS Vault` is already
