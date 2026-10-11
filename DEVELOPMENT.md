@@ -361,6 +361,9 @@ the embedded Perplexity editor is removed from served HTML, and non-exported
 paths return 404. Reports, spreadsheets, archives and vault contents are never
 served. The preview is public but marked noindex.
 
+Public preview:
+https://rabbitsoftware-rf-nexus-preview.rabbitsoftware-gateway.workers.dev
+
 The original export is preserved in the vault. Staged copies of only
 `index.html`, `assets\index-drmRIFDg.js` and `assets\index--vzZ5AZu.css` go under
 the Git-ignored `tools\rf-nexus-preview\public` directory. Do not copy the vault
