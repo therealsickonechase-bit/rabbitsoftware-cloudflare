@@ -3,7 +3,7 @@
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Local and hosted features | RabbitSoftware</title><link rel="stylesheet" href="polish.css"></head>
 <body class="document-page"><main class="document-main wrap">
   <h1>What runs locally, and what does not</h1>
-  <p>Use this website from a local checkout without uploading your files. After obtaining its static assets and optional model, these local functions need no internet: published research reading, corpus metadata search, selected-file viewing, software simulation, offline CLI demo/local lookup, and local Ollama chat. Hosted AI, live web searches, email sign-in and cloud account/device sync still require their separate services.</p>
+  <p>Use this website from a local checkout without uploading your files. After obtaining its static assets and optional model, these local functions need no internet: published research reading, corpus metadata search, selected-file viewing, software simulation, offline CLI demo/local lookup, and local Ollama chat. Hosted AI and live web searches still need internet. RabbitOS is account-free; it does not provide cloud account/device sync.</p>
   <h2>Run the static website on your computer</h2>
   <p>From a reviewed checkout of <a href="https://github.com/ringquistchase-collab/rabbitsoftware-cloudflare">the website repository</a>, run:</p>
   <pre><code>python -m http.server 8788 --bind 127.0.0.1 --directory site</code></pre>
@@ -26,7 +26,7 @@ python scripts/local-site.py --model qwen2.5:3b --port 8788</code></pre>
   <ul>
     <li>Homepage Research AI offers separate hosted Cloudflare/Hugging Face and hosted Qwen3 / Cloudflare choices. Hosted Qwen requires no local install but sends approved prompts off-device and is usage-limited. Local Ollama still requires the local website server and your installed model; weights are not bundled. No automatic fallback occurs.</li>
     <li><a href="research-agent.html">Live public web research</a> uses Cloudflare, Tavily and the hosted model after consent. It cannot search an offline internet.</li>
-    <li><a href="https://app.rabbitsoftware.io/">RabbitOS email sign-in and cloud accounts</a> remain hosted. Local setup neither clones private accounts nor replaces authentication.</li>
+    <li><a href="https://app.rabbitsoftware.io/">RabbitOS</a> opens without sign-in. Notes, chats and settings stay in that browser; existing private account data remains inaccessible and is not copied by local setup.</li>
     <li><a href="agent.html">The historical local browser-agent ZIP</a> is unavailable in this deployment; no working download is claimed.</li>
     <li>Encrypted-record opening on the homepage is local-only and supports the recovery format, not legacy vault formats. Creating a research-chat record requires a prior chat attempt.</li>
   </ul>
