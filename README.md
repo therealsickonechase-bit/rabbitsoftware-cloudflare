@@ -13,6 +13,7 @@ Captured from the live account on 2026-10-08.
 | api.rabbitsoftware.io | Worker `rabbitsoftware-sync` (`workers/sync`) | Main API: accounts, device sync, history, research/Maxwell snapshots, corpus, quotas |
 | agent.rabbitsoftware.io | Worker `rabbitsoftware-node-worker` (`workers/node-worker`) | Archive-verification agent, runs jobs through a Workflow and calls `rabbitsoftware-sync`'s `ArchiveAgent` |
 | rabbitsoftware-gateway.workers.dev | Worker `rabbitsoftware-gateway` (`workers/gateway`) | Rate-limited AI chat gateway to a Hugging Face inference endpoint |
+| rabbitsoftware-qwen.rabbitsoftware-gateway.workers.dev | Worker `rabbitsoftware-qwen` (`workers/qwen`) | Hosted Qwen3 via Workers AI; shared durable daily/hourly attempt caps for website and RabbitOS chats |
 
 ## Storage and other resources
 
