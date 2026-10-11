@@ -243,10 +243,14 @@
     .install-grid { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 54px; }
     .install-grid > div:first-child p { max-width: 430px; color: var(--muted); }
     .install-list { border-top: 1px solid var(--line); }
-    .install-row { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 14px; padding: 17px 0; border-bottom: 1px solid var(--line); }
-    .install-row h3 { margin: 0; font-size: 14px; }
-    .install-row pre { grid-column: 2; margin: 0; padding: 12px; overflow-wrap: anywhere; white-space: pre-wrap; background: var(--night); color: var(--night-ink); font-size: 12px; line-height: 1.55; }
-    .install-row a { grid-column: 2; width: fit-content; color: var(--green); font-size: 13px; }
+    .install-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 22px 0; border-bottom: 1px solid var(--line); }
+    .install-row h3 { margin: 0; font-size: 16px; }
+    .install-row p { margin: 0; color: var(--muted); font-size: 14px; }
+    .install-row pre { margin: 0; padding: 12px; overflow-wrap: anywhere; white-space: pre-wrap; background: var(--night); color: var(--night-ink); font-size: 12px; line-height: 1.55; }
+    .install-row a { color: var(--green); }
+    .install-row .chat-copy { justify-self: start; }
+    .install-grid ol { padding-left: 22px; color: var(--muted); }
+    .install-grid li { margin-bottom: 14px; }
 
     .caveat { padding-block: 62px; border-bottom: 1px solid var(--line); }
     .caveat-inner { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 30px; }
@@ -424,19 +428,19 @@
       <div class="hero-copy">
         <p class="eyebrow">Local-first research / experimental systems</p>
         <h1 id="site-title">RabbitSoftware</h1>
-        <p class="hero-lede">Public research, a hosted RabbitOS console, and local Python prototypes - separate tools with visible sources and data boundaries.</p>
+        <p class="hero-lede">Read public research, inspect selected files in your browser, open the hosted RabbitOS console, or run the website and AI locally on your computer. Choose your path below - each has its own setup and data boundaries.</p>
         <div class="hero-actions">
           <a class="button primary" href="https://app.rabbitsoftware.io/">Open RabbitOS</a>
-          <a class="button" href="#start">Set up local tools</a>
+          <a class="button" href="#start">Get started / copy commands</a>
         </div>
         <p class="hero-note">Research prototypes, not clinical software. The retired Helloworld installers are no longer used. Local setup does not install a replacement operating system.</p>
       </div>
       <aside class="hero-index" aria-label="Project snapshot">
         <p class="hero-index-label">Project snapshot</p>
         <dl>
-          <div><dt>Host runtime</dt><dd>Python</dd></div>
-          <div><dt>Kernel tests</dt><dd>QEMU only</dd></div>
-          <div><dt>Cloud sharing</dt><dd>Opt-in</dd></div>
+          <div><dt>Hosted console</dt><dd>Browser / online</dd></div>
+          <div><dt>Local website + AI</dt><dd>Python / Ollama</dd></div>
+          <div><dt>Python prototypes</dt><dd>Separate setup</dd></div>
         </dl>
       </aside>
     </div>
@@ -444,7 +448,7 @@
 
   <div class="signals" aria-label="Project principles">
     <div class="signals-inner wrap">
-      <span class="signal"><b>01</b> Local by default</span>
+      <span class="signal"><b>01</b> Choose local or hosted</span>
       <span class="signal"><b>02</b> Sources stay inspectable</span>
       <span class="signal"><b>03</b> Sharing waits for consent</span>
     </div>
@@ -494,8 +498,8 @@
           <h2 id="boundary-title">Your device is the default boundary.</h2>
         </div>
         <ul class="boundary-list">
-          <li><b>A</b><span><strong>Local first.</strong> Conversations, settings, research records, integrity reports, node keys, chains, and the local model stay on the device by default.</span></li>
-          <li><b>B</b><span><strong>Consent before transfer.</strong> Public searches, hosted-model questions, publishing, and sharing wait for an explicit yes and are recorded locally.</span></li>
+          <li><b>A</b><span><strong>Local tools stay local.</strong> Selected-file viewing and local Ollama chat stay on your computer. The hosted RabbitOS console uses online account services; it is not an offline vault.</span></li>
+          <li><b>B</b><span><strong>Choose before sending.</strong> Hosted Research AI and live public searches need consent. Local chat never falls back to hosted AI, reads your files automatically, or searches the live web.</span></li>
           <li><b>C</b><span><strong>Public chain, public data.</strong> The chain is permanent. Personal data belongs in the encrypted local vault, never in a public event.</span></li>
         </ul>
       </div>
@@ -505,26 +509,68 @@
       <div class="install-grid">
         <div>
           <p class="section-index">03 / GET STARTED</p>
-          <h2 id="start-title">Choose the application, then set it up.</h2>
-          <p>The old DNA-Blockchain/Helloworld Windows and Linux installers return 404. The replacement setup tool prepares three separate, pinned source checkouts in isolated Python environments: the RabbitOS backend, dna-chain monitor, and cancer-mutation-blockchain research stack.</p>
-          <p><strong>Install Python 3.11 or 3.12 and Git first.</strong> Save and review the setup script before running it. Setup downloads source and dependencies, but does not start services, register scheduled tasks, scan devices, publish records, or open tunnels. <a href="setup.html">Read prerequisites, component choices, verification results, and limits</a>.</p>
+          <h2 id="start-title">Get started: choose what you want to run.</h2>
+          <ol>
+            <li><strong>Use RabbitOS online:</strong> <a href="https://app.rabbitsoftware.io/">open the hosted console</a> and follow its sign-in instructions. No installation is needed; account services require internet.</li>
+            <li><strong>Read or inspect a file:</strong> open <a href="research.html">research summaries</a> or the <a href="chain.html">file / corpus viewer</a>. No installer is needed. The viewer only reads the file you select.</li>
+            <li><strong>Run Python prototypes:</strong> use the Windows or Linux setup steps here. Start with the backend; the monitor and research stack are separate components.</li>
+            <li><strong>Run the website with local AI:</strong> use the local website steps below. This is a different setup from the backend and requires Ollama.</li>
+          </ol>
+          <p><strong>Before using terminal commands:</strong> install <a href="https://www.python.org/downloads/">Python 3.11 or 3.12</a> and <a href="https://git-scm.com/downloads">Git</a>, then reopen your terminal. Python 3.13/3.14 is not supported by the pinned prototype dependencies. Commands use 3.11; replace it with 3.12 if that is your installed version.</p>
+          <p>Use a new writable folder. Copy and run one step at a time; review downloaded code before execution. The old Helloworld shell-pipe installers are retired. <a href="setup.html">Full component setup and verification limits</a> &middot; <a href="local.html">Local / hosted guide</a>.</p>
         </div>
         <div class="install-list" aria-label="Local setup commands">
           <div class="install-row">
-            <h3>Windows / PowerShell</h3>
-            <pre><code>Invoke-WebRequest -Uri https://rabbitsoftware.io/installers/setup.py -OutFile rabbitsoftware-setup.py
-# Review the saved script before continuing.
-py -3.11 rabbitsoftware-setup.py --check
-py -3.11 rabbitsoftware-setup.py --component all</code></pre>
-            <a href="installers/setup.py">Review replacement setup.py</a>
+            <h3>Python backend: Windows / PowerShell</h3>
+            <p>1. Download the script into your new folder.</p>
+            <pre><code id="setup-windows-download">Invoke-WebRequest -Uri https://rabbitsoftware.io/installers/setup.py -OutFile rabbitsoftware-setup.py</code></pre>
+            <button class="chat-copy" type="button" data-copy-target="setup-windows-download">Copy Windows download</button>
+            <p>2. <a href="installers/setup.py">Review the setup source</a> and open your saved copy before continuing.</p>
+            <p>3. Check prerequisites, then prepare the backend only if the check succeeds.</p>
+            <pre><code id="setup-windows-check">py -3.11 rabbitsoftware-setup.py --check</code></pre>
+            <button class="chat-copy" type="button" data-copy-target="setup-windows-check">Copy Windows check</button>
+            <pre><code id="setup-windows-run">py -3.11 rabbitsoftware-setup.py --component backend</code></pre>
+            <button class="chat-copy" type="button" data-copy-target="setup-windows-run">Copy Windows setup</button>
+            <p>4. After setup succeeds, use the exact loopback-only start command it prints. Open http://127.0.0.1:8000/docs after starting it; stop with Ctrl+C. This backend is not the hosted web console.</p>
           </div>
           <div class="install-row">
-            <h3>Linux / WSL</h3>
-            <pre><code>curl -fL https://rabbitsoftware.io/installers/setup.py -o rabbitsoftware-setup.py
-# Review the saved script before continuing.
-python3.11 rabbitsoftware-setup.py --check
-python3.11 rabbitsoftware-setup.py --component all</code></pre>
-            <a href="setup.html">Choose components and review setup limits</a>
+            <h3>Python backend: Linux / WSL</h3>
+            <p>1. Use a new folder on the Linux filesystem. Install the matching Python venv package if needed, then download.</p>
+            <pre><code id="setup-linux-download">curl -fL https://rabbitsoftware.io/installers/setup.py -o rabbitsoftware-setup.py</code></pre>
+            <button class="chat-copy" type="button" data-copy-target="setup-linux-download">Copy Linux download</button>
+            <p>2. <a href="installers/setup.py">Review the setup source</a> and your saved copy before continuing.</p>
+            <p>3. Check prerequisites, then prepare the backend only if the check succeeds.</p>
+            <pre><code id="setup-linux-check">python3.11 rabbitsoftware-setup.py --check</code></pre>
+            <button class="chat-copy" type="button" data-copy-target="setup-linux-check">Copy Linux check</button>
+            <pre><code id="setup-linux-run">python3.11 rabbitsoftware-setup.py --component backend</code></pre>
+            <button class="chat-copy" type="button" data-copy-target="setup-linux-run">Copy Linux setup</button>
+            <p>4. Use the start command printed after success, then open http://127.0.0.1:8000/docs. Stop with Ctrl+C.</p>
+          </div>
+          <div class="install-row">
+            <h3>Optional monitor and research components</h3>
+            <p>Replace <code>backend</code> with <code>monitor</code> or <code>research</code> to prepare that component instead; <code>--component all</code> prepares all three in a fresh destination. Setup does not start services, scan devices, register tasks, or open tunnels. Existing component folders are not overwritten: for retries, use a new <code>--directory "my-new-folder"</code>.</p>
+            <p>Windows preparation passed for all three. Linux backend health passed; full Linux monitor/research preparation is still unverified. Preparation checks do not certify full application workflows. <a href="setup.html">Read the exact verification boundaries</a>.</p>
+          </div>
+          <div class="install-row">
+            <h3>Local website + Ollama AI: Windows</h3>
+            <p>1. Install <a href="https://ollama.com/download">Ollama</a> and keep it running on its default loopback port. Download this example model while online (about 1.9 GB).</p>
+            <pre><code id="local-model">ollama pull qwen2.5:3b</code></pre>
+            <button class="chat-copy" type="button" data-copy-target="local-model">Copy model download</button>
+            <p>2. From a folder without an existing rabbitsoftware-cloudflare checkout, download the website source. These repairs are on the published <code>fix/vault-coordinator-status</code> branch, not yet merged into the default branch.</p>
+            <pre><code id="local-clone">git clone --branch fix/vault-coordinator-status https://github.com/ringquistchase-collab/rabbitsoftware-cloudflare.git
+cd rabbitsoftware-cloudflare</code></pre>
+            <button class="chat-copy" type="button" data-copy-target="local-clone">Copy website checkout</button>
+            <p>3. Review <code>scripts\local-site.py</code>, then start the local website server. This does not install the Python backend.</p>
+            <pre><code id="local-windows-run">py -3.11 scripts\local-site.py --model qwen2.5:3b --port 8788</code></pre>
+            <button class="chat-copy" type="button" data-copy-target="local-windows-run">Copy Windows local server</button>
+            <p>4. Open <a href="http://127.0.0.1:8788/">http://127.0.0.1:8788/</a>, open Research AI, choose <strong>Local Ollama</strong>, and approve your message. Keep the terminal and Ollama running; stop the website with Ctrl+C.</p>
+          </div>
+          <div class="install-row">
+            <h3>Local website + Ollama AI: Linux / WSL</h3>
+            <p>Install and run Ollama inside the same Linux environment, download the model, and clone the website using steps 1-2 above. Review <code>scripts/local-site.py</code>, then use this command from the checkout:</p>
+            <pre><code id="local-linux-run">python3.11 scripts/local-site.py --model qwen2.5:3b --port 8788</code></pre>
+            <button class="chat-copy" type="button" data-copy-target="local-linux-run">Copy Linux local server</button>
+            <p>Open <a href="http://127.0.0.1:8788/">http://127.0.0.1:8788/</a> and choose Local Ollama in Research AI. An existing installed model can replace <code>qwen2.5:3b</code>. A plain static server cannot handle local AI; no hosted fallback occurs. <a href="local.html">Troubleshooting and offline limits</a>.</p>
           </div>
         </div>
       </div>

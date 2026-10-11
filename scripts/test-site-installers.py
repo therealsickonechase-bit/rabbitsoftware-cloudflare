@@ -116,8 +116,28 @@ class SetupTests(unittest.TestCase):
         self.assertIn("installers/setup.py", home)
         self.assertIn("--check", home)
         self.assertIn("--component all", home)
+        self.assertIn("--component backend", home)
         self.assertIn("setup.html", home)
         self.assertTrue((ROOT / "site" / "setup.html").is_file())
+
+    def test_homepage_copy_buttons_target_visible_commands(self):
+        class Commands(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.command_ids = set()
+                self.targets = []
+
+            def handle_starttag(self, tag, attrs):
+                attrs = dict(attrs)
+                if tag == "code" and attrs.get("id"):
+                    self.command_ids.add(attrs["id"])
+                if tag == "button" and attrs.get("data-copy-target"):
+                    self.targets.append(attrs["data-copy-target"])
+
+        commands = Commands()
+        commands.feed((ROOT / "site" / "index.html").read_text(encoding="utf-8"))
+        self.assertEqual(len(commands.targets), 10)
+        self.assertEqual(set(commands.targets), commands.command_ids)
 
 
 if __name__ == "__main__":

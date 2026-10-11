@@ -92,15 +92,20 @@ for (const tab of tabs) {
   });
 }
 
-for (const button of document.querySelectorAll("[data-copy]")) {
+for (const button of document.querySelectorAll("[data-copy], [data-copy-target]")) {
+  const label = button.textContent;
   button.addEventListener("click", async () => {
     try {
-      await navigator.clipboard.writeText(button.dataset.copy);
+      const command = button.dataset.copyTarget
+        ? document.getElementById(button.dataset.copyTarget)?.textContent
+        : button.dataset.copy;
+      if (!command) throw new Error("Copy command is missing.");
+      await navigator.clipboard.writeText(command);
       button.textContent = "Copied";
     } catch {
       button.textContent = "Select command above";
     }
-    setTimeout(() => { button.textContent = "Copy"; }, 1800);
+    setTimeout(() => { button.textContent = label; }, 1800);
   });
 }
 
