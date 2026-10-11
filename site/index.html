@@ -595,7 +595,7 @@ python rabbit.py --demo ask "find BRCA1 on the chain"</code></pre>
         </article>
         <article class="capability">
           <h3>Research AI destinations</h3>
-          <p><a href="local.html">Local Ollama</a> answers through a loopback-only server using your installed model. Hosted research chat and <a href="research-agent.html">live public search</a> remain separate, consent-gated network features.</p>
+          <p>Research AI offers <strong>hosted Qwen3 / Cloudflare</strong> without a local install, the existing hosted Hugging Face provider, or <a href="local.html">Local Ollama</a> through your loopback server. Choose a provider and approve each message; hosted prompts leave your computer. <a href="research-agent.html">Live public search</a> remains separate.</p>
           <p>The historical <a href="agent.html">browser-agent ZIP</a> is unavailable. Current <a href="setup.html">backend and research prototypes</a> have their own setup; they do not restore that missing package.</p>
         </article>
         <article class="capability">
@@ -680,12 +680,13 @@ python rabbit.py --demo ask "find BRCA1 on the chain"</code></pre>
         </section>
         <section class="chat-pane" id="pane-research" role="tabpanel" aria-labelledby="tab-research" tabindex="0" hidden>
           <h3>Ask about the reviewed research</h3>
-          <p>Answers use the two public summaries linked below and your explicitly selected AI destination. Hosted AI uses Cloudflare/Hugging Face; Local Ollama requires the local website server and an installed model. This is not a live literature search; new studies are not automatically fetched.</p>
+          <p>Answers use the two public summaries linked below and your selected AI destination: hosted Qwen3 on Cloudflare, the existing hosted Hugging Face model, or Local Ollama through your local website server. Hosted choices require internet, not an Ollama installation. This is not live literature search; new studies are not automatically fetched. No automatic provider fallback.</p>
           <div class="chat-log" id="chat-log" role="log" aria-live="polite" aria-relevant="additions"></div>
           <form class="chat-form" id="chat-form">
             <label for="chat-provider">AI destination (switching clears chat context)</label>
             <select id="chat-provider">
               <option value="hosted">Hosted Cloudflare / Hugging Face</option>
+              <option value="qwen">Hosted Qwen3 / Cloudflare (online)</option>
               <option value="local" disabled>Local Ollama (requires local website server)</option>
             </select>
             <label for="chat-question">Your question</label>

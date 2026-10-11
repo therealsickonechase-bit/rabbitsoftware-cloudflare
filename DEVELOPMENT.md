@@ -3,6 +3,33 @@
 Local-first workflow. Nothing here touches production unless you run a deploy
 command explicitly.
 
+## Hosted Qwen chat
+
+`workers/qwen/` is an isolated Workers AI gateway using
+`@cf/qwen/qwen3-30b-a3b-fp8`. It does not redeploy or modify the existing bundled
+Hugging Face gateway. The website and authenticated RabbitOS chat routes use
+its fixed `/v1/chat/completions` endpoint with explicit provider choice.
+Local Ollama is unchanged. No automatic provider fallback is permitted.
+
+The SQLite-backed Durable Object coordinates a shared 500-attempt UTC daily
+cap and 20 attempts per connecting-client IP per rolling hour. Reservations
+count even if inference fails, preventing retries from bypassing spend guards.
+RabbitOS server-side calls share their outbound IP quota; its own research
+daily and avatar hourly controls also apply. This is a request/token cap,
+not a guaranteed dollar budget. Workers AI usage may incur account charges.
+Application logs contain error types, never prompts or answers.
+
+```powershell
+node --test scripts\test-qwen-gateway.mjs scripts\test-qwen-quota.mjs
+npx wrangler deploy --config workers\qwen\wrangler.jsonc --dry-run
+```
+
+The quota test runs actual workerd SQL/RPC and checks persistence after restart;
+it makes no AI inference calls. Deploy the Qwen Worker only with approval,
+verify real non-private inference, then publish the website and RabbitOS.
+No provider API credential belongs in browser code. Origins are browser
+controls, not authentication; global quotas also cover direct API abuse.
+
 ## Dev site (static, no tooling)
 
 ```powershell
