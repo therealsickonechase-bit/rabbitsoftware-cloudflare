@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Chase Allen Ringquist">
+  <title>Local agent download | RabbitSoftware</title>
+  <link rel="icon" type="image/svg+xml" href="assets/rabbit-mark.svg">
+  <link rel="stylesheet" href="polish.css">
+</head>
+<body class="document-page">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="top wrap"><a class="brand" href="index.html"><img src="assets/rabbit-mark.svg" width="34" height="34" alt="">RabbitSoftware</a><a class="back" href="index.html#tools">All website tools</a></header>
+  <main class="document-main wrap" id="main">
+    <p class="eyebrow">Local browser agent / version 0.2.1</p>
+    <h1>Run an agent locally.</h1>
+    <p class="intro">Offline record lookup, Europe PMC papers, and optional Tavily web search. No hosted AI or record uploads.</p>
+    <p><a href="downloads/rabbitsoftware-agent-0.2.1.zip" download>Download local agent ZIP</a> &middot; <a href="downloads/rabbitsoftware-agent-0.2.1.sha256">SHA-256 checksum</a></p>
+    <h2>Start the local interface</h2>
+    <p>Install Python 3.10+, verify the checksum, extract the whole ZIP, and open a terminal in the folder containing <code>run_agent.py</code>. No extra packages are required.</p>
+    <pre><code>python run_agent.py --host 127.0.0.1 --port 8765</code></pre>
+    <p>Open <code>http://127.0.0.1:8765/</code> in your browser. The command uses your remembered source or labeled demo records if none is configured. Stop with Ctrl+C. Only loopback binding is allowed. Use a different port if occupied.</p>
+    <p>Windows can use <code>py -3</code>, macOS/Linux <code>python3</code>. Tested on Windows/Python 3.12; other platforms are not tested. This is a new reconstruction, not the original application.</p>
+    <h2>Choose a mode</h2>
+    <ul>
+      <li><strong>Source lookup:</strong> list, find, or show demo/local/archive entries. Use <code>--chain "C:\path\to\records.json"</code> for an existing local file; <a href="cli.html">CLI instructions</a> document supported research, Maxwell, and DNA formats and signed account reads. Real sources are never discovered automatically.</li>
+      <li><strong>Europe PMC papers:</strong> search public literature with fresh consent. No API key needed.</li>
+      <li><strong>Tavily web search:</strong> optional, using each visitor's own key. Restart with the command below and enter the key in the hidden terminal prompt.</li>
+    </ul>
+    <pre><code>python run_agent.py --host 127.0.0.1 --port 8765 --tavily</code></pre>
+    <p>Never paste a key into chat, a URL, or a command argument. The key is kept in memory and is not saved or exposed to the browser. Your Tavily allowance and billing apply; keep paid overages disabled if desired.</p>
+    <h2>Data boundaries</h2>
+    <p>Each approved search sends only the public query to the selected provider. Local/account records stay separate. Results are public-source links and snippets, not chain records or verified AI answers. No autonomous loops, full-page fetching, account registration, or model calls.</p>
+    <h2>Research viewer and remembered source</h2>
+    <pre><code>python research_viewer.py --chain "C:\path\to\existing-chain.json" --remember
+python research_viewer.py
+python rabbit.py ask "what's on the chain"
+python rabbit.py ask "show entry 2"</code></pre>
+    <p>The viewer starts the same loopback interface. Remembered settings contain paths/selection, not records or keys. Use <code>--public-corpus</code> for public research batches, which are not a blockchain. Signed account reads use your own existing device credential file and optional <code>cryptography</code> dependency; see the included CLI README. No inspected owner data is bundled or published. The <a href="chain.html">website viewer</a> keeps public corpus and browser-only local files separate.</p>
+    <p>Five provider attempts per rolling hour per process, including failures; restarting resets this local limit. No silent retries. Do not enter personal, genomic, biosignal, health data, or credentials. Pattern checks are incomplete. Not medical advice.</p>
+    <p>Do not run on an untrusted shared computer. Host, origin, and session-token checks protect form requests but do not stop privileged local processes. Browser history and terminal scrollback may remain.</p>
+    <h2>Verify and inspect</h2>
+    <pre><code>Get-FileHash .\rabbitsoftware-agent-0.2.1.zip -Algorithm SHA256</code></pre>
+    <p>Compare with the linked checksum. README, code, license notice, demo records, and per-file hashes are included. Checksums are not independent signatures. Inspect code before running; no private records, keys, dependencies, or model weights are bundled.</p>
+    <p>By Chase Allen Ringquist. <a href="license.html">UPL-1.0 and third-party terms</a> &middot; <a href="privacy.html">Privacy policy</a>.</p>
+  </main>
+  <footer class="wrap"><p><a href="index.html">Home</a> &middot; <a href="cli.html">Offline CLI</a> &middot; <a href="privacy.html">Privacy policy</a></p></footer>
+</body>
+</html>
