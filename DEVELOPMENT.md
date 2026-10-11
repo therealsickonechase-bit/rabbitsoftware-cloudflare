@@ -339,6 +339,41 @@ No new Worker is needed to connect this local backlog. Future cloud coordination
 needs a separately approved bridge and access policy; never tunnel the vault's
 localhost API or upload private notes/recordings by default.
 
+### External task references
+
+- [Perplexity Computer task thread](https://www.perplexity.ai/computer/tasks/b932bee4-75e2-41ef-b8dd-4434e1a9a206?view=thread):
+  user-provided reference for RabbitOS coordination, also recorded in the vault's
+  preserved `GitHub Live\Coordinator\Decisions.md` note.
+
+The thread's contents, ownership, status and repository relationships have not
+been verified. This is a navigation link, not an API integration or live sync;
+adding it does not authorize uploading repository contents, private notes or
+recordings to Perplexity. Access may require the user's signed-in account.
+
+### RF Nexus static export preview
+
+`tools\rf-nexus-preview` hosts only the three reviewed HTML/JS/CSS files from
+the user-provided RF Nexus export, in a separate Worker named
+`rabbitsoftware-rf-nexus-preview`. It is not the RabbitOS console or a working
+RF Nexus backend. A visible warning explains unavailable features; API,
+WebSocket and write requests fail explicitly. CSP blocks outbound connections,
+the embedded Perplexity editor is removed from served HTML, and non-exported
+paths return 404. Reports, spreadsheets, archives and vault contents are never
+served. The preview is public but marked noindex.
+
+The original export is preserved in the vault. Staged copies of only
+`index.html`, `assets\index-drmRIFDg.js` and `assets\index--vzZ5AZu.css` go under
+the Git-ignored `tools\rf-nexus-preview\public` directory. Do not copy the vault
+folder wholesale. Full source/server recovery is needed for actual integration;
+do not patch the generated bundle to fabricate a working backend.
+
+```powershell
+node --test tools\rf-nexus-preview\test.mjs
+npx --no-install wrangler deploy --config tools\rf-nexus-preview\wrangler.jsonc --dry-run
+# Only after explicit approval to publish the static preview:
+npx --no-install wrangler deploy --config tools\rf-nexus-preview\wrangler.jsonc
+```
+
 ## Supabase
 
 Project ref `ludxbakxpmdqhfgdenwp`. `supabase/` holds the CLI config and (future) migrations.

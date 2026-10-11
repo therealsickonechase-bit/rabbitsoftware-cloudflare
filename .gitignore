@@ -8,3 +8,4 @@ backup/
 .agents/
 .claude/skills/
 skills-lock.json
+tools/rf-nexus-preview/public/
