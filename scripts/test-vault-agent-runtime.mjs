@@ -18,7 +18,11 @@ test("agent rejects unavailable tools, malformed actions and turn exhaustion exp
   assert.ok(!JSON.stringify(actionSchema([])).includes('"enum":[]'));
   await assert.rejects(runAgent("", {}, () => "{}"), /task/);
   await assert.rejects(runAgent("Run", {}, () => '{"action":"tool","name":"shell","arguments":{}}'), /unavailable/);
-  await assert.rejects(runAgent("Run", {}, () => "Not JSON"));
+  await assert.rejects(runAgent("Run", {}, () => "Not JSON"), /three times/);
+  const replies = ['{"action":"answer","content":"cut o', '{"action":"answer","content":"Short."}'];
+  const seen = [];
+  assert.equal((await runAgent("Run", {}, messages => { seen.push(messages.at(-1).content); return replies.shift(); })).answer, "Short.");
+  assert.match(seen[1], /cut off/);
   await assert.rejects(runAgent("Run", { noop: { description: "No op", execute: () => ({ ok: true }) } }, () => '{"action":"tool","name":"noop","arguments":{}}', { maxTurns: 1 }), /execution budget/);
 });
 
@@ -185,8 +189,8 @@ test("local tool loop persists proposals and cited learning; hosted search filte
     const result = await execute(vault, "Research provenance and propose code.", { type: "ollama", model: "qwen2.5:3b" }, async (url, request) => {
       assert.equal(url, "http://127.0.0.1:11434/api/chat");
       assert.equal(JSON.parse(request.body).model, "qwen2.5:3b");
-      assert.equal(JSON.parse(request.body).options.num_predict, 600);
-      assert.equal(JSON.parse(request.body).options.num_ctx, 4096);
+      assert.equal(JSON.parse(request.body).options.num_predict, 1500);
+      assert.equal(JSON.parse(request.body).options.num_ctx, 8192);
       return Response.json({ message: { content: JSON.stringify(actions[index++]) } });
     });
     assert.ok(result.trace.length >= 7);

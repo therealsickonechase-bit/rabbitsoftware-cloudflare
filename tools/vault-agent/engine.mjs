@@ -53,13 +53,21 @@ export async function runAgent(prompt, tools, generate, { maxTurns = 12, initial
     messages.push({ role: "user", content: `Initial retrieval is complete. Use this successfully read evidence; do not repeat discovery or claim you cannot access it. Answer the original task now unless another tool is genuinely needed. ${JSON.stringify(initialCalls)}` });
   }
   const trace = initialCalls.map(({ name, arguments: args }) => ({ name, arguments: args, origin: "host", status: "succeeded" }));
+  let invalidReplies = 0;
   for (let turn = 0; turn < maxTurns; turn++) {
     if (new TextEncoder().encode(JSON.stringify(messages)).length > 65536) {
       throw new Error("Agent context exceeded 64 KiB. Narrow the task; no context was silently dropped.");
     }
     const text = await generate(messages);
     if (typeof text !== "string" || new TextEncoder().encode(text).length > 32768) throw new Error("Provider returned an invalid or oversized response.");
-    const action = JSON.parse(text);
+    let action;
+    try { action = JSON.parse(text); }
+    catch {
+      // Small local models can hit their output limit mid-answer. Ask again instead of failing the run.
+      if (++invalidReplies > 2) throw new Error("Provider returned incomplete or invalid JSON three times. Narrow the task; no answer was saved.");
+      messages.push({ role: "user", content: "Your previous reply was cut off or was not one valid JSON object. Reply again with a single complete JSON object and keep any answer content shorter." });
+      continue;
+    }
     if (action.action === "answer" && typeof action.content === "string" && action.content.trim()) {
       if (remaining.length) {
         messages.push({ role: "assistant", content: text });
