@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="author" content="Chase Allen Ringquist">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Give a RabbitSoftware agent a small public task and come back for the result.">
+  <meta name="tasks-endpoint" content="https://rabbitsoftware-tasks.rabbitsoftware-gateway.workers.dev">
+  <title>Agent tasks | RabbitSoftware</title>
+  <link rel="icon" type="image/svg+xml" href="assets/rabbit-mark.svg">
+  <link rel="stylesheet" href="polish.css">
+  <link rel="stylesheet" href="research-agent.css">
+  <script type="module" src="tasks.js"></script>
+</head>
+<body class="document-page">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="top wrap">
+    <a class="brand" href="index.html"><img src="assets/rabbit-mark.svg" width="34" height="34" alt="">RabbitSoftware</a>
+    <a class="back" href="index.html">RabbitSoftware home</a>
+  </header>
+  <main class="document-main wrap" id="main">
+    <p class="eyebrow">Agent tasks / RabbitSoftware</p>
+    <h1 class="agent-identity"><img src="assets/rabbit-mark.svg" width="52" height="52" alt="">Agent tasks</h1>
+    <p class="intro">Hand an agent a small public task. It joins a queue on Cloudflare and the result appears here when it is done.</p>
+    <form id="task-form">
+      <label for="task-kind"><strong>What should the agent do?</strong></label>
+      <select id="task-kind">
+        <option value="answer">Answer a question</option>
+        <option value="summarize">Summarise some text</option>
+        <option value="explain">Explain code or technical text</option>
+      </select>
+      <label for="task-input"><strong>Your task</strong></label>
+      <textarea id="task-input" rows="6" maxlength="8000" required placeholder="What does a Cloudflare Durable Object do?"></textarea>
+      <label class="agent-consent"><input id="task-consent" type="checkbox">
+        <span>I approve sending this text to RabbitSoftware's Cloudflare Worker and Cloudflare Workers AI (Qwen). It contains no personal or private information.</span>
+      </label>
+      <div class="agent-actions">
+        <button id="task-submit" type="submit" disabled>Submit task</button>
+        <button id="task-clear" type="button">Forget my tasks</button>
+      </div>
+      <p id="task-status" role="status" aria-live="polite">JavaScript is loading. Nothing is sent while you type.</p>
+      <noscript><p>This page needs JavaScript.</p></noscript>
+    </form>
+    <section aria-labelledby="task-list-title">
+      <h2 id="task-list-title">Your tasks</h2>
+      <p id="task-empty">No tasks yet. Tasks you submit from this browser are listed here.</p>
+      <ol id="task-list"></ol>
+    </section>
+    <details class="agent-limits">
+      <summary>How it works and limits</summary>
+      <p><strong>Flow:</strong> this page sends your task to the <code>rabbitsoftware-tasks</code> Worker, which stores it in a queue and runs tasks one at a time with Cloudflare Workers AI (Qwen). The page checks back every few seconds. The task ID is only kept in this browser; anyone with the ID can read the result.</p>
+      <p><strong>Limits:</strong> 5 tasks per network per hour, 100 tasks per UTC day for everyone, at most 25 waiting at once, 8,000 characters per task. Accepted tasks count even if they fail. There are no automatic retries.</p>
+      <p><strong>Storage:</strong> your text is deleted as soon as the task finishes; the result is kept for 7 days. Your network address is stored only as a one-way hash for the hourly limit.</p>
+      <p>Pattern checks refuse obvious email addresses, phone numbers and credentials, but cannot catch everything. Do not submit personal, health or private information. AI answers can be wrong. <a href="privacy.html">Read website privacy</a>.</p>
+    </details>
+  </main>
+  <footer class="wrap"><p>By Chase Allen Ringquist &middot; <a href="license.html">Author and license</a> &middot; <a href="privacy.html">Privacy policy</a> &middot; <a href="index.html">RabbitSoftware home</a> &middot; <a href="status.html">Status</a></p></footer>
+</body>
+</html>
