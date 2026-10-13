@@ -35,7 +35,7 @@ def prepare(component, root):
     destination.mkdir(parents=True)
     run("git", "init", str(destination))
     run("git", "remote", "add", "origin",
-        f"https://github.com/ringquistchase-collab/{repo}.git", cwd=destination)
+        f"https://github.com/rabbitsoftware-io/{repo}.git", cwd=destination)
     if component == "backend":
         run("git", "sparse-checkout", "init", "--no-cone", cwd=destination)
         run("git", "sparse-checkout", "set", "--no-cone", "/rabbit-os/", cwd=destination)

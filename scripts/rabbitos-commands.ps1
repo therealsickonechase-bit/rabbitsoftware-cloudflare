@@ -144,7 +144,7 @@ try {
             Show-Command "git commit -m 'fix: improve RabbitOS workflow reliability' -m 'Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>'"
             Show-Command 'git push --set-upstream origin HEAD'
             $repoName = @{ cloudflare = 'rabbitsoftware-cloudflare'; console = 'rabbit-web'; core = 'RABBIT-SOFTWARE' }[$Area]
-            $github = "ringquistchase-collab/$repoName"
+            $github = "rabbitsoftware-io/$repoName"
             Show-Command ("gh pr list --repo $github --head " + '(git branch --show-current)')
             Write-Output '# Only create a draft if this branch has no existing PR. Otherwise update that PR.'
             Show-Command ("gh pr create --repo $github --base main --draft --title 'fix: improve RabbitOS workflow reliability' --body 'Local reliability repairs and regression tests. Review the diff and validation results before merge; no deployment is included.'")
