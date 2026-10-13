@@ -235,7 +235,7 @@ coordinates. Review and merge PR #6 before documenting it as available.
 
 The local `RabbitOS Vault` at `C:\Users\developer\Documents\RabbitOS Vault` is
 connected to the **public** GitHub repository
-`ringquistchase-collab/obsidian-rabbitos-vault`. Its `git-obsi-sync` plugin
+`rabbitsoftware-io/obsidian-rabbitos-vault`. Its `git-obsi-sync` plugin
 syncs **automatically every 3 seconds** through the GitHub API, so vault changes
 are published within seconds. The plugin does not read the vault `.gitignore`:
 only its own exclude patterns (Obsidian Settings → Git Sync) keep folders off
@@ -1675,7 +1675,7 @@ the file tree stale, close and reopen the vault to refresh its cache.
 python scripts\sync-github-vault.py --vault "C:\Users\developer\Documents\RabbitOS Vault" --setup
 python scripts\sync-github-vault.py --vault "C:\Users\developer\Documents\RabbitOS Vault"
 python scripts\sync-github-vault.py --vault "C:\Users\developer\Documents\RabbitOS Vault" --verify-only
-python scripts\sync-github-vault.py --vault "C:\Users\developer\Documents\RabbitOS Vault" --setup --repository ringquistchase-collab/brainflow
+python scripts\sync-github-vault.py --vault "C:\Users\developer\Documents\RabbitOS Vault" --setup --repository rabbitsoftware-io/brainflow
 python -m unittest scripts\test-import-github-vault.py scripts\test-sync-github-vault.py
 ```
 
