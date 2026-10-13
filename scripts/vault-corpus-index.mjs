@@ -19,7 +19,10 @@ import { postJson, serviceOrigin } from "../tools/vault-agent/corpus.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const CHUNK = 1800;
-const SKIP_VAULT = /^(Cloud Agents\/(Results|Proposals|Coordination|Dispatchers|Network)\/|\.obsidian\/|\.trash\/)/;
+// Agent output, machine state, and the linked folders that are copies of material indexed elsewhere:
+// the vault's full sync publishes GitHub Live/Imports, Code/ and the cloud-drive mirrors, which would
+// otherwise put every repository doc and every note into the corpus two or three times over.
+const SKIP_VAULT = /^(Cloud Agents\/(Results|Proposals|Coordination|Dispatchers|Network)\/|\.obsidian\/|\.trash\/|GitHub (Live|Imports)\/|Code\/|Computer\/|Repos\/|Drive\/|OneDrive\/|Claude\/|[^/]* library\/)/;
 const SKIP_REPO = /(^|\/)(node_modules|\.next|\.wrangler|dist|build|vendor|backup|private-cloud-data)\//;
 
 export function chunkMarkdown(text, max = CHUNK) {
