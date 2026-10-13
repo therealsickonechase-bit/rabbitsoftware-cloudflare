@@ -1,12 +1,12 @@
 # rabbitsoftware-gateway — AI chat gateway in front of a Hugging Face inference endpoint.
 # Mirrors the live Worker settings as of 2026-10-08.
 name = "rabbitsoftware-gateway"
-main = "src/index.js"
+main = "src/handler.mjs"
 compatibility_date = "2026-09-01"
 workers_dev = true
 
 [vars]
-CHAT_ALLOWED_ORIGINS = "https://preview.rabbitsoftware-site.pages.dev,https://rabbitsoftware.io"
+CHAT_ALLOWED_ORIGINS = "https://preview.rabbitsoftware-site.pages.dev,https://rabbitsoftware.io,https://0a8e3f92.rabbitsoftware-site.pages.dev"
 DAILY_LIMIT = "500"
 ENDPOINT_URL = "https://6abda5e90093f0b3703165a8.endpoints.huggingface.cloud"
 MAX_PROMPT_CHARS = "12000"
