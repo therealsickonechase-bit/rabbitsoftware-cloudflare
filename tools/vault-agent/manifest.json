@@ -1,0 +1,9 @@
+{
+  "id": "rabbit-vault-agent",
+  "name": "Rabbit Vault Agent",
+  "version": "0.1.0",
+  "minAppVersion": "1.13.1",
+  "description": "Local general-purpose vault research, cited knowledge, reviewed proposals, and an explicit cloud-result bridge.",
+  "author": "Rabbitsoftware",
+  "isDesktopOnly": true
+}

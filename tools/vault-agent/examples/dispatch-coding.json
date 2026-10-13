@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "capability": "code.repair",
+  "instruction": "Verify the approved public synthetic addition utility for the per-agent dispatcher integration. Preserve its positive, negative, and fractional addition behavior and immutable tests. Inspect only the approved source scope, make no changes if it is already correct, and return the fixed runner's validation result. Do not access any other project or service.",
+  "adapters": ["coding"],
+  "dependsOn": [],
+  "notes": [],
+  "share": true
+}

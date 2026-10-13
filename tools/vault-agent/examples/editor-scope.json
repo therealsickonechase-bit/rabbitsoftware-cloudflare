@@ -1,0 +1,8 @@
+{
+  "adapter": "coding",
+  "files": [
+    "tools/vault-agent/dispatcher.mjs",
+    "tools/vault-agent/result-review.mjs"
+  ],
+  "reason": "Agent-selected candidates for future return-routing and evidence-review repair. Review these source hashes and approve appropriate immutable dispatcher/review tests before activating a new scope; the existing synthetic addition tests do not cover these modules."
+}
