@@ -167,6 +167,66 @@ unavailable; do not fabricate replacement downloads.
 format adapters and account-scope omission. Published CLI ZIPs and simulation
 source were recovered from the existing public website, not private backups.
 
+## CRISPR and bio research tools
+
+These live in the sibling repository `rabbitsoftware-io/research-agents`
+(`C:\Users\odaat\Projects\research-agents`, reachable from the vault as
+`Code/research-agents`). Everything works on text and public read-only data: no
+lab protocol, no delivery method, no pathogen or toxin work, and nothing for use
+on a person. Guide scores are a GC + seed-region heuristic, **not** a validated
+efficiency or off-target model; real work needs CRISPOR or Cas-OFFinder and lab
+testing.
+
+| Need | Call |
+|---|---|
+| Transcripts, guides, CRISPR literature, audit-chain digest | `python crispr_data.py` (`--gene BRCA1`, `--no-literature`) |
+| Guide finder (20-mer + NGG, both strands) | `crispr_guide_design.find_guide_candidates(seq, top_n)` |
+| Spacer checks (GC, poly-T, self-folding) and protein effect of an edit | `bio_tools.guide_quality(guide)`, `bio_tools.edit_effect(cds, index, edit)` |
+| All four pieces together | `python crispr_research_suite.py` |
+| Literature only (trials, papers, preprints) | `python crispr_cancer_research.py`, continuous: `crispr_research_agent.py` |
+
+Records are written to `crispr_records.json` and reach RabbitOS only through
+`rabbit_sync.py`'s signed ingest, the same path the other agents use.
+
+```powershell
+cd C:\Users\odaat\Projects\research-agents
+python -m unittest test_crispr_data test_bio_tools
+```
+
+The repo's interpreter is `.venv-eeg` (VS Code `.vscode/settings.json` selects it
+and loads `.env` into new terminals). It started as the EEG environment, so the
+bio packages were added separately: `python -m pip install biopython ViennaRNA
+primer3-py`. Without biopython every `bio_tools` test errors with
+`No module named 'Bio'`.
+
+On `main`, `test_crispr_data.test_real_transcripts` fails with
+`AttributeError: 'list' object has no attribute 'upper'`: `crispr_data.py` caches
+coding-region ranges under `cds:<accession>` keys in `crispr_cache.json`, and the
+test treats every cache entry as a sequence. PR #6 carries the two-line fix
+(skip keys starting `cds:`), so merging it repairs the suite.
+
+`.claude/skills/crispr-guide-design/SKILL.md` is the Claude Code skill that
+routes CRISPR questions to these tools; keep its table in step with the one above.
+
+### crispr_tool.py (one-stop CLI, PR #6, not yet merged)
+
+Branch `crispr-tool` adds a single command-line entry point: guides on a built-in
+gene (BRCA1, BRCA2, PARP1 real RefSeq transcripts, downloaded once and cached),
+on a pasted sequence or on a FASTA file, with quality flags and an optional edit
+preview that reports the protein change.
+
+```powershell
+python crispr_tool.py --gene BRCA1                       # top guides
+python crispr_tool.py --gene BRCA1 --guide 1 --delete 1  # preview a 1-base deletion at the cut
+python crispr_tool.py --seq ACGT... --cds 1 300 --json   # your own sequence, machine-readable
+python -m unittest test_crispr_tool
+```
+
+It reuses `crispr_data.guide_records` and a new `bio_tools.protein_change`, so
+the CLI and the RabbitOS path agree on guides and on edit effects. Reverse-strand
+edits are applied in the guide's own orientation and reported in forward
+coordinates. Review and merge PR #6 before documenting it as available.
+
 ## Obsidian, Copilot, and GitHub
 
 The local `RabbitOS Vault` at `C:\Users\odaat\Documents\RabbitOS Vault` is
