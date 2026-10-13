@@ -1,6 +1,6 @@
-import { resolve } from "node:path";
+import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { realpath } from "node:fs/promises";
+import { access, realpath } from "node:fs/promises";
 import { execute, createTools, approveLearning, loadConfig } from "../tools/vault-agent/runtime.mjs";
 import { collect, safePath, writeOnce, endpoint, main as sync } from "./vault-agent-sync.mjs";
 import { checkCredentials, digest, normalizeJob } from "../workers/vault-agent/src/protocol.mjs";
@@ -35,7 +35,10 @@ export async function main(args) {
     const { tools } = createTools(vault, false, crypto.randomUUID());
     console.log(JSON.stringify(await (values.search ? tools.search.execute({ query: values.search }) : tools.read.execute({ path: values.read })), null, 2));
   } else {
-    const config = await loadConfig(values.config);
+    // Default to the vault's hosted provider config when present; --config or --require-cloud-status keep the explicit/Ollama path.
+    const defaultConfig = join(vault, ".obsidian", "plugins", "rabbit-vault-agent", "local-provider.json");
+    const useDefault = !values.config && !values["require-cloud-status"] && await access(defaultConfig).then(() => true, () => false);
+    const config = await loadConfig(values.config ?? (useDefault ? defaultConfig : undefined));
     if (values["require-cloud-status"]) {
       if (config.type !== "ollama" || config.cloudAccess?.allowRemote !== true || !config.cloudAccess.actions?.includes("status")) {
         throw new Error("A required cloud status call needs explicitly enabled local caller tools.");
