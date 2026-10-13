@@ -115,12 +115,16 @@ source were recovered from the existing public website, not private backups.
 
 ## Obsidian, Copilot, and GitHub
 
-The local `RabbitOS Vault` at `C:\Users\odaat\Documents\RabbitOS Vault` is already
-connected to `ringquistchase-collab/rabbitos-vault` on GitHub. Its existing
-`git-obsi-sync` plugin is available for manual vault sync; automatic vault sync
-is disabled to keep private-repository publishing approval-only. This does not
-merge the vault into this Cloudflare repository or change either repository's
-deployment workflow.
+The local `RabbitOS Vault` at `C:\Users\odaat\Documents\RabbitOS Vault` is
+connected to the **public** GitHub repository
+`ringquistchase-collab/obsidian-rabbitos-vault`. Its `git-obsi-sync` plugin
+syncs **automatically every 3 seconds** through the GitHub API, so vault changes
+are published within seconds. The plugin does not read the vault `.gitignore`:
+only its own exclude patterns (Obsidian Settings → Git Sync) keep folders off
+GitHub. `Local/` and the linked library folders are excluded; generated notes and
+agent state elsewhere in the vault are published. Add a folder to those patterns
+before writing private files there. This does not merge the vault into this
+Cloudflare repository or change either repository's deployment workflow.
 
 The vault uses the **Local REST API with MCP** community plugin, installed from
 `coddingtonbear/obsidian-local-rest-api` release `5.4.0`. It requires Obsidian
