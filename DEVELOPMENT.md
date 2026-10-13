@@ -3,6 +3,24 @@
 Local-first workflow. Nothing here touches production unless you run a deploy
 command explicitly.
 
+## Publishing this guide
+
+The full document can be recorded locally at `Cloud Agents/DEVELOPMENT.md` in
+the Obsidian vault. That copy is private, outside automatic cloud-sharing roots,
+and verified against the source hash. The public website copy replaces personal
+Windows usernames and removes private task-thread links; it does not publish
+vault reports, credentials, mailbox state or note snapshots.
+
+```powershell
+node scripts\publish-development.mjs --vault "<vault-root>"
+```
+
+This writes `site/development.md` and creates a new exact vault copy, refusing
+to overwrite an existing vault document. Omit `--vault` to refresh only the public
+copy after source edits. `site/development.html` provides a plain-Markdown reader
+and download link, with no external renderer or automatic command execution.
+Deploying Pages remains a separate explicitly approved production operation.
+
 ## Hosted Qwen chat
 
 `workers/qwen/` is an isolated Workers AI gateway using
@@ -52,7 +70,8 @@ npm blocks them by default; approve them once with `npm install-scripts approve`
 
 ## Workers, locally
 
-`npm run dev:sync`, `dev:node-worker`, `dev:gateway` run each Worker with `--local`,
+`npm run dev:sync`, `dev:node-worker`, `dev:gateway` run each Worker with its
+`wrangler.dev.toml` configuration and `--local`,
 which uses simulated D1/KV/R2/Durable Objects and never touches live data. Secrets
 go in an untracked `.dev.vars` file next to each `wrangler.toml` (gitignored).
 
@@ -149,11 +168,1302 @@ then compare them with this repository and its GitHub issues." GitHub access
 continues through Copilot's existing GitHub integration; no extra GitHub token
 is needed for the Obsidian connection.
 
+The Rabbit Vault Agent community plugin is enabled for local-first tasks.
+Its default provider is loopback Ollama `qwen2.5:3b`; no remote fallback or
+automatic original-note edits are enabled. CPU-only inference has a bounded
+ten-minute wait per model turn; hosted inference retains its three-minute
+limit. Timeouts remain explicit failed runs with private retained reports.
+
 The plugin exposes note read/write and command tools. Review approvals before
 allowing edits or commands. Vault notes used in a Copilot request can become
 model context; do not request secrets or private linked-folder contents.
 Git ignore rules are not MCP access controls. Setup verification initializes
 MCP and lists tools without reading, editing, or uploading note contents.
+
+## Owner cloud command shell and connection map
+
+The separate [cloudshell Worker](workers/cloudshell/README.md) and owner-only
+RabbitOS cloud bridge are activated as separate pilot services, not a change
+to the main production console.
+Use `npm run test:cloudshell` and `npm run typecheck:cloudshell`; Worker-only
+dry-run packaging and the full Docker image build/run succeeded. Native Windows
+container development needs WSL, whose Node/Docker integration is still pending.
+The pinned image includes Bash/Node, not Python. See the component guide for the exact contract,
+ephemeral workspace, durable concurrency gate, explicit recovery and cost gates.
+No secret enters the browser or command environment. A 60-second command
+timeout is distinct from container startup and teardown.
+
+The current RabbitOS console keeps legacy account/login routes disabled.
+New tool access supports three explicit modes: locked `local-only` by default,
+restricted verified Supabase identities, and signed Cloudflare Access JWTs.
+The user selected additional people from an operator-controlled allowlist,
+with agent-side scoped approval lasting one hour. A separate persistent
+approval broker verifies configured subject/capability policy; it never trusts
+an AI's approval prose, a browser identity, or a client approval flag.
+Caller-agent, backend-service and approving-agent credentials are distinct.
+Missing tokens/URLs are configuration failures, not successful jobs.
+Submit/status/result viewing does not automatically return cloud output to
+local notes; use the existing approved vault connector. Same-grant job links
+prevent guessing another person's or agent's job IDs.
+
+`npm run vault:cloud-access -- --vault <path> <action>` supplies explicitly
+authenticated local/connected agent requests and decisions, with automatic
+private retained success/failure reports. See the component guide for exact
+actions, environment references and scope/expiry constraints. The approved
+pilot has one allowlisted email and the fixed `local-vault-agent` identity,
+distinct protected credentials and a verified one-hour agent grant.
+An explicitly configured local Ollama runtime also exposes `cloud_access`
+request/status/decision actions, with environment-only credentials and
+model-origin report evidence. Hosted note providers and arbitrary shell actions
+are refused by this native tool; coding agents use the separately authenticated
+CLI for consented command/snapshot actions.
+
+The vault hub `Pathways/Agent Worker Frontend Backend Network.md` now links
+the real frontend, BFF, Workers, local dispatchers, cloud-note jobs, retained
+mailbox, network transports and reports. Companion notes separate integration
+gaps, owner-shell operation and proposed business responsibilities. They are
+private (`cloud-agent-share: false`), not cloud-upload permission or a scheduler.
+
+The user approved Docker, paid Containers activation and isolated deployment.
+Live shell health/consent boundaries and exact synthetic command output were
+verified, including both remote console machine routes. Additional paid
+resources or wider identities still require separate approval.
+The previously published public development guide and private exact snapshot
+remain the last approved publication; this local documentation update was not
+republished or redeployed.
+
+The live isolated entry points are
+`https://rabbit-web-cloud-supabase.rabbitsoftware-gateway.workers.dev` and
+`https://rabbit-web-cloud-access.rabbitsoftware-gateway.workers.dev`; the broker
+is `https://rabbitsoftware-cloudshell.rabbitsoftware-gateway.workers.dev`.
+The Access application has reusable exact-email and exact-service-token
+policies. Anonymous requests redirect to authentication; signed service JWT
+verification uses the actual empty `sub` and exact signed `common_name`.
+The pilot Access service token expires 2026-10-13T18:44:42Z and grants expire
+after one hour; neither is silently renewed.
+
+The native plugin is enabled and uses a host-owned local provider configuration
+for Ollama, with only `cloud_access` request/status actions. Its bounded caller
+credential loader passes only the caller token and strips backend/approval/note
+tokens. Existing hosted note-provider settings are preserved. **Report connected
+cloud-access status with the local agent** is a native Obsidian command;
+Obsidian's separate desktop CLI remains disabled and is not required.
+The native status-report command passes `--require-cloud-status true`: the
+existing exact-call guard rejects an answer without a successful model-selected
+status call. It does not silently execute a tool or expand host permissions.
+Live CLI receipts and local model runs retain private reports automatically.
+A consented public-synthetic note job completed with its exact marker/path and
+empty edits. Same-grant reads through both consoles passed; guessed-job and
+machine browser-Origin reads were denied. Human browser sign-in remains
+unverified; these activation tests uploaded no private notes.
+
+## Hugging Face account in the vault
+
+```powershell
+python scripts\sync-huggingface-vault.py --vault "C:\Users\odaat\Documents\RabbitOS Vault"
+python -B scripts\test-sync-huggingface-vault.py
+```
+
+Writes one note per model, dataset and Space (metadata, file list, card and
+README) plus an index at `Hugging Face/Hugging Face.md`. It only reads from
+Hugging Face, never downloads weights or data files, and uses the existing local
+sign-in (`HF_TOKEN` or `~/.cache/huggingface/token`). Private repo cards land in
+the vault, so `/Hugging Face/` must stay in the vault `.gitignore`; the script
+refuses to run otherwise. Unchanged notes are not rewritten, and notes for repos
+removed from Hugging Face are reported, not deleted. Run it manually; no schedule.
+
+## Obsidian cloud agents
+
+The isolated cloud service was activated with approval on 2026-10-12:
+`https://rabbitsoftware-vault-agent.rabbitsoftware-gateway.workers.dev`.
+Its private R2 bucket, Workflow, and SQLite budget are separate from all
+existing resources. Authenticated health, anonymous rejection, actual inference,
+durable output shape/content, and identical-job replay were verified using only
+synthetic public data. No existing vault notes were uploaded.
+
+`workers/vault-agent/` and `scripts/vault-agent-sync.mjs` provide a separate,
+single-vault, bearer-authenticated note assistant. It uses R2 for immutable job
+snapshots and results, Workflows for processing after your computer goes offline,
+and a SQLite Durable Object for a fixed shared 20-inference-attempt UTC daily
+cap. Failed inference attempts count. Generation has zero automatic retries and
+a 4000-output-token limit; it uses only Workers AI Qwen3, with no fallback.
+This is an attempt/token cap, not a guaranteed dollar budget.
+
+The vault-side layout is:
+
+- `Cloud Agents/Knowledge/`: notes you explicitly opt in.
+- `Agents/` and `Workers/`: existing notes, included only if individually opted in.
+- `Cloud Agents/Inbox/`: task notes (task, answer, or organize mode).
+- `Cloud Agents/Results/`: generated Markdown and companion edit-proposal JSON.
+- `Cloud Agents/Backups/`: originals preserved before approved replacement.
+
+Only Markdown notes with the exact, unquoted top-level YAML line
+`cloud-agent-share: true` are shared. Default starter notes have `false`.
+Knowledge snapshots contain 1-40 notes, each at most 16000 UTF-8 bytes, and
+must fit a 64 KiB JSON request including the instruction. The connector reports
+excess size instead of silently dropping or truncating notes. Links are not
+followed, attachments are not uploaded, linked filesystem directories are
+refused, and other vault folders are outside the allowlist.
+
+These copies are sent to Cloudflare R2, Workflow storage, and Workers AI.
+Never opt in secrets, personal/EEG/medical information, private source code,
+credential files, or private repository snapshots. The credential detector
+blocks only several recognizable token/private-key forms; it is not a privacy
+scanner. Revoking the marker stops future uploads but does not remove snapshots
+already stored in the cloud. There is no automatic remote retention/deletion
+policy. Request an explicit bucket/workflow cleanup when retiring the service.
+
+Inbox note example:
+
+```markdown
+---
+cloud-agent-share: false
+cloud-agent-mode: answer
+---
+Explain how the selected Workers and Agents fit together, citing vault paths.
+```
+
+Use `task` for note-based writing/analysis, `answer` for questions, and `organize`
+for summaries plus optional full-note edit proposals. These assistants have no
+shell, browser, deployment, or external-action tools. They cannot execute arbitrary
+code, edit running Workers, or act on private information outside the snapshot.
+The organize mode can propose replacements of supplied notes, not rename/delete
+files or change unrelated folders.
+
+### Local checks and connector use
+
+```powershell
+npm run test:vault-agent
+npx wrangler deploy --config workers\vault-agent\wrangler.jsonc --dry-run
+npm run vault:agents -- --vault "C:\Users\odaat\Documents\RabbitOS Vault" --plan
+```
+
+The tests run real local Workflows/R2/SQLite with a clearly test-only AI service,
+including all three modes, the actual connector submit/download/approval flow,
+idempotency, revocation before upload, byte limits, conflict rejection, backups,
+and persistence after restart. No notes or inference calls reach Cloudflare.
+`npm run dev:vault-agent` uses only `-dev` simulated storage and intentionally
+has no AI binding: jobs fail explicitly if inference is attempted. Set a local
+token in the ignored `workers/vault-agent/.dev.vars` for authenticated API testing.
+Do not add a remote AI binding merely to make local testing succeed.
+
+Activation requires **explicit approval** to create the dedicated
+`rabbitsoftware-vault-agent` R2 bucket, deploy the new Worker/Workflow/DO, and
+set its `VAULT_AGENT_TOKEN` secret (32+ random characters). Do not reuse the
+sync bucket, existing Worker bundles, or the Obsidian API key. Keep the R2
+bucket private. After approval, provision the named bucket first, deploy only
+this Worker's production config, and set its secret interactively using
+Wrangler. Verify an authenticated `/health` and a synthetic non-private job
+before allowing any note upload.
+
+Set `VAULT_AGENT_URL` to the resulting HTTPS Worker origin (no path or trailing
+API route) and `VAULT_AGENT_TOKEN` in the local process environment; never put
+the token in notes, commands saved in the vault, or tracked files.
+
+```powershell
+# Review the opted-in file list first. No network request is made.
+npm run vault:agents -- --vault "C:\Users\odaat\Documents\RabbitOS Vault" --plan
+# Only after reviewing each selected note and enabling desired inbox entries:
+npm run vault:agents -- --vault "C:\Users\odaat\Documents\RabbitOS Vault" --sync --allow-upload
+# Run again when the computer is on to fetch finished jobs without any upload.
+npm run vault:agents -- --vault "C:\Users\odaat\Documents\RabbitOS Vault" --pull
+# Review the result JSON and compare replacements with current notes first.
+npm run vault:agents -- --vault "C:\Users\odaat\Documents\RabbitOS Vault" --apply <job-id> --approve-edits
+```
+
+Submitting records a durable immutable snapshot and starts the Workflow. Cloud
+processing can continue with the computer off; **new local tasks and results
+cannot sync while the computer is off**. Running the connector is manual; no
+OS scheduled task or recurring automation is installed.
+
+Connector state, including retryable snapshots, stays in the Git-ignored
+repository `.wrangler/vault-agent-sync/` directory, keyed by vault and Worker
+origin. Preserve it across runs. A connector lock prevents overlapping runs.
+If it crashes, confirm no connector is running before removing its specific
+stale `sync.lock`. Unchanged inbox notes do not rerun when knowledge changes:
+edit the task text to request a new revision. Identical mode/instruction/snapshot
+combinations share one content-addressed job and do not spend on repeat submissions.
+Failed jobs are reported; edit the task text to retry, rather than silently
+restarting an errored Workflow.
+
+Downloads never overwrite edited results. Approval checks every proposal
+against the submitted snapshot and current file hash before changing any note;
+originals are backed up, and changed notes are refused. Close other editors while
+applying: filesystem edits are not cross-application transactions, and a write
+failure can leave a partially applied batch recoverable from the backups.
+Applying again skips replacements already applied. Local JSON proposals can be
+reviewed but should not be hand-edited; submit a new task revision instead.
+
+## Portable vault task coordination
+
+`npm run vault:tasks` is a separate persistent coordinator; existing one-shot
+agent/plugin behavior is unchanged. It defines work as versioned JSON rather
+than binding work to a programming language, OS or provider. Namespaced
+capabilities are extensible: a peer can advertise `code.check`,
+`network.discover`, or another capability without a new local task format.
+Only capabilities actually implemented by an authorized adapter can execute.
+The protocol uses JSON, SHA-256 and HTTPS; this implementation needs Node.
+A bare-metal/older host still needs its own compatible transport/runtime adapter.
+No universal compatibility or uninterrupted execution is promised.
+
+Create a task JSON file (not a credential file):
+
+```json
+{
+  "version": 1,
+  "capability": "notes.search",
+  "instruction": "syntax",
+  "adapters": ["local"],
+  "dependsOn": [],
+  "notes": [],
+  "share": false
+}
+```
+
+```powershell
+npm run vault:tasks -- --vault "C:\Users\odaat\Documents\RabbitOS Vault" --discover
+npm run vault:tasks -- --vault "C:\Users\odaat\Documents\RabbitOS Vault" --enqueue task.json
+npm run vault:tasks -- --vault "C:\Users\odaat\Documents\RabbitOS Vault" --list
+npm run vault:tasks -- --vault "C:\Users\odaat\Documents\RabbitOS Vault" --run
+npm run vault:tasks -- --vault "C:\Users\odaat\Documents\RabbitOS Vault" --artifact <output-hash>
+```
+
+Enqueue prints a SHA-256 task ID. A later task puts that ID in `dependsOn`;
+dependencies must already exist, preventing forward-reference cycles.
+Completed output is stored once by content hash, and tasks store references.
+Request snapshots remain frozen after first preparation; changed notes need a
+new task definition/instruction. Do not edit coordinator state by hand.
+`notes.read` requires explicit note paths. `notes.answer` reads selected notes
+or the top two search matches; `text.transform` consumes explicit notes and
+dependency outputs. Those two capabilities use local Ollama. Search/read need
+neither a model nor internet. This coordinator does not execute proposed code
+or edit originals.
+
+State is atomically replaced under `Cloud Agents/Coordination/state.json`.
+It may contain private snapshots and is Git-ignored in the configured vault.
+Other vaults must ignore this directory too. Integrity checks reject corrupted
+artifacts/definitions; unsupported state versions are preserved, never reset.
+A process lock prevents concurrent runs. A crash can leave `state.json.lock`;
+verify its recorded PID has stopped before removing that specific lock.
+Atomic rename is not a distributed-filesystem transaction or a substitute for
+backups. Do not share this state between concurrent machines via file sync.
+
+Budgets: 128 tasks, 256 unique artifacts, 65536 UTF-8 bytes per artifact,
+8 MiB serialized state, 8 dependencies and 8 explicit notes per task.
+Each manual `--run` processes at most 8 tasks serially and caches discovery
+per adapter. Model context/turn budgets and cloud job snapshot limits still
+apply. Storage exhaustion is an explicit error, not an automatic deletion.
+`--prune <id>,<id>` removes reviewed terminal tasks and unreferenced artifacts;
+it refuses to remove a dependency still referenced by a retained task.
+Pruning local state does **not** delete remote jobs or R2 snapshots. Remote
+retention, quotas and costs remain the provider/operator's responsibility.
+Existing one-shot Results/Proposals are outside this coordinator's budget.
+
+Connection/time-out/overload failures retain prepared input and wait with
+bounded backoff, failing after 5 such execution failures. Discovery failures
+remain visible waiting states with a 60-second retry interval. Run again when
+connectivity returns; nothing runs while this computer is off. Accepted durable
+remote jobs may continue independently. `--retry <id>` explicitly resets retry
+attempts for waiting/blocked/failed work, without changing its immutable request.
+An errored Cloudflare Workflow needs a **new task revision**, not replay of its
+already-errored immutable job. Dependent work waits or reports its failed
+prerequisite; retry it explicitly after repair.
+
+Adapters are attempted in the task's explicitly approved order only until one
+compatible adapter is selected. Its endpoint/type or local model is then pinned;
+ambiguous failures never silently move work to another provider. To intentionally
+change providers, create a new task definition. Unknown versions/capabilities
+produce visible errors/waiting states: add and test a compatible adapter rather
+than claiming automatic old/new-version compatibility.
+
+### Autonomous local coding and repair
+
+The `coding-local` adapter adds capability `code.repair` using the installed
+Copilot CLI and the existing login. This is **local execution with hosted
+Copilot inference**, not offline Ollama. Both adapter `allowExecution: true`
+and `allowRemote: true`, plus task `share: true`, are mandatory. Approve the
+exact source scope as suitable model context; never select private code,
+credential files or personal notes. No vault notes are read by this adapter.
+Existing local/offline note capabilities are unchanged.
+
+Example local configuration (replace CLI path with your installed binary):
+
+```json
+{
+  "adapters": [{
+    "id": "coding",
+    "type": "coding-local",
+    "projectRoot": "C:\\Users\\odaat\\Projects\\rabbitsoftware-cloudflare",
+    "cliPath": "C:\\path\\to\\installed\\copilot.exe",
+    "allowExecution": true,
+    "allowRemote": true,
+    "files": ["tools/vault-agent/examples/coding-syntax.mjs"],
+    "tests": ["tools/vault-agent/examples/coding-syntax.test.mjs"],
+    "maxRounds": 3,
+    "maxLines": 12,
+    "apply": true
+  }]
+}
+```
+
+The adapter pins its canonical project, executable, file scope, validation,
+limits and apply approval. It copies only 1-20 explicit source files and 1-8
+separate **immutable** Node test files, rejecting links and credential patterns.
+Inputs are frozen as content-addressed coordinator artifacts. It supports
+self-contained Node-testable modules; it does not copy dependencies, install
+packages or run arbitrary package scripts. Choose a tested compatible adapter
+for other languages/build systems rather than broadening command permissions.
+Splitting into new files requires those modules to exist in the approved scope.
+
+Task definition:
+
+```json
+{
+  "version": 1,
+  "capability": "code.repair",
+  "instruction": "Repair the selected function while preserving its required behavior.",
+  "adapters": ["coding"],
+  "dependsOn": [],
+  "notes": [],
+  "share": true
+}
+```
+
+```powershell
+npm run vault:tasks -- --vault "C:\Users\odaat\Documents\RabbitOS Vault" --config ".wrangler\vault-coding-config.json" --discover
+npm run vault:tasks -- --vault "C:\Users\odaat\Documents\RabbitOS Vault" --enqueue ".wrangler\vault-coding-task.json"
+npm run vault:tasks -- --vault "C:\Users\odaat\Documents\RabbitOS Vault" --config ".wrangler\vault-coding-config.json" --run
+```
+
+The configured scope on this computer currently covers **only the public
+synthetic addition example**, not unrestricted access to the connected repos.
+On 2026-10-12, the real installed Copilot CLI repaired that example through the
+vault queue, the runner verified fixed positive/negative/fractional tests, and
+applied the change with a backup. The persisted task status is `done`.
+
+During one `--run`, the agent autonomously edits a copied workspace, then the
+runner executes the approved fixed Node tests and checks source line budgets.
+Failures feed back into up to 3 repair rounds; a claimed answer or process exit
+alone is never success. Source line budget is configurable (1-2000, default
+400). Context is split losslessly into chunks of at most 4096 UTF-8 bytes and
+80 newline delimiters with a hash manifest; instructions tell the host to read
+every chunk. Huge source lines must be refactored, not truncated. Per-file
+64 KiB and total source-snapshot 256 KiB limits remain explicit errors requiring
+smaller dependency tasks. Context is capped at 64 KiB.
+
+CLI tool exposure is limited to view/edit/create/glob/grep, shell tools are
+denied, built-in MCP is disabled, and temporary-directory access is disabled.
+Only the external runner executes the approved Node tests. Ambient token/secret
+variables and Node test/options injections are removed from child environments;
+the CLI uses the existing signed-in host profile. The host's tools/MCP/network
+permissions are **not** automatically broadened. This is **not an OS sandbox**:
+Node tests can execute arbitrary code with the user's account. Only approve
+trusted tests/source; use a real container/VM for untrusted workloads.
+CLI/version changes that reject these controls fail explicitly.
+
+An agent call has a 180-second deadline; validation has 120 seconds. Combined
+process output is capped at 64 KiB. On Windows, timeout/overflow terminates the
+specific child PID tree, never processes selected by name. Unexpected files,
+links, changed tests or task-context chunks reject validation; workspace text
+is checked against a 1 MiB budget after each agent/validation invocation.
+This is a post-execution check, not a filesystem quota.
+
+Validated updates stay staged unless `apply: true` was explicitly configured.
+Application checks all original source hashes, backs up originals, rechecks
+before each write and leaves unrelated dirty files alone. It is not a
+cross-editor transaction: close other editors during apply. Partial batches
+can resume only for unchanged originals or already-applied content; backups
+remain available for operator recovery. No deployment, publishing, spending,
+secret access or permission changes are authorized by a coding task.
+
+The idempotency ledger and workspace are retained under
+`.wrangler/vault-coding/<task-id>/` in the approved project, separate from the
+vault state. Completed work returns its saved receipt without re-execution.
+A project-wide `coding.lock` prevents overlapping coding runs even from
+different vaults. After a crash, verify its recorded PID stopped before removing
+that specific lock; it is never automatically discarded.
+An interrupted agent/validation invocation stops for operator review rather
+than blindly repeating an ambiguous action. Failed/exhausted repairs do not
+restart just because a coordinator task is retried; inspect the retained
+feedback and submit a new task revision after repair. Stale coordinator locks
+need PID verification as documented above.
+Coordinator pruning does not remove these workspaces/backups; review and clean
+specific completed job directories separately. There is no aggregate disk quota,
+resident daemon, automatic schedule or guarantee against storage exhaustion.
+
+New validated coding receipts also include changed source contents and hashes
+so a downstream mailbox can retain code, not just a temporary path. Receipt
+serialization must fit the 64 KiB artifact budget **before** copy-back; larger
+changes remain unapplied and need a smaller task scope.
+
+Cloud-shell tasks still use explicit authorized HTTPS adapters. No shell was
+provisioned or connected. Until an appropriate configured shell advertises the
+requested capability, that work stays visibly waiting; no local/cloud provider
+switch is made after an adapter is pinned.
+
+```powershell
+node --test scripts\test-vault-agent-coding.mjs tools\vault-agent\examples\coding-syntax.test.mjs
+```
+
+### Authorized remote and cloud-shell adapters
+
+Optional `--config <local-config.json>` selects up to 16 adapters. The default
+is only `local`; no remote host is contacted by default. Keep config outside
+tracked notes (for example, the ignored repository `.wrangler` directory).
+This example config contains no secret values:
+
+```json
+{
+  "adapters": [
+    { "id": "local", "type": "local" },
+    {
+      "id": "cf",
+      "type": "cloudflare-jobs",
+      "url": "https://rabbitsoftware-vault-agent.rabbitsoftware-gateway.workers.dev",
+      "allowRemote": true,
+      "tokenEnv": "VAULT_AGENT_TOKEN"
+    },
+    {
+      "id": "shell",
+      "type": "cloud-shell-http",
+      "url": "https://your-authorized-service.example",
+      "allowRemote": true,
+      "tokenEnv": "VAULT_SHELL_TOKEN"
+    }
+  ]
+}
+```
+
+Supply each token through the process environment without printing it or putting
+it in a saved command. Missing remote credentials are reported by discovery and
+do not disable unrelated local adapters. `local` optionally accepts
+`providerConfig` referencing a local Ollama configuration.
+An adapter `{"id":"hosted","type":"model","allowRemote":true,"providerConfig":"<ignored-provider-config.json>"}`
+reuses the existing explicitly configured OpenAI-compatible provider, including
+its model, HTTPS endpoint, token and separate provider-level `allowRemote` approval.
+It supports `notes.answer` and `text.transform`, with the same opted-in snapshots
+and dependency gates; it never chooses a hosted endpoint by itself. Model calls
+use the existing bounded client and 180-second timeout, not the service-adapter
+30-second timeout. Its credentials remain in the ignored local provider config,
+never coordinator state.
+
+`agent-http` and `cloud-shell-http` are provider-neutral clients for an **existing
+authorized service** implementing the contract below. They do not provision a
+Google/Azure/AWS shell, launch arbitrary SSH/CLI commands, or turn the desktop
+Obsidian plugin into a headless server. The service operator must separately
+authorize sandboxed execution, account scopes and any consequential actions.
+
+All remote operations require task `share: true` plus adapter `allowRemote: true`.
+Explicit notes must also have `cloud-agent-share: true`. Shared local tasks use
+that same opted-in read scope; private dependency artifacts cannot be reclassified
+as exportable by a later shared task. Consent is not a complete privacy scanner:
+review prompts, inputs and outputs. Credentials never belong in task artifacts.
+HTTPS credential-free URLs, no redirects, and bounded JSON constrain remote
+calls. Service adapters enforce 30-second timeouts and 64 KiB outbound and
+inbound JSON limits; model adapters retain their existing model-client budgets.
+
+The Cloudflare bridge negotiates its existing `/health`, submits normalized
+immutable `/jobs` snapshots, and polls durable result/status endpoints. It
+supports `notes.answer` and `text.transform`; supply explicit opted-in notes
+or shared dependency outputs. Its 16 KiB per-note and 64 KiB job limits remain.
+It proposes text only, not shell execution. No Worker deployment was needed.
+
+Agent/cloud-shell contract (all endpoints require Bearer authentication):
+
+- `GET /capabilities` returns
+  `{"versions":[1],"capabilities":["shell.job"],"idempotentTasks":true,"peers":[]}`.
+  Peer hints (maximum 16) are informational "gossip", never automatic trust,
+  network scanning, broadcast, credential forwarding or new adapter registration.
+- `POST /tasks` accepts
+  `{"version":1,"id":"<task-hash>","definition":{...},"notes":[{"path":"...","content":"..."}],"inputs":[{"task":"<dependency-id>","artifact":"<content-hash>","content":"..."}]}`.
+  It returns `{"version":1,"id":"<task-hash>"}`. The service must persist
+  idempotency **before executing**, associate the ID with the entire immutable
+  request, and reject a differing request for an existing ID. Replays after a
+  timeout must never execute the shell action twice.
+- `GET /tasks/<id>` returns
+  `{"version":1,"id":"<task-hash>","status":"queued|running|waiting"}` while
+  pending, or `{"version":1,"id":"<task-hash>","status":"done","content":"bounded result"}`.
+  Other statuses are explicit failures. All JSON messages must fit 64 KiB.
+  A claimed idempotency capability is not proof: contract-test your service
+  and enforce host-side execution/approval/resource limits before real work.
+
+```powershell
+node --test scripts\test-vault-agent-tasks.mjs scripts\test-vault-agent-runtime.mjs
+```
+
+Tests cover real filesystem restart/locking/integrity/CLI behavior, exact
+capacity and UTF-8 byte limits, dependency sharing gates, retries, provider
+pinning, and mock HTTP contracts for agents, cloud shells and the Cloudflare
+bridge. They do not provision or live-test a new cloud shell.
+
+## Retained agent communication
+
+`npm run vault:network` adds a store-and-forward mailbox independent of an
+agent's current session. It stores immutable code, handoff text and task
+receipts at `Cloud Agents/Network/mailbox.json`, with content-hash deduplication,
+atomic replacement, file sync, a single-host process lock and integrity checks.
+The configured vault ignores this directory in Git. Other vaults must add the
+same ignore rule. Keep backups; "durable" does not mean immune to disk loss,
+manual deletion or an unpowered machine.
+
+Messages survive the sender/receiver leaving a task or restarting. Reading
+does not consume them. Recipients explicitly acknowledge the exact message
+and content hash **after** durable processing; pending messages are replayed
+until acknowledged. Acknowledged code remains readable until explicit pruning.
+Delivery is at least once, not exactly-once execution: recipients must keep
+their own processed-message IDs before applying side effects, and must not
+interpret a received code block as permission to run it.
+
+Create a message JSON file:
+
+```json
+{
+  "version": 1,
+  "sender": "coding-agent",
+  "recipient": "vault-orchestrator",
+  "key": "syntax-result-v1",
+  "kind": "code",
+  "route": "local",
+  "share": false,
+  "content": "export const add = (a, b) => a + b;"
+}
+```
+
+`sender`/`recipient` are lowercase names, not URLs or credentials.
+The key is a sender/recipient-scoped revision/idempotency key; reusing it with
+different content or routing is refused. A local route has no network upload.
+A cloud route additionally requires `share: true` and remains
+`cloud-pending`—no remote service, tunnel or delivery daemon was authorized.
+Queued cloud messages cannot be locally acknowledged or silently pruned.
+Do not place secrets or private data in exportable messages.
+
+```powershell
+npm run vault:network -- --vault "C:\Users\odaat\Documents\RabbitOS Vault" --send ".wrangler\vault-network-handoff.json"
+npm run vault:network -- --vault "C:\Users\odaat\Documents\RabbitOS Vault" --receive vault-orchestrator
+npm run vault:network -- --vault "C:\Users\odaat\Documents\RabbitOS Vault" --read "vault-orchestrator:<message-id>"
+npm run vault:network -- --vault "C:\Users\odaat\Documents\RabbitOS Vault" --list
+```
+
+These commands can run from another task/shell using an absolute script path
+and vault path; the caller does not need to work inside the vault. They require
+the same host/filesystem authorization. This is not a multi-host shared-file
+queue; do not operate concurrent copies over Dropbox/OneDrive/Git.
+
+After safely processing a message, an acknowledgment JSON file contains
+`{"recipient":"vault-orchestrator","id":"<message-id>","artifact":"<content-hash>"}`:
+
+```powershell
+npm run vault:network -- --vault "C:\Users\odaat\Documents\RabbitOS Vault" --ack "<ack-file.json>"
+npm run vault:network -- --vault "C:\Users\odaat\Documents\RabbitOS Vault" --prune "<acknowledged-id>,<acknowledged-id>"
+```
+
+`--receive` returns up to 16 pending message headers, not bulk code contents,
+plus a remaining count. Read the individual messages. The mailbox caps retained
+messages/artifacts at 128 each, content at 65536 UTF-8 bytes per message and
+serialized state at 8 MiB. CLI input JSON is capped at 128 KiB including JSON
+escaping. No pending message is auto-deleted or overwritten on exhaustion;
+storage full is a visible failure. Split larger work into explicitly ordered
+revision keys. Operator pruning removes only acknowledged local messages and
+unreferenced content. Once pruned, its deduplication tombstone is gone; replaying
+that old key creates a new message. Keep recipient processing IDs for stronger
+side-effect idempotency.
+
+If the process crashes, inspect `mailbox.json.lock` and verify its recorded
+PID stopped before removing that specific lock. Unsupported versions,
+missing/corrupted artifacts and changing immutable keys are rejected without
+resetting stored information.
+
+### Coding/task feedback retained for other agents
+
+```powershell
+npm run vault:tasks -- --vault "C:\Users\odaat\Documents\RabbitOS Vault" --publish vault-orchestrator
+```
+
+This reads completed/failed/blocked tasks and copies their status and result
+contents into local `task-receipt` messages. It does not execute the task again,
+read arbitrary paths, contact a cloud provider or grant permissions. Repeated
+publishing is deduplicated; changed status/result creates a new receipt.
+Publishing is explicit rather than a transaction with task execution: if the
+mailbox is full or the host stops, repair capacity and run `--publish` again.
+Receipts retain result content independently of coordinator pruning.
+New coding repair receipts include validated changed source paths, content and
+hashes; receipts created before this feature still have their original metadata.
+Oversized receipt content is refused, not truncated. Retained workspaces/backups
+remain separately governed by the coding adapter's cleanup rules.
+
+### Optional authenticated local network transport
+
+For other local agents/processes, start the mailbox only on loopback:
+
+```powershell
+# Generate a temporary server credential without printing or saving it.
+$env:VAULT_MAILBOX_TOKEN = [Convert]::ToHexString([Security.Cryptography.RandomNumberGenerator]::GetBytes(32))
+npm run vault:network -- --vault "C:\Users\odaat\Documents\RabbitOS Vault" --serve 8810
+```
+
+Supply the token to authorized local clients via their process environment,
+never notes, command-line arguments, browser pages or model context. Stop the
+foreground server with Ctrl+C. It is not installed as a Windows service and no
+scheduler was created. Its address/port is printed, never its token.
+
+All endpoints require `Authorization: Bearer <token>`:
+
+- `GET /health`: version 1, loopback transport, `cloudDelivery: false`.
+- `POST /messages`: the message JSON above; returns ID, replay flag and status.
+- `GET /inbox/<recipient>`: up to 16 pending message headers.
+- `GET /inbox/<recipient>/<id>`: retained local message and code content.
+- `POST /ack`: acknowledgment JSON; idempotently records completion.
+
+The service binds **only** `127.0.0.1`, accepts only loopback Host headers,
+refuses browser Origin headers, emits no CORS grants, compares hashed tokens
+in constant time, and limits incoming JSON to 64 KiB of actual streamed bytes.
+HTTP content near the CLI content limit may exceed the JSON envelope budget;
+split it or use the same-host CLI, never silently truncate. Received message
+JSON includes metadata/escaping in addition to the bounded content.
+Connection/header/request limits bound server work. Tokens authorize the
+whole local mailbox, not separately authenticated recipient identities;
+message sender/recipient labels are routing metadata, not proof of identity.
+Do not give this token to an untrusted agent. Local filesystem permissions
+remain the security boundary for CLI callers.
+
+The production Cloudflare Worker cannot call your computer's loopback address.
+It retains its existing snapshot/results API; future cloud-mailbox integration
+needs a separately authorized deployment/service and client adapter. No
+private note was uploaded, no local port exposed publicly, and no cloud
+deployment happened here. While the host is off, data stays on disk but no
+local communication occurs. Reconnect/replay needs a powered host.
+
+```powershell
+node --test scripts\test-vault-agent-network.mjs scripts\test-vault-agent-coding.mjs
+```
+
+Checks cover real HTTP loopback/authentication/restart, file/CLI persistence,
+message replay/acknowledgment, hash integrity, exact storage/content limits,
+queued cloud routes and publishing task results without re-executing agents.
+
+## Retained tool packages and lightweight gossip
+
+Tools developed during tasks can be retained with their usage skills in the
+mailbox's independent package catalog. Content remains local in
+`Cloud Agents/Network/mailbox.json`, alongside non-shared companion guides at
+`Cloud Agents/Network/Packages/<sha256>.md`. Guides reference immutable source
+bundles; they do not install code or skills. There are two workflows:
+
+1. The local note AI's `stage_tool` action, or `vault:network --package FILE`,
+   retains a complete source/skill package **unvalidated, pending review**.
+   Arbitrary imported/generated code is never automatically executed.
+2. Run an already approved exact-scope `code.repair` task with `coding-local`.
+   The runner develops/repairs the copied source, runs fixed trusted Node tests,
+   checks hashes and line limits, and records validation provenance.
+   `vault:tasks --publish <agent>` retains the terminal receipt and matching
+   changed source as a pending package with `scoped-tests-passed` metadata.
+   Frozen test paths/hashes and coding identity must match. This does not
+   expand the approved scope or authorize cloud-shell execution. A successful
+   no-change task and older receipts are published without new packages.
+
+Example package JSON (source and skill are embedded strings, not executable
+commands or paths to arbitrary local files):
+
+The runnable CLI input example is `tools/vault-agent/examples/tool-package.json`.
+It contains only public synthetic code and a reviewable skill; no validation
+claim is attached.
+
+```json
+{
+  "version": 1,
+  "name": "synthetic-add",
+  "description": "Synthetic addition utility; review before reuse.",
+  "capabilities": ["code.add"],
+  "files": [
+    {"path": "add.mjs", "content": "export const add = (a, b) => a + b;\n"},
+    {"path": "SKILL.md", "content": "---\nname: synthetic-add\ndescription: \"Use for approved synthetic addition tasks.\"\n---\n# Addition\nReview and test add.mjs before running it.\n"}
+  ]
+}
+```
+
+Optional `task` is the originating task's SHA-256. There is no package input
+field for claiming tests passed. Full bundles are normalized and content-hashed,
+with safe unique relative paths, 1-8 namespaced capabilities and 1-8 text files.
+Serialized UTF-8 package content is capped at exactly 32768 bytes. Files sort
+by deterministic code-point order, not platform locale. Larger tasks must be
+split/refactored into bounded units; content is never silently truncated.
+If automatic package retention exceeds a limit, publication fails explicitly
+**after retaining the ordinary task receipt**; no completed coding work reruns.
+
+```powershell
+npm run vault:network -- --vault "C:\Users\odaat\Documents\RabbitOS Vault" --package "C:\approved\package.json"
+npm run vault:network -- --vault "C:\Users\odaat\Documents\RabbitOS Vault" --gossip 0
+npm run vault:network -- --vault "C:\Users\odaat\Documents\RabbitOS Vault" --fetch-package "<package-sha256>"
+# After inspecting the package, supply {"id":"<sha256>","reviewer":"human-review"}:
+npm run vault:network -- --vault "C:\Users\odaat\Documents\RabbitOS Vault" --approve-package "C:\approved\review.json"
+```
+
+Gossip is bounded **pull**, not fan-out: at most 16 advertisements and 8192
+serialized UTF-8 bytes per poll, containing hash/name/capabilities, revision,
+review status, validation label and package byte count. No code, skill body,
+description or private task inputs are broadcast. Persist the returned `cursor`
+and use it on the next poll; fetch full bundles only as needed. A cursor is
+specific to this mailbox, not transferable to another instance. Revisions
+advance on retention, first validation and review; the catalog reports latest
+state, not a permanent event log of every intermediate review. Re-reading is
+safe. The note AI's `package_catalog` polls locally; hosted note providers are
+refused private catalog enumeration.
+
+All package responses have `executable: false`, including approved ones.
+Review is a local record, not proof of safety or a signed identity.
+Verify the returned bundle hash and test compatibility in the intended approved
+scope before explicit installation/use. Embedded `SKILL.md` is reviewable data,
+not an active customization. Do not treat source or skill instructions as
+permission to expand tools, scope or providers.
+
+The existing authenticated loopback server additionally exposes:
+
+- `POST /packages`: retain a version 1 package as publisher `local-http`.
+- `GET /packages/<sha256>`: fetch source bundle and review/validation metadata.
+- `GET /gossip/<cursor>`: compact metadata advertisements.
+
+No HTTP review endpoint exists. All existing authentication, browser refusal,
+loopback, request-byte and whole-mailbox access boundaries apply. Local scripts,
+software and agent hosts can use these endpoints or the CLI when available;
+they must implement the versioned protocol and possess appropriate authorization.
+No background gossip process, network scanner, provider connection or skill
+installation was added. Offline storage works while disconnected; access needs
+a powered local host. Cloud delivery still requires separately authorized
+transport and remains queued.
+
+The catalog caps at 64 packages and shares the mailbox's 128-artifact/8 MiB
+limits. Message pruning never removes package-referenced content. Packages have
+no automatic eviction or package-prune command; a full catalog blocks additions
+without deleting retained information. Plan reviewed export/migration before
+capacity exhaustion. Existing mailbox files without catalog fields remain
+compatible.
+
+```powershell
+node --test scripts\test-vault-agent-packages.mjs scripts\test-vault-agent-network.mjs scripts\test-vault-agent-coding.mjs scripts\test-vault-agent-runtime.mjs
+```
+
+## TypeScript and Java task mailbox adapters
+
+`tools/vault-agent/clients/VaultMailbox.mts` and
+`tools/vault-agent/clients/VaultMailbox.java` connect Node TypeScript and Java
+software to the existing retained mailbox. Both invoke the **same-host Node
+CLI** with arguments, not a shell command. They require no server, token, HTTP,
+AI inference or internet. A local Node runtime, the CLI source and accessible
+vault remain prerequisites. These are software-task reporting adapters, not
+new coordinator execution providers.
+
+Construct with absolute Node/entrypoint/vault paths, a stable lowercase sender,
+and the return recipient. TypeScript defaults Node to `process.execPath`.
+`completeTask(taskSha256, revision, result)` stores a version 1 `task-receipt`
+with literal result content, status `completed`, and stable key
+`task:<sha256>:<revision>`. `reportTask` also supports `failed` and `blocked`.
+Save the result locally first; success confirms retention, not recipient action.
+Repeated identical completion is deduplicated, including after acknowledgment;
+changed results require a new 1-32-character revision.
+
+`receive()` reads the inbox addressed to the configured **sender**;
+`read(id)` fetches retained content and `acknowledge(id, artifact)` confirms
+durable processing. The configured recipient is for outbound messages only.
+Do not acknowledge until the recipient has saved results and processed IDs.
+Reads replay until acknowledgment; side effects are not inherently exactly once.
+TypeScript checks fetched content hashes and returns typed responses. Java
+returns versioned JSON strings for the application's existing parser; it adds
+no external JSON library. The shared store validates message integrity.
+
+Both adapters bound CLI calls to 30 seconds and output to 1 MiB, clean up their
+temporary input/output files, and propagate errors without provider fallback.
+The mailbox still enforces 65536-byte content and 128 KiB CLI input limits.
+Receipt JSON adds overhead; a 64 KiB raw result may be too large. Split work
+without truncation. A busy/full/unavailable vault visibly fails; keep the result
+and retry the same key. There is no independent client outbox when the vault is
+unavailable. Cloud delivery remains unconnected.
+
+Node 24 directly runs the `.mts` source using type stripping.
+`tools/vault-agent/examples/complete-task.mts` accepts CLI path, vault, sender,
+recipient, task SHA-256, result revision, and saved UTF-8 result file:
+
+```powershell
+node tools\vault-agent\examples\complete-task.mts `
+  "C:\Users\odaat\Projects\rabbitsoftware-cloudflare\scripts\vault-agent-network.mjs" `
+  "C:\Users\odaat\Documents\RabbitOS Vault" `
+  "typescript-worker" "vault-orchestrator" `
+  "<task-sha256>" "v1" "C:\approved\saved-result.txt"
+```
+
+Java requires Java 11+ (verified with 21). Compile into an ignored build folder:
+
+```powershell
+New-Item -ItemType Directory -Force .wrangler\java-mailbox | Out-Null
+javac --release 11 -Xlint:all -Werror -d .wrangler\java-mailbox tools\vault-agent\clients\VaultMailbox.java
+$node = (Get-Command node).Source
+java -cp .wrangler\java-mailbox VaultMailbox $node `
+  "C:\Users\odaat\Projects\rabbitsoftware-cloudflare\scripts\vault-agent-network.mjs" `
+  "C:\Users\odaat\Documents\RabbitOS Vault" `
+  "java-worker" "vault-orchestrator" `
+  complete "<task-sha256>" "v1" "C:\approved\saved-result.txt"
+```
+
+The Java CLI also accepts `receive`, `read <message-id>`, and
+`ack <message-id> <artifact-hash>`. Identity labels do not provide isolation
+from another local process with filesystem access. Generated result code never
+executes automatically. Source bundles support `.mts` and `.java` retention;
+compiled `.class`/`.jar` binaries are not tool packages.
+
+`npm run test:vault-mailbox-clients` strictly type-checks TypeScript, compiles
+Java with warnings treated as errors, and exchanges actual Unicode completion
+receipts across both languages through the mailbox CLI. Java must be on PATH,
+or set `VAULT_JAVA_HOME` to an approved JDK directory. Missing Java fails that
+explicit validation command; no runtime is silently installed.
+`npm run test:vault-agent` also covers TypeScript clients without requiring Java.
+TypeScript and Node typings are development-only dependencies.
+
+The vault companion is `Cloud Agents/TypeScript and Java Task Mailbox.md`,
+linked from its main service guide. No scheduler or resident process is installed.
+
+## Agent-owned local dispatchers
+
+`scripts/vault-agent-dispatch.mjs` (`npm run vault:dispatch`) lets an agent request
+work from a named dispatcher, using the existing task adapters and mailbox.
+Each dispatcher owns `Cloud Agents/Dispatchers/<name>/state.json` with a separate
+lock, queue, frozen inputs and bounded approval ledger. The original default
+coordinator remains independent. Local data never becomes hosted merely because
+a dispatcher is named after a provider.
+
+### Request, approve and call
+
+```powershell
+$vault = "C:\Users\odaat\Documents\RabbitOS Vault"
+npm run vault:dispatch -- --vault $vault --agent vault-dispatcher `
+  --sender vault-orchestrator --request tools\vault-agent\examples\dispatch-coding.json
+npm run vault:dispatch -- --vault $vault --agent vault-dispatcher --inspect "<request-id>"
+# Only after explicit approval of this exact request:
+npm run vault:dispatch -- --vault $vault --agent vault-dispatcher --approve "<request-id>"
+npm run vault:dispatch -- --vault $vault --agent vault-dispatcher `
+  --discover --config .wrangler\vault-coding-config.json
+npm run vault:dispatch -- --vault $vault --agent vault-dispatcher `
+  --run --config .wrangler\vault-coding-config.json
+npm run vault:dispatch -- --vault $vault --agent vault-dispatcher --list
+```
+
+The request file is the existing version 1 task definition, not arbitrary
+commands or adapter credentials. A mailbox `handoff` envelope retains
+`{"version":1,"type":"agent-request","task":<normalized-definition>}`.
+Requests use stable `request:<task-sha256>` keys and are addressed to the named
+dispatcher; self-dispatch requests are refused. Sender labels remain local
+routing metadata, not authenticated principals. Requests themselves grant no
+permissions. `--approve` persists a specific request's task into the isolated
+queue; it does not execute. Request-selected dependencies must already exist in
+that dispatcher queue.
+
+The vault ignores `Cloud Agents/Dispatchers/` in Git publishing because frozen
+inputs can contain private content. The local note runtime registers the
+dispatcher and language usage guides, but never indexes dispatcher state.
+Its existing 16000-byte note limit is unchanged; oversized guides are visibly
+excluded rather than silently loaded into a small model context.
+
+One explicitly invoked `--run` passes approved tasks to existing configured
+adapters: local Ollama/read/search, compatible hosted models, installed Copilot
+(`coding-local`), authorized HTTP agents, Cloudflare jobs, or configured shell
+services. It does not provision any of them. Without `--config`, only the local
+adapter is selected. Configurations are operator-owned, never supplied by the
+request. Sharing, source scope, credential, capability/version and pinned
+identity checks remain enforced. The installed coding config still approves
+only the public synthetic addition file and fixed tests.
+
+The local runtime's `agent_request` action accepts `dispatcher` and `task`;
+it retains the request as `note-agent`, returns `requiresApproval: true`, and
+does not expose approval/execution tools. Hosted note providers are refused
+local submission. The workspace host or requester uses the mailbox CLI to read
+responses (`--receive note-agent` for local note AI requests). Java/TypeScript
+clients can submit the same envelope with their existing `send` method, or
+invoke the request CLI. No hidden host SDK or unrestricted subagent tool is used.
+
+### Durable return routing
+
+A pass runs at most eight tasks and returns at most eight terminal responses.
+Responses are local `task-receipt` messages with `type: "agent-response"`,
+dispatcher, original request ID, task ID, terminal status, adapter, output hash,
+actual result content or explicit error. The destination is the original request
+sender, not a model-supplied redirect. The original request is acknowledged only
+after its response is durably retained. Returned results remain pending for the
+requester to process and exact-hash acknowledge.
+
+Completion is not rerun after a full mailbox or interruption during return.
+Later passes deduplicate the response and complete bookkeeping. Do not prune
+acknowledged original requests until the dispatch ledger shows `delivered`;
+otherwise an interrupted bookkeeping replay may need operator recovery.
+Result envelope overhead counts toward the mailbox's 64 KiB limit. Oversized
+returns block visibly without truncation or task reexecution.
+
+Identical normalized tasks requested by multiple senders share one execution
+within a dispatcher; each approved requester receives a response. Waiting
+tasks retain frozen inputs and use existing retry times. Failed/blocked work
+returns explicit feedback; review and submit a new task revision for changed
+work rather than erasing ledgers. No dispatcher retry/prune command was added.
+Each queue retains the existing coordinator capacities plus a 128-request
+approval limit; no automatic eviction exists.
+
+### Evidence review and bounded editor repair
+
+New dispatcher return receipts include `review: {artifact, verdict, executed:
+false}`. The private review artifact checks output digests, local coding runner
+identity, frozen source hashes, immutable test paths/hashes, changed path/hash
+lists and line limits. It does not rerun tests. Verdicts distinguish
+`scoped-evidence-consistent`, `unverified`, and `contradicted`; they are not
+proof of safety, exhaustive coverage, or factual correctness. Ordinary AI/worker
+text remains unverified even when the provider reports task completion.
+Unsupported/disputed coding success returns status `review-required` and
+unchanged `executionStatus`; the CLI exits nonzero for that new delivery.
+No task state is relabeled as failed and no repair/reexecution is triggered.
+New coding requests freeze line/round budgets; review compares receipts to them.
+Older requests can lack those fields and report `limitsBoundToRequest: false`;
+their original configured limit is not independently established by review.
+
+```powershell
+npm run vault:dispatch -- --vault $vault --agent vault-dispatcher --review "<task-id>"
+# Optional fresh authorized capability diagnostics:
+npm run vault:dispatch -- --vault $vault --agent vault-dispatcher `
+  --review "<task-id>" --config .wrangler\vault-coding-config.json
+```
+
+`--review` persists a content-hashed private artifact on the selected task.
+With no config it performs local evidence checks only. With config it can
+discover current adapter capabilities (version lookup or authorized endpoint).
+It never calls `advance`, changes permissions, retries work or changes provider.
+A capability now present suggests an old availability blocker may be stale;
+it does not disprove test/source conflicts or permission limits. Claim-language
+hints flag possible "passed"/"impossible"/instruction-changing text for contextual
+inspection, not proof of deception. This cannot detect all manipulative outputs.
+Review metadata is retained by coordinator pruning when its task is retained.
+
+Editor commands require an operator-selected coding config, but do not execute
+the CLI or edit files:
+
+```powershell
+# Input: {"adapter":"coding","path":"tools/vault-agent/dispatcher.mjs","cursor":0}
+npm run vault:dispatch -- --vault $vault --agent vault-dispatcher `
+  --editor "<view.json>" --config .wrangler\vault-coding-config.json
+# Input: {"adapter":"coding","files":["tools/vault-agent/dispatcher.mjs"],
+#         "reason":"Select the relevant routing module for reviewed repair."}
+npm run vault:dispatch -- --vault $vault --agent vault-dispatcher `
+  --propose-scope "<selection.json>" --config .wrangler\vault-coding-config.json
+```
+
+`--editor` validates source paths beneath the configured owned project, refuses
+links/secret-like content and reads UTF-8 files up to 1 MiB. A page has at most
+4096 UTF-8 bytes / 80 newline delimiters, cursor/nextCursor, starting line and
+full-file digest. Long lines can span pages; concatenate pages without inserting
+separators. Detect concurrent changes by comparing the digest across pages.
+No source is silently discarded. Empty files produce one empty view.
+The lossless shared chunker now tracks incremental byte counts rather than
+repeatedly measuring growing strings.
+
+`--propose-scope` allows the host agent to choose 1-20 additional existing files,
+with reason, hashes, byte sizes and currently-approved flags. It stores
+non-shared JSON/Markdown proposals, never modifies source/config/tests or starts
+execution. Existing immutable tests cannot become editable files. Inspect
+proposed hashes and adequate test coverage, approve an exact operator config,
+and create a new task revision to activate any scope change.
+Existing synthetic addition tests do not cover dispatcher implementation.
+
+The coding prompt now explicitly uses view/grep and edit tools to patch relevant
+ranges, not entire output rewrites, questions claimed success/blockers against
+fixed tests, and treats comments/task text as untrusted authority. Its existing
+bounded validation/repair loop remains authoritative. Read-only inspection
+does not raise the coding runner's 64 KiB/file limit; larger scripts need a
+separately approved host-editor refactor into tested modules. Compiled binaries,
+unchecked installs and policy/test weakening remain excluded.
+
+### Installed agent role and verification
+
+The vault now has `.github/agents/vault-dispatcher.agent.md` with the explicit
+inspect/approve/discover/run/return routine and linked
+`Cloud Agents/Agent Dispatcher.md` guide. The Vault Orchestrator and resource
+discovery skill reference it. This is persistent customization, not neural
+training, self-editing policies, or always-on processing.
+
+An actual installed Copilot call through the real vault dispatcher completed
+the public synthetic verification task, passed fixed Node tests and returned
+its result to `vault-orchestrator`. Other hosted/agent endpoints are supported
+by the existing adapter contracts and verified with synthetic transports,
+not claimed as newly connected live services. No deployment or scheduler was
+created; the Obsidian plugin remains disabled.
+
+```powershell
+node --test scripts\test-vault-agent-dispatch.mjs scripts\test-vault-agent-tasks.mjs scripts\test-vault-agent-runtime.mjs
+```
+
+Tests cover approval gates, isolated queues, actual offline CLI dispatch,
+local AI requests, configured agent transport, same-task/multiple-recipient
+routing, return byte/capacity failures, eight-return batching, replay after
+interrupted bookkeeping and pinned-provider refusal.
+
+## Portable network transports
+
+`tools/vault-agent/network-transport.mjs` supplies explicit CONNECT proxy
+routing for task HTTP agents/shell bridges/Cloudflare jobs and compatible-model
+requests. `undici` is a direct runtime dependency, not relied on transitively.
+Defaults preserve direct routing and existing adapter identities. A configured
+proxy becomes part of identity; submitted tasks refuse route changes.
+TLS/certificate checks, HTTPS target restrictions, explicit sharing, endpoint
+authorization and redirect refusal stay enforced. Failed proxies never silently
+fall back directly. Proxy credentials are environment-only, separate from
+origin authentication, and never embedded in URLs.
+
+```json
+{
+  "id": "peer",
+  "type": "agent-http",
+  "url": "https://authorized.example",
+  "allowRemote": true,
+  "tokenEnv": "VAULT_PEER_TOKEN",
+  "proxy": {"url":"http://127.0.0.1:8899","tokenEnv":"VAULT_PROXY_AUTH"}
+}
+```
+
+`proxy.url` is an HTTP/HTTPS proxy origin with no path/credentials/query.
+Optional `tokenEnv` names a complete Proxy-Authorization value from the proxy
+administrator. Prefer TLS to a remote proxy; an HTTP CONNECT request exposes
+its proxy auth header on that leg. No TLS-disable or downgrade option exists.
+HTTP here describes the proxy leg, not a plaintext target.
+Hosted compatible model provider configs or model adapter entries accept proxy
+selection; conflicting selections fail. Local Ollama/Copilot adapters reject
+this field because their own supported runtime network configuration is separate.
+No SOCKS/PAC, implicit proxy-environment selection, full-device networking or
+legacy standalone sync-CLI proxy feature is implied.
+
+Carrier independence means OS-managed IP: configured Ethernet/Wi-Fi,
+Windows mobile broadband, Android/iPhone tethering, Starlink/satellite routers
+can provide the route. No modem/SIM/terminal configuration is performed.
+Unknown hardware is usable only if its driver/router already provides compatible
+IP; non-IP radios, SMS-only links and undocumented device APIs require a real
+identified/authorized adapter. This cannot remove carrier subscriptions,
+keys, network physics, authentication or DNS/TLS requirements.
+
+```powershell
+npm run vault:network -- --diagnose
+npm run vault:network -- --diagnose --config "<approved-adapters.json>"
+npm run vault:network -- --diagnose --config "<approved-adapters.json>" --resolve-dns
+```
+
+Diagnostics require no vault and expose at most 32 interface names/families
+(not IP/MAC addresses), 16 configured remote routes, credential presence flags
+and optional bounded DNS resolution. They do not scan networks, connect to
+terminals, authenticate providers or identify carrier type. DNS probes target
+only configured endpoint/proxy hosts, with a 3-second resolver cancellation
+deadline per route; IP literals skip DNS. A proxy can resolve the destination
+even if local destination DNS is unavailable. Interface/DNS success does not
+prove working internet or delivery. Model endpoints stored in provider files are
+not loaded/probed by this diagnostic. Environment proxy values are never printed.
+
+### Offline bundle relay
+
+`tools/vault-agent/offline-relay.mjs` exports selected local mailbox messages
+already marked `share: true` into a version 1 bundle and imports reviewed bundles
+into a destination mailbox. It is independent of HTTP/DNS/proxy during transfer
+and can use approved removable media or an authorized file channel.
+Private existing receipts are refused; never alter immutable sharing metadata.
+Cloud-pending messages are not converted into local deliveries.
+
+```powershell
+npm run vault:network -- --vault "<source-vault>" --export-relay "<message-id>,<message-id>" --output "C:\approved\relay.json"
+npm run vault:network -- --vault "<destination-vault>" --import-relay "C:\approved\relay.json"
+```
+
+Selection caps at 16 messages; serialized UTF-8 bundle caps at 256 KiB including
+hash. Input is validated completely before batch persistence, including stable
+message/content/bundle hashes, immutable key conflicts and existing capacity.
+Imports are atomic with respect to the existing mailbox file; full/invalid
+bundles leave retained state unchanged. Export uses new files only (`wx`),
+never overwrites output or consumes source messages. Re-import deduplicates,
+including locally acknowledged copies.
+
+Imported handoffs/requests remain untrusted and **never execute or approve**
+anything. Sender labels/hashes are not authentication/signatures; files are
+not encrypted. Use trusted channels/appropriate separately approved encryption
+and verify sender identity out-of-band. Source acknowledgment is not propagated
+automatically from the destination; importing does not claim source delivery.
+Normal recipient processed-ID/exact-hash acknowledgment applies locally.
+Dependencies and execution config remain destination-dispatcher scoped.
+No resident relay service or automatic private snapshot transfer is installed.
+
+The vault companion is `Cloud Agents/Portable Network Transports.md`,
+registered in the local runtime's bounded service-guide scope.
+
+```powershell
+node --test scripts\test-vault-agent-transports.mjs
+```
+
+Tests include actual authenticated CONNECT/TLS traffic with temporary locally
+trusted test certs, target/proxy credential separation, invalid-certificate
+and redirect refusal, failed-route no fallback, adapter-route identity pinning,
+offline replay/atomicity/byte caps and no-secret diagnostics. The real proxy test
+requires `openssl` (Git for Windows bundled path by default or `VAULT_OPENSSL`);
+certs remain temporary and system trust is unchanged. Physical satellite/mobile
+devices and third-party provider endpoints are not claimed as live-tested.
+
+## General-purpose vault-owned agent
+
+### Automatic reports and exact-call challenges
+
+The local `vault:agent --task` runtime retains private `Cloud Agents/Results/run-<uuid>.json`
+reports before provider initialization, including failure paths. Reports contain
+provider/model, prompt hash, host/model call origins, argument hashes, observed
+call status, source hashes, staged paths and timestamps. Success still saves its
+Markdown answer. Error types are retained without raw credential-bearing provider
+diagnostics. Synced temporary-file/rename updates preserve complete reports;
+interrupted `running` reports are not success. Disk failure is surfaced, not
+success-shaped. Review storage growth; no background retention/pruning service
+is installed. Dispatcher evidence stays in its existing durable ledgers/receipts.
+
+Operator-owned Ollama/compatible provider configs may specify `requiredCalls`,
+up to eight `{name, arguments}` objects. Only exact successful model-selected
+calls satisfy them; initial host retrieval is distinguished. Premature answers
+are rejected with a corrective turn, and the existing turn budget remains.
+This does not authorize self-approval, shell execution, wider coding scope or
+production changes. The low-level `runAgent` also accepts `requiredCalls` and
+an optional `onCall` recorder; direct callers must choose their persistence sink.
+Agent prose remains unverified unless appropriate evidence supports its claims.
+
+### Gateway quota repair and source provenance
+
+Gateway deployment now uses `workers/gateway/src/handler.mjs`, a maintainable
+entrypoint exporting the repaired `Limits` Durable Object while reusing the
+unchanged compiled request handler and `cleanRequest` from `src/index.js`.
+Original pre-bundle source/source maps were not found in the repository or
+reachable Git history. The bundle remains preserved rather than blindly edited;
+the Qwen sibling's existing `cleanRequest` import remains compatible.
+
+`src/quota.mjs` stores hourly timestamps and the legacy daily count together
+under the existing `day` key using a storage transaction. Accepted reservations
+are durable before a response, survive instance/runtime recreation and share
+the existing daily budget. Expired hourly timestamps are pruned on accepted
+reservations; UTC rollover preserves the prior reset behavior. Existing daily
+counts survive upgrade. Old in-memory-only hourly timestamps cannot be recovered,
+so the first repaired hourly interval starts with newly recorded reservations.
+No namespace/schema migration or secret replacement is required.
+
+```powershell
+npm run test:gateway
+npx wrangler deploy --config workers\gateway\wrangler.toml --dry-run
+```
+
+The tests use real local workerd restarts for hourly/daily persistence and
+concurrent reservations, check exact rolling-window/UTC boundaries and legacy
+daily counts, and preserve health/CORS/error contracts. They also run existing
+Qwen request/quota regressions. No live inference request or production quota
+write is needed for these tests. Production origins were reconciled with the
+active version before deployment; preserve unknown remote vars with `--keep-vars`.
+
+The local runtime in `tools/vault-agent/` is not restricted to the cloud service's
+three output modes. It handles arbitrary subject requests through an actual
+multi-turn tool loop: resource discovery, keyword search, note reading, staging
+proposals, and staging cited learning. It can draft code, research, art prompts,
+service designs, or other text proposals, but cannot execute arbitrary code,
+render images, run shell commands, provision infrastructure, or edit originals.
+Capabilities must be supplied by actual tools; the agent never claims unlimited
+expertise or access.
+
+Each task first runs resource discovery and a local search, then reads up to two
+explicitly referenced or top-matching notes before invoking the model. These
+verified tool outputs bootstrap the model rather than relying on it to choose
+retrieval correctly. It can request further reads through the tool loop.
+
+Default inference uses the already-installed local Ollama `qwen2.5:3b`. It works
+without internet while Ollama and this computer are running. Structured JSON
+schemas constrain model actions; input, output, context, and turn limits fail
+explicitly instead of truncating or silently switching providers. These are client
+budgets; the selected model's own context window still applies. The small local
+model explicitly uses its existing 4096-token context and a 600-output-token cap
+to avoid expanding memory use on this 8 GB, CPU-only machine. Initial evidence
+marks its two-snippet limit and summarized resource inventory; more detailed
+discovery and reads remain available through tools.
+
+```powershell
+npm run vault:agent -- --vault "C:\Users\odaat\Documents\RabbitOS Vault" --search "agents workers"
+npm run vault:agent -- --vault "C:\Users\odaat\Documents\RabbitOS Vault" --read "Agents/Agents.md"
+npm run vault:agent -- --vault "C:\Users\odaat\Documents\RabbitOS Vault" --task "Research the selected notes and propose a cited implementation."
+```
+
+Local knowledge roots are `Agents`, `Workers`, `Platform`, `Pathways`, `Tools`,
+`Cloud Agents/Knowledge`, and `Cloud Agents/Learned`. Other folders and linked
+filesystem trees are not automatically traversed. The two root-level Cloud
+Agents service guides are also explicitly readable/searchable; results,
+unreviewed proposals and credential files are not. Searches report excluded
+oversized notes and empty/missing roots, and refuse scopes over 2000 notes.
+Hosted-provider search/read excludes notes without `cloud-agent-share: true`.
+Private code and personal data never belong in hosted model context.
+
+Outputs go to `Cloud Agents/Results/local-<id>.md`. Proposed work goes to
+`Cloud Agents/Proposals/<id>-<index>.json`, with a companion Markdown note
+visible in Obsidian. Originals are not modified.
+Promote reviewed learning explicitly:
+
+```powershell
+npm run vault:agent -- --vault "C:\Users\odaat\Documents\RabbitOS Vault" --approve-learning "Cloud Agents/Proposals/<id>-<index>.json"
+```
+
+Promotion verifies all cited source hashes and saves a non-shared note under
+`Cloud Agents/Learned`. This is retrieval memory, not model retraining or proof
+that generated claims are true. Code and other proposals require ordinary
+reviewed editing/testing with the workspace host's tools.
+
+### Obsidian and workspace integration
+
+```powershell
+npm run vault:agent:install -- --vault "C:\Users\odaat\Documents\RabbitOS Vault"
+```
+
+The installer copies only the owned plugin entrypoint and manifest to
+`.obsidian/plugins/rabbit-vault-agent`. It never changes existing plugin settings
+or credential files. Enable **Rabbit Vault Agent** in Obsidian Community plugins.
+Its task modal offers local Ollama or an explicitly configured provider; its
+cloud-result command downloads previously submitted jobs. It invokes fixed owned
+Node entrypoints without a shell, passes task text over stdin, and opens saved
+results. Node must be available on Obsidian's PATH. Closing/disabling the plugin
+stops its local child processes; local work does not run on an unpowered machine.
+
+Cloud credentials are stored only in the vault's Git-ignored plugin `data.json`,
+under `provider`: `type`, `url`, `token`, `allowRemote`. The activated setup uses
+`type: "cloudflare-jobs"` and an approved random token. Never print or copy that
+file into notes or tracked source. Explicitly selecting that provider submits
+only opted-in knowledge to durable cloud jobs; empty scopes fail without upload.
+The modal does not silently switch when local inference fails.
+
+For another hosted model, use an ignored local JSON config with
+`type: "openai-compatible"`, `model`, a full HTTPS chat-completions `url`,
+`token`, and `allowRemote: true`; supply `--config` to the CLI. Only providers
+supporting the request's JSON output and chat parameters are compatible; errors
+are explicit. Google Cloud requires an authorized project, a supported model and
+Google Cloud OAuth credentials, not an arbitrary API key. Consult its current
+[OpenAI-compatible endpoint documentation](https://cloud.google.com/vertex-ai/generative-ai/docs/start/openai).
+This adapter has been contract-tested but no Google Cloud service is provisioned
+or live-tested. Expired tokens must be refreshed explicitly.
+
+Open the existing `RabbitOS.code-workspace` to make the vault's
+`.github/agents/vault-orchestrator.agent.md` and
+`.github/skills/vault-resource-discovery/SKILL.md` discoverable. The orchestrator
+coordinates provider-aware research/building using the host's actual MCP, web,
+terminal, edit, and installed skill capabilities. Use it for reviewed implementation
+and provider-specific infrastructure, rather than giving a local note tool
+unrestricted shell access. New host tools, providers and domain skills must be
+installed/authorized and verified; their names alone do not make them available.
+
+### Access and optional cloud shells
+
+The user requested that the native plugin remain installed without enabling it
+or reloading Obsidian. Existing vault/MCP access is unchanged. The new cloud
+Worker can access only its private R2 snapshots/results through its bindings;
+other Workers do not automatically gain local filesystem or bucket access.
+Authorized clients can connect through the token-protected API. There is no
+anonymous endpoint exposing vault files and no local MCP tunnel.
+
+No additional cloud shell was required or provisioned. If a concrete task needs
+one, choose the authorized provider and scoped runtime explicitly, install the
+headless CLI/MCP agent connection there, and share only approved non-private
+resources. The desktop Obsidian plugin cannot run in a headless cloud shell.
+Google Cloud project authorization and shell provisioning remain separate from
+the existing Cloudflare service.
 
 ### Importing owned GitHub repositories
 
@@ -440,21 +1750,6 @@ npx --no-install wrangler deploy --config tools\rf-nexus-preview\wrangler.jsonc 
 # Only after explicit approval to publish the static preview:
 npx --no-install wrangler deploy --config tools\rf-nexus-preview\wrangler.jsonc
 ```
-
-## Hugging Face account in the vault
-
-```powershell
-python scripts\sync-huggingface-vault.py --vault "C:\Users\odaat\Documents\RabbitOS Vault"
-python -B scripts\test-sync-huggingface-vault.py
-```
-
-Writes one note per model, dataset and Space (metadata, file list, card and
-README) plus an index at `Hugging Face/Hugging Face.md`. It only reads from
-Hugging Face, never downloads weights or data files, and uses the existing local
-sign-in (`HF_TOKEN` or `~/.cache/huggingface/token`). Private repo cards land in
-the vault, so `/Hugging Face/` must stay in the vault `.gitignore`; the script
-refuses to run otherwise. Unchanged notes are not rewritten, and notes for repos
-removed from Hugging Face are reported, not deleted. Run it manually; no schedule.
 
 ## Supabase
 
