@@ -437,6 +437,21 @@ npx --no-install wrangler deploy --config tools\rf-nexus-preview\wrangler.jsonc 
 npx --no-install wrangler deploy --config tools\rf-nexus-preview\wrangler.jsonc
 ```
 
+## Hugging Face account in the vault
+
+```powershell
+python scripts\sync-huggingface-vault.py --vault "C:\Users\odaat\Documents\RabbitOS Vault"
+python -B scripts\test-sync-huggingface-vault.py
+```
+
+Writes one note per model, dataset and Space (metadata, file list, card and
+README) plus an index at `Hugging Face/Hugging Face.md`. It only reads from
+Hugging Face, never downloads weights or data files, and uses the existing local
+sign-in (`HF_TOKEN` or `~/.cache/huggingface/token`). Private repo cards land in
+the vault, so `/Hugging Face/` must stay in the vault `.gitignore`; the script
+refuses to run otherwise. Unchanged notes are not rewritten, and notes for repos
+removed from Hugging Face are reported, not deleted. Run it manually; no schedule.
+
 ## Supabase
 
 Project ref `ludxbakxpmdqhfgdenwp`. `supabase/` holds the CLI config and (future) migrations.
