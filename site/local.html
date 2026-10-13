@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Local and hosted features | RabbitSoftware</title><link rel="stylesheet" href="polish.css"></head>
+<body class="document-page"><main class="document-main wrap">
+  <h1>What runs locally, and what does not</h1>
+  <p>Use this website from a local checkout without uploading your files. After obtaining its static assets and optional model, these local functions need no internet: published research reading, corpus metadata search, selected-file viewing, software simulation, offline CLI demo/local lookup, and local Ollama chat. Hosted AI and live web searches still need internet. RabbitOS is account-free; it does not provide cloud account/device sync.</p>
+  <h2>Run the static website on your computer</h2>
+  <p>From a reviewed checkout of <a href="https://github.com/ringquistchase-collab/rabbitsoftware-cloudflare">the website repository</a>, run:</p>
+  <pre><code>python -m http.server 8788 --bind 127.0.0.1 --directory site</code></pre>
+  <p>Open http://127.0.0.1:8788/. Keep the server running while using the pages; stop with Ctrl+C. Use HTTP, not file URLs, so JavaScript modules and the local metadata asset can load. This serves files from your local checkout, not from a private vault. Python's server does not apply the Pages security headers. Do not expose it to other computers.</p>
+  <h2>Optional offline AI with Ollama</h2>
+  <p>Install <a href="https://ollama.com/">Ollama</a> and obtain a model while online. The example small model is qwen2.5:3b; model downloads use disk space and their own licenses. If you already have an Ollama model, select its exact installed name instead. Model output is unverified, not medical advice.</p>
+  <pre><code>ollama pull qwen2.5:3b
+python scripts/local-site.py --model qwen2.5:3b --port 8788</code></pre>
+  <p>Use backslashes in the script path on Windows: <code>python scripts\local-site.py --model qwen2.5:3b --port 8788</code>. Keep Ollama listening on its default loopback port 11434. Open the local website, choose Local Ollama in Research AI, and approve each message. The server forwards only to 127.0.0.1, bypasses proxies, rejects redirects and cross-origin calls, and never falls back to hosted AI. Stop the local server with Ctrl+C. Starting it does not install an auto-start task.</p>
+  <p>A plain Python static server cannot handle local AI requests; use the local-site server for that mode. Switching destinations clears the in-tab conversation and resets consent. Existing local servers using other APIs or ports are not automatically connected; no arbitrary endpoint entry is exposed.</p>
+  <h2>Local functions</h2>
+  <ul>
+    <li><a href="research.html">Read published research summaries</a>. Opening third-party citations needs internet.</li>
+    <li><a href="chain.html">Search the bundled public metadata or inspect a selected local JSON file</a>. No query or file contents are sent to a remote API.</li>
+    <li><a href="cli.html">Download and review the offline CLI</a>. Demo/local lookup is deterministic, not generative AI. Public corpus and signed-account CLI modes use the network.</li>
+    <li><a href="dna-code.html">Run the software-only encoding simulation</a>.</li>
+    <li><a href="setup.html">Prepare the local backend, monitor and research prototypes</a>. Setup itself needs network downloads. Optional external AI providers and research collection need internet; mock backend responses are not real AI.</li>
+  </ul>
+  <h2>Hosted and unfinished functions</h2>
+  <ul>
+    <li>Homepage Research AI offers separate hosted Cloudflare/Hugging Face and hosted Qwen3 / Cloudflare choices. Hosted Qwen requires no local install but sends approved prompts off-device and is usage-limited. Local Ollama still requires the local website server and your installed model; weights are not bundled. No automatic fallback occurs.</li>
+    <li><a href="research-agent.html">Live public web research</a> uses Cloudflare, Tavily and the hosted model after consent. It cannot search an offline internet.</li>
+    <li><a href="https://app.rabbitsoftware.io/">RabbitOS</a> opens without sign-in. Notes, chats and settings stay in that browser; existing private account data remains inaccessible and is not copied by local setup.</li>
+    <li><a href="agent.html">The historical local browser-agent ZIP</a> is unavailable in this deployment; no working download is claimed.</li>
+    <li>Encrypted-record opening on the homepage is local-only and supports the recovery format, not legacy vault formats. Creating a research-chat record requires a prior chat attempt.</li>
+  </ul>
+  <p>A full local account/device console is still a separate, unfinished implementation; hosted email authentication and cloud sync cannot be called offline. No private files, model weights or credentials are bundled here. Local chat does not execute tools, read your files, or search the live web.</p>
+  <p><a href="index.html">Home</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a href="recovery.html">Recovery status</a></p>
+</main></body></html>

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Reviewed local setup for the RabbitOS Python backend, dna-chain monitor, and separate blockchain research prototype.">
+  <title>Application setup | RabbitSoftware</title>
+  <link rel="stylesheet" href="polish.css">
+</head>
+<body class="document-page">
+  <header class="top wrap"><a class="brand" href="index.html">RabbitSoftware</a></header>
+  <main class="document-main wrap" id="main">
+    <h1>Separate applications. Explicit setup.</h1>
+    <p>The retired DNA-Blockchain/Helloworld install.ps1 and install.sh endpoints return 404. Do not pipe downloaded code into PowerShell or Bash. The replacement <a href="installers/setup.py">setup.py</a> is a new preparation tool, not a recovered original installer.</p>
+    <h2>Hosted RabbitOS console</h2>
+    <p><a href="https://app.rabbitsoftware.io/">Open RabbitOS in your browser</a>. No sign-in, CAPTCHA or local installer is needed. Public research, hosted Qwen and browser-local brain/body tools are separate from the Python prototypes below. Chats, notes and settings stay in this browser; approved hosted AI requests leave it. Local files and devices are not connected automatically, and existing private account data is inaccessible.</p>
+    <h2>Prerequisites and download</h2>
+    <p>Install Python 3.11 or 3.12 and Git, then reopen your terminal. Python 3.11 is the backend CI baseline. The pinned dependencies do not support Python 3.13/3.14; setup rejects those versions before downloading source. Network access is required for GitHub and package downloads. Use a new writable folder, not an existing application checkout.</p>
+    <h3>Windows / PowerShell</h3>
+    <pre><code>Invoke-WebRequest -Uri https://rabbitsoftware.io/installers/setup.py -OutFile rabbitsoftware-setup.py
+# Review the saved script before continuing.
+py -3.11 rabbitsoftware-setup.py --check
+py -3.11 rabbitsoftware-setup.py --component all</code></pre>
+    <h3>Linux / WSL</h3>
+    <pre><code>curl -fL https://rabbitsoftware.io/installers/setup.py -o rabbitsoftware-setup.py
+# Review the saved script before continuing.
+python3.11 rabbitsoftware-setup.py --check
+python3.11 rabbitsoftware-setup.py --component all</code></pre>
+    <p>If you have Python 3.12 instead, use <code>py -3.12</code> on Windows or <code>python3.12</code> on Linux. Ubuntu may require the matching python3.11-venv or python3.12-venv package. Under WSL, use the Linux filesystem for setup rather than a Windows-mounted folder to avoid slow environment creation. No Python interpreter or system packages are installed automatically. A failed command stops setup and reports its error; already prepared components are not rolled back. Existing destinations are never overwritten. To retry a failed component, select it with a new <code>--directory</code>.</p>
+    <h2>Choose a component</h2>
+    <p>Replace <code>all</code> with <code>backend</code>, <code>monitor</code>, or <code>research</code>. Each component gets a source checkout and its own <code>.venv</code> under <code>rabbitsoftware-local</code>. Use <code>--directory "my-new-folder"</code> to choose another location. Source revisions are pinned in the reviewed script; this is not automatic updating or full Git-history synchronization.</p>
+    <ul>
+      <li><strong>backend:</strong> the <a href="https://github.com/ringquistchase-collab/RABBIT-SOFTWARE/tree/688857c30ab3d81e9491de689f41ff2719ca2d0c/rabbit-os">RabbitOS FastAPI backend</a>. Only the rabbit-os subtree is checked out, avoiding legacy Windows-invalid filenames. Git's NTFS protection override applies only to that sparse checkout command, not your global settings. Installs the declared dependencies and checks <code>/health</code> in-process with a mock provider and an in-memory database. Setup prints an explicit loopback-only Uvicorn command for later use. This is not the hosted console or a replacement OS.</li>
+      <li><strong>monitor:</strong> the <a href="https://github.com/ringquistchase-collab/dna-chain/tree/2897f87f8d63bee9eeba3a63f25382a3a45dab69">dna-chain prototype</a>. Setup checks the monitor's <code>--help</code> command only. Its original Windows Task Scheduler and Linux systemd installers would register and start persistent monitoring; this replacement does neither. Running monitoring separately can inspect files and probe peer addresses. Only use your own or explicitly authorized sources and devices.</li>
+      <li><strong>research:</strong> the <a href="https://github.com/ringquistchase-collab/cancer-mutation-blockchain/tree/1518685a92acfb3a8935c5b516db8e712dea2c58">cancer-mutation-blockchain research prototype</a>. Setup installs its declared requirements, checks core dependency imports and the orchestrator entry point, but does not start the multi-service stack. Optional dependencies are not included. The old install.sh can install into system Python, start services and open tunnels; its stop mode uses broad process-name termination. Do not use that script as the RabbitOS installer.</li>
+    </ul>
+    <h2>What was verified</h2>
+    <p>All three preparation targets passed on Windows with Python 3.12. The Linux/WSL backend health check passed with an isolated Python 3.11 interpreter. The initial WSL Python 3.14 attempt was stopped because its dependencies are unsupported; the second attempt stalled fetching the monitor repository from GitHub. Full Linux preparation of monitor/research is not yet verified.</p>
+    <p>Backend health, monitor help, dependency consistency and research dependency imports are preparation checks, not full workflow validation. No real account, device, network-monitoring, biomedical analysis, blockchain consensus or public deployment is certified by setup. These are research prototypes, not medical advice or clinical software.</p>
+    <p>No administrator privileges, auto-start services, public tunnels or global Python packages are required by the replacement tool. Source repositories have their own licenses; installing source does not change their terms. Review <a href="privacy.html">website privacy</a> and each component's source before running it.</p>
+  </main>
+  <footer class="wrap"><p><a href="index.html#start">Get started</a> &middot; <a href="recovery.html">Recovery status</a></p></footer>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "name": "rabbitsoftware-vault-agent-dev",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-12",
+  "workers_dev": false,
+  "r2_buckets": [{ "binding": "VAULT", "bucket_name": "rabbitsoftware-vault-agent-dev" }],
+  "workflows": [{ "binding": "JOBS", "name": "rabbitsoftware-vault-jobs-dev", "class_name": "VaultJob" }],
+  "durable_objects": { "bindings": [{ "name": "BUDGET", "class_name": "VaultBudget" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["VaultBudget"] }],
+  "observability": { "enabled": true, "traces": { "enabled": true } }
+}

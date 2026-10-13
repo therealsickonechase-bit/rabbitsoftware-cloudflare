@@ -9,7 +9,8 @@ async function displaySource() {
       signal: AbortSignal.timeout(15000),
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    if (!response.headers.get("content-type")?.startsWith("text/plain")) {
+    const type = response.headers.get("content-type")?.split(";")[0].trim();
+    if (!["text/plain", "text/x-python", "application/x-python-code"].includes(type)) {
       throw new Error("The server did not return a plain-text source file.");
     }
     const source = await response.text();

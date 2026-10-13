@@ -1,10 +1,13 @@
 node_modules/
 .wrangler/
 .dev.vars
+.dev.vars.*
 .env
+.env.*
 backup/
 
 .cloudflare/
 .agents/
 .claude/skills/
 skills-lock.json
+tools/rf-nexus-preview/public/

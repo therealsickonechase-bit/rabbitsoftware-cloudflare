@@ -1,0 +1,21 @@
+{
+  "name": "rabbitsoftware-qwen",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-11",
+  "workers_dev": true,
+  "ai": { "binding": "AI" },
+  "vars": {
+    "CHAT_ALLOWED_ORIGINS": "https://rabbitsoftware.io,https://app.rabbitsoftware.io",
+    "DAILY_LIMIT": "500",
+    "PER_CLIENT_PER_HOUR": "20"
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "QWEN_LIMITS", "class_name": "QwenLimits" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["QwenLimits"] }],
+  "observability": {
+    "enabled": true,
+    "logs": { "enabled": true, "head_sampling_rate": 1 },
+    "traces": { "enabled": true, "head_sampling_rate": 0.01 }
+  }
+}

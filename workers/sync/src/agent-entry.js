@@ -431,6 +431,42 @@ async function migrationPreview(env, account) {
   };
 }
 __name(migrationPreview, "migrationPreview");
+function b64urlDecode(text) {
+  const b64 = String(text || "").replace(/-/g, "+").replace(/_/g, "/");
+  return b64decode(b64 + "=".repeat((4 - b64.length % 4) % 4));
+}
+__name(b64urlDecode, "b64urlDecode");
+async function verifySupabaseJwt(request, env) {
+  const base = String(env.SUPABASE_URL || "").replace(/[/]+$/, "");
+  if (!base) return { status: 503, error: "supabase auth is not configured" };
+  const token = (request.headers.get("Authorization") || "").match(/^Bearer ([A-Za-z0-9_-]+[.][A-Za-z0-9_-]+[.][A-Za-z0-9_-]+)$/)?.[1];
+  if (!token) return { status: 401, error: "send a Supabase access token as a Bearer token" };
+  const [h, p, sig] = token.split(".");
+  try {
+    const header = JSON.parse(new TextDecoder().decode(b64urlDecode(h)));
+    const claims = JSON.parse(new TextDecoder().decode(b64urlDecode(p)));
+    const signed = enc.encode(`${h}.${p}`);
+    let ok = false;
+    if (header.alg === "HS256" && env.SUPABASE_JWT_SECRET) {
+      const key = await crypto.subtle.importKey("raw", enc.encode(env.SUPABASE_JWT_SECRET), { name: "HMAC", hash: "SHA-256" }, false, ["verify"]);
+      ok = await crypto.subtle.verify("HMAC", key, b64urlDecode(sig), signed);
+    } else if (header.alg === "ES256" || header.alg === "RS256") {
+      const res = await fetch(`${base}/auth/v1/.well-known/jwks.json`, { cf: { cacheTtl: 600, cacheEverything: true } });
+      const jwk = res.ok ? (await res.json()).keys?.find((k) => k.kid === header.kid) : null;
+      if (jwk) {
+        const algo = header.alg === "ES256" ? { name: "ECDSA", namedCurve: "P-256" } : { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" };
+        const key = await crypto.subtle.importKey("jwk", jwk, algo, false, ["verify"]);
+        ok = await crypto.subtle.verify(header.alg === "ES256" ? { name: "ECDSA", hash: "SHA-256" } : algo, key, b64urlDecode(sig), signed);
+      }
+    }
+    if (!ok) return { status: 401, error: "invalid token" };
+    if (claims.iss !== `${base}/auth/v1` || claims.aud !== "authenticated" || !(claims.exp > Date.now() / 1e3)) return { status: 401, error: "invalid or expired token" };
+    return { user: { id: claims.sub, email: claims.email || null, role: claims.role || null } };
+  } catch {
+    return { status: 401, error: "invalid token" };
+  }
+}
+__name(verifySupabaseJwt, "verifySupabaseJwt");
 async function handle(request, env) {
   const url = new URL(request.url);
   const path = url.pathname;
@@ -479,6 +515,11 @@ async function handle(request, env) {
     slot.attempts += 1;
     await env.SYNC.put(key, JSON.stringify(slot));
     return json(200, { sealed: slot.sealed });
+  }
+  if (method === "GET" && path === "/v1/supabase/health") return json(200, { configured: Boolean(env.SUPABASE_URL) });
+  if (method === "GET" && path === "/v1/supabase/me") {
+    const auth = await verifySupabaseJwt(request, env);
+    return auth.error ? json(auth.status, { error: auth.error }) : json(200, { user: auth.user });
   }
   const who = await signedDevice(request, env, body);
   if (who.error) return who.error;

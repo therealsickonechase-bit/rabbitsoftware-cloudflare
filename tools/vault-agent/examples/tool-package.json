@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "name": "synthetic-add",
+  "description": "Public synthetic addition utility and reviewable usage skill; not installed or execution-approved.",
+  "capabilities": ["code.add"],
+  "files": [
+    {
+      "path": "add.mjs",
+      "content": "export function add(left, right) {\n  return left + right;\n}\n"
+    },
+    {
+      "path": "SKILL.md",
+      "content": "---\nname: synthetic-add\ndescription: \"Use for approved synthetic addition examples after reviewing and testing the retained source.\"\n---\n# Synthetic addition\n\nImport add from add.mjs in an approved Node workspace. Review the package hash and code before use. Verify positive, negative, and fractional inputs with the existing fixed synthetic addition tests. This package grants no execution permission and is not installed automatically. No network, secrets, services, or private note content are required. Validation in one workspace does not establish compatibility with another runtime.\n"
+    }
+  ]
+}

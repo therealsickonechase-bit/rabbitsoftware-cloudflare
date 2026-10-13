@@ -25,25 +25,32 @@
 <body>
   <main>
     <h1>Status</h1>
-    <p>Checked live from your browser each time you open this page.</p>
+    <p>This page is served locally or by the website host. Hosted RabbitOS checks require internet and start only when you press the button.</p>
+    <button id="check" type="button">Check hosted RabbitOS</button>
     <ul id="rows" aria-live="polite">
       <li><span>This website</span><span class="state ok">Up</span></li>
-      <li><span>RabbitOS console</span><span class="state" id="os">Checking...</span></li>
-      <li><span>RabbitOS database</span><span class="state" id="db">Checking...</span></li>
+      <li><span>Hosted RabbitOS console</span><span class="state" id="os">Not checked</span></li>
+      <li><span>Hosted RabbitOS database</span><span class="state" id="db">Not checked</span></li>
     </ul>
     <small id="when"></small>
     <small><a href="/">Back to rabbitsoftware.io</a> &middot; <a href="https://app.rabbitsoftware.io/">Open RabbitOS</a></small>
   </main>
   <script>
     const set = (id, up, text) => { const e = document.getElementById(id); e.textContent = text; e.className = 'state ' + (up ? 'ok' : 'down') }
-    fetch('https://app.rabbitsoftware.io/api/health', { cache: 'no-store' })
+    document.getElementById('check').addEventListener('click', () => {
+    document.getElementById('check').disabled = true
+    set('os', false, 'Checking...')
+    set('db', false, 'Checking...')
+    fetch('https://app.rabbitsoftware.io/api/health', { cache: 'no-store', signal: AbortSignal.timeout(15000) })
       .then((r) => r.json().then((d) => ({ http: r.status, d })))
       .then(({ http, d }) => {
-        set('os', http === 200 || http === 503, 'Up')
-        set('db', d.checks && d.checks.database === 'ok', d.checks && d.checks.database === 'ok' ? 'Up (' + d.database_ms + ' ms)' : 'Down')
+        set('os', http === 200, http === 200 ? 'Up' : 'Degraded / HTTP ' + http)
+        set('db', http === 200 && d.checks && d.checks.database === 'ok', d.checks && d.checks.database === 'ok' ? 'Up (' + d.database_ms + ' ms)' : 'Down / unknown')
         document.getElementById('when').textContent = 'Last checked ' + new Date().toLocaleTimeString()
       })
-      .catch(() => { set('os', false, 'Unreachable'); set('db', false, 'Unknown') })
+      .catch((error) => { console.error('Hosted health check failed', error); set('os', false, 'Unreachable from this browser'); set('db', false, 'Unknown') })
+      .finally(() => { document.getElementById('check').disabled = false })
+    })
   </script>
 </body>
 </html>

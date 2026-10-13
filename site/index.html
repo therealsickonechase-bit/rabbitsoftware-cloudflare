@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="RabbitSoftware is local-first research, operating-system, and blockchain software with inspectable provenance and explicit data boundaries.">
+  <meta name="description" content="RabbitSoftware connects a public research website, a hosted RabbitOS console, and separately installed Python research prototypes. Review setup code and data boundaries before use.">
   <meta name="theme-color" content="#f2f4ee">
   <title>RabbitSoftware | Research systems, built to be inspected</title>
   <link rel="icon" type="image/png" href="assets/rabbitsoftware.png">
@@ -243,10 +243,14 @@
     .install-grid { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 54px; }
     .install-grid > div:first-child p { max-width: 430px; color: var(--muted); }
     .install-list { border-top: 1px solid var(--line); }
-    .install-row { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 14px; padding: 17px 0; border-bottom: 1px solid var(--line); }
-    .install-row h3 { margin: 0; font-size: 14px; }
-    .install-row pre { grid-column: 2; margin: 0; padding: 12px; overflow-wrap: anywhere; white-space: pre-wrap; background: var(--night); color: var(--night-ink); font-size: 12px; line-height: 1.55; }
-    .install-row a { grid-column: 2; width: fit-content; color: var(--green); font-size: 13px; }
+    .install-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 22px 0; border-bottom: 1px solid var(--line); }
+    .install-row h3 { margin: 0; font-size: 16px; }
+    .install-row p { margin: 0; color: var(--muted); font-size: 14px; }
+    .install-row pre { margin: 0; padding: 12px; overflow-wrap: anywhere; white-space: pre-wrap; background: var(--night); color: var(--night-ink); font-size: 12px; line-height: 1.55; }
+    .install-row a { color: var(--green); }
+    .install-row .chat-copy { justify-self: start; }
+    .install-grid ol { padding-left: 22px; color: var(--muted); }
+    .install-grid li { margin-bottom: 14px; }
 
     .caveat { padding-block: 62px; border-bottom: 1px solid var(--line); }
     .caveat-inner { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 30px; }
@@ -414,6 +418,7 @@
       <a href="#boundaries">Data boundaries</a>
       <a href="#agents-chains">Agents &amp; chains</a>
       <a href="#start">Get started</a>
+      <a href="local.html">Local / hosted</a>
       <a href="#resources">Resources</a>
     </nav>
   </header>
@@ -423,19 +428,19 @@
       <div class="hero-copy">
         <p class="eyebrow">Local-first research / experimental systems</p>
         <h1 id="site-title">RabbitSoftware</h1>
-        <p class="hero-lede">Research software, operating-system experiments, and signed provenance - built to run locally and make its boundaries visible.</p>
+        <p class="hero-lede">Read public research, inspect selected files in your browser, open the hosted RabbitOS console, or run the website and AI locally on your computer. Choose your path below - each has its own setup and data boundaries.</p>
         <div class="hero-actions">
-          <a class="button primary" href="https://github.com/DNA-Blockchain/Helloworld">Explore the source</a>
-          <a class="button" href="#start">Install the project</a>
+          <a class="button primary" href="https://app.rabbitsoftware.io/">Open RabbitOS</a>
+          <a class="button" href="#start">Get started / copy commands</a>
         </div>
-        <p class="hero-note">Active research software. Version 0.12.0. The experimental kernel runs in QEMU.</p>
+        <p class="hero-note">Research prototypes, not clinical software. The retired Helloworld installers are no longer used. Local setup does not install a replacement operating system.</p>
       </div>
       <aside class="hero-index" aria-label="Project snapshot">
         <p class="hero-index-label">Project snapshot</p>
         <dl>
-          <div><dt>Host runtime</dt><dd>Python</dd></div>
-          <div><dt>Kernel tests</dt><dd>QEMU only</dd></div>
-          <div><dt>Cloud sharing</dt><dd>Opt-in</dd></div>
+          <div><dt>Hosted console</dt><dd>Browser / online</dd></div>
+          <div><dt>Local website + AI</dt><dd>Python / Ollama</dd></div>
+          <div><dt>Python prototypes</dt><dd>Separate setup</dd></div>
         </dl>
       </aside>
     </div>
@@ -443,7 +448,7 @@
 
   <div class="signals" aria-label="Project principles">
     <div class="signals-inner wrap">
-      <span class="signal"><b>01</b> Local by default</span>
+      <span class="signal"><b>01</b> Choose local or hosted</span>
       <span class="signal"><b>02</b> Sources stay inspectable</span>
       <span class="signal"><b>03</b> Sharing waits for consent</span>
     </div>
@@ -453,7 +458,7 @@
     <div class="rabbitos-inner wrap">
       <img class="rabbitos-art" src="assets/brain-network.svg" width="900" height="560" alt="A brain drawn as a network of connected glowing nodes" loading="lazy">
       <h2 id="rabbitos-title">RabbitOS</h2>
-      <p>The RabbitOS console: browse the research library and ask questions, explore a 3D brain and body model, and connect your own devices and data that stay on your computer. Sign in with just your email, no password.</p>
+      <p>RabbitOS is the account-free workspace at app.rabbitsoftware.io: public research, hosted Qwen chat, local brain/body tools, and browser-local notes and settings. No email, password, or CAPTCHA is needed. Existing private account data stays inaccessible. Opening the console does not install software or automatically connect your files, vault, or devices.</p>
       <a class="button primary" href="https://app.rabbitsoftware.io/">Open RabbitOS</a>
     </div>
   </section>
@@ -480,8 +485,8 @@
           <p>Nodes keep their own signed chains and replicate a research ledger. Validators reject events that contain personal data.</p>
         </article>
         <article class="capability">
-          <h3>Host and guest</h3>
-          <p>The Python application runs on the host. The experimental Rust kernel and bounded guest workflows run in QEMU; they do not replace the host OS.</p>
+          <h3>Separate applications</h3>
+          <p>The hosted console, local Python backend, monitor, and research stack have separate setup and data boundaries. Local installation does not replace the host OS or automatically connect a private vault.</p>
         </article>
       </div>
     </section>
@@ -493,8 +498,8 @@
           <h2 id="boundary-title">Your device is the default boundary.</h2>
         </div>
         <ul class="boundary-list">
-          <li><b>A</b><span><strong>Local first.</strong> Conversations, settings, research records, integrity reports, node keys, chains, and the local model stay on the device by default.</span></li>
-          <li><b>B</b><span><strong>Consent before transfer.</strong> Public searches, hosted-model questions, publishing, and sharing wait for an explicit yes and are recorded locally.</span></li>
+          <li><b>A</b><span><strong>Local tools stay local.</strong> Selected-file viewing and local Ollama chat stay on your computer. RabbitOS notes and settings stay in your browser; public feeds and hosted Qwen require internet. It is not a synced offline vault.</span></li>
+          <li><b>B</b><span><strong>Choose before sending.</strong> Hosted Research AI and live public searches need consent. Local chat never falls back to hosted AI, reads your files automatically, or searches the live web.</span></li>
           <li><b>C</b><span><strong>Public chain, public data.</strong> The chain is permanent. Personal data belongs in the encrypted local vault, never in a public event.</span></li>
         </ul>
       </div>
@@ -504,57 +509,102 @@
       <div class="install-grid">
         <div>
           <p class="section-index">03 / GET STARTED</p>
-          <h2 id="start-title">Start with the source.</h2>
-          <p>This website was recovered from a surviving Cloudflare preview. The original GitHub repository and installers are currently unavailable; the Python application is only partially recovered.</p>
-          <p><strong>Do not run the historical install commands below.</strong> They are retained as recovery references, not working installation instructions. <a href="recovery.html">Read the recovery status</a>.</p>
+          <h2 id="start-title">Get started: choose what you want to run.</h2>
+          <ol>
+            <li><strong>Use RabbitOS online:</strong> <a href="https://app.rabbitsoftware.io/">open the account-free workspace</a>. No sign-in or installation is needed. Try Qwen chat, public research, or the local brain/body explorer. Chats and notes stay in this browser; hosted AI requires consent and internet.</li>
+            <li><strong>Read or inspect a file:</strong> open <a href="research.html">research summaries</a> or the <a href="chain.html">file / corpus viewer</a>. No installer is needed. The viewer only reads the file you select.</li>
+            <li><strong>Run Python prototypes:</strong> use the Windows or Linux setup steps here. Start with the backend; the monitor and research stack are separate components.</li>
+            <li><strong>Run the website with local AI:</strong> use the local website steps below. This is a different setup from the backend and requires Ollama.</li>
+          </ol>
+          <p><strong>Before using terminal commands:</strong> install <a href="https://www.python.org/downloads/">Python 3.11 or 3.12</a> and <a href="https://git-scm.com/downloads">Git</a>, then reopen your terminal. Python 3.13/3.14 is not supported by the pinned prototype dependencies. Commands use 3.11; replace it with 3.12 if that is your installed version.</p>
+          <p>Use a new writable folder. Copy and run one step at a time; review downloaded code before execution. The old Helloworld shell-pipe installers are retired. <a href="setup.html">Full component setup and verification limits</a> &middot; <a href="local.html">Local / hosted guide</a>.</p>
         </div>
-        <div class="install-list" aria-label="Install commands">
+        <div class="install-list" aria-label="Local setup commands">
           <div class="install-row">
-            <h3>Windows / PowerShell</h3>
-            <pre><code>irm https://raw.githubusercontent.com/DNA-Blockchain/Helloworld/master/install.ps1 | iex</code></pre>
-            <a href="https://github.com/DNA-Blockchain/Helloworld/blob/master/install.ps1">Review install.ps1</a>
+            <h3>Python backend: Windows / PowerShell</h3>
+            <p>1. Download the script into your new folder.</p>
+            <pre><code id="setup-windows-download">Invoke-WebRequest -Uri https://rabbitsoftware.io/installers/setup.py -OutFile rabbitsoftware-setup.py</code></pre>
+            <button class="chat-copy" type="button" data-copy-target="setup-windows-download">Copy Windows download</button>
+            <p>2. <a href="installers/setup.py">Review the setup source</a> and open your saved copy before continuing.</p>
+            <p>3. Check prerequisites, then prepare the backend only if the check succeeds.</p>
+            <pre><code id="setup-windows-check">py -3.11 rabbitsoftware-setup.py --check</code></pre>
+            <button class="chat-copy" type="button" data-copy-target="setup-windows-check">Copy Windows check</button>
+            <pre><code id="setup-windows-run">py -3.11 rabbitsoftware-setup.py --component backend</code></pre>
+            <button class="chat-copy" type="button" data-copy-target="setup-windows-run">Copy Windows setup</button>
+            <p>4. After setup succeeds, use the exact loopback-only start command it prints. Open http://127.0.0.1:8000/docs after starting it; stop with Ctrl+C. This backend is not the hosted web console.</p>
           </div>
           <div class="install-row">
-            <h3>Linux / WSL</h3>
-            <pre><code>curl -fsSL https://raw.githubusercontent.com/DNA-Blockchain/Helloworld/master/install.sh | bash</code></pre>
-            <a href="https://github.com/DNA-Blockchain/Helloworld/blob/master/install.sh">Review install.sh</a>
+            <h3>Python backend: Linux / WSL</h3>
+            <p>1. Use a new folder on the Linux filesystem. Install the matching Python venv package if needed, then download.</p>
+            <pre><code id="setup-linux-download">curl -fL https://rabbitsoftware.io/installers/setup.py -o rabbitsoftware-setup.py</code></pre>
+            <button class="chat-copy" type="button" data-copy-target="setup-linux-download">Copy Linux download</button>
+            <p>2. <a href="installers/setup.py">Review the setup source</a> and your saved copy before continuing.</p>
+            <p>3. Check prerequisites, then prepare the backend only if the check succeeds.</p>
+            <pre><code id="setup-linux-check">python3.11 rabbitsoftware-setup.py --check</code></pre>
+            <button class="chat-copy" type="button" data-copy-target="setup-linux-check">Copy Linux check</button>
+            <pre><code id="setup-linux-run">python3.11 rabbitsoftware-setup.py --component backend</code></pre>
+            <button class="chat-copy" type="button" data-copy-target="setup-linux-run">Copy Linux setup</button>
+            <p>4. Use the start command printed after success, then open http://127.0.0.1:8000/docs. Stop with Ctrl+C.</p>
+          </div>
+          <div class="install-row">
+            <h3>Optional monitor and research components</h3>
+            <p>Replace <code>backend</code> with <code>monitor</code> or <code>research</code> to prepare that component instead; <code>--component all</code> prepares all three in a fresh destination. Setup does not start services, scan devices, register tasks, or open tunnels. Existing component folders are not overwritten: for retries, use a new <code>--directory "my-new-folder"</code>.</p>
+            <p>Windows preparation passed for all three. Linux backend health passed; full Linux monitor/research preparation is still unverified. Preparation checks do not certify full application workflows. <a href="setup.html">Read the exact verification boundaries</a>.</p>
+          </div>
+          <div class="install-row">
+            <h3>Local website + Ollama AI: Windows</h3>
+            <p>1. Install <a href="https://ollama.com/download">Ollama</a> and keep it running on its default loopback port. Download this example model while online (about 1.9 GB).</p>
+            <pre><code id="local-model">ollama pull qwen2.5:3b</code></pre>
+            <button class="chat-copy" type="button" data-copy-target="local-model">Copy model download</button>
+            <p>2. From a folder without an existing rabbitsoftware-cloudflare checkout, download the website source. These repairs are on the published <code>fix/vault-coordinator-status</code> branch, not yet merged into the default branch.</p>
+            <pre><code id="local-clone">git clone --branch fix/vault-coordinator-status https://github.com/ringquistchase-collab/rabbitsoftware-cloudflare.git
+cd rabbitsoftware-cloudflare</code></pre>
+            <button class="chat-copy" type="button" data-copy-target="local-clone">Copy website checkout</button>
+            <p>3. Review <code>scripts\local-site.py</code>, then start the local website server. This does not install the Python backend.</p>
+            <pre><code id="local-windows-run">py -3.11 scripts\local-site.py --model qwen2.5:3b --port 8788</code></pre>
+            <button class="chat-copy" type="button" data-copy-target="local-windows-run">Copy Windows local server</button>
+            <p>4. Open <a href="http://127.0.0.1:8788/">http://127.0.0.1:8788/</a>, open Research AI, choose <strong>Local Ollama</strong>, and approve your message. Keep the terminal and Ollama running; stop the website with Ctrl+C.</p>
+          </div>
+          <div class="install-row">
+            <h3>Local website + Ollama AI: Linux / WSL</h3>
+            <p>Install and run Ollama inside the same Linux environment, download the model, and clone the website using steps 1-2 above. Review <code>scripts/local-site.py</code>, then use this command from the checkout:</p>
+            <pre><code id="local-linux-run">python3.11 scripts/local-site.py --model qwen2.5:3b --port 8788</code></pre>
+            <button class="chat-copy" type="button" data-copy-target="local-linux-run">Copy Linux local server</button>
+            <p>Open <a href="http://127.0.0.1:8788/">http://127.0.0.1:8788/</a> and choose Local Ollama in Research AI. An existing installed model can replace <code>qwen2.5:3b</code>. A plain static server cannot handle local AI; no hosted fallback occurs. <a href="local.html">Troubleshooting and offline limits</a>.</p>
           </div>
         </div>
       </div>
     </section>
 
     <section class="section wrap" id="agents-chains" aria-labelledby="agents-chains-title">
+      <span id="tools"></span>
       <div class="section-head">
         <span class="section-index">04 / LOCAL TOOLS</span>
         <div>
-          <h2 id="agents-chains-title">Run the agents. Read the chain locally.</h2>
-          <p class="section-intro">The website offers consent-gated research chat, not a hosted agent console or public chain explorer. RabbitSoftware’s local assistant, literature-research agent, and chain viewer run on your own machine.</p>
+          <h2 id="agents-chains-title">Inspect local files. Keep hosted tools separate.</h2>
+          <p class="section-intro">Use the <a href="chain.html">local-file and corpus viewer</a>, <a href="cli.html">offline CLI</a>, or <a href="setup.html">separate prototype setup</a>. <a href="local.html">See what works offline and what still requires a service</a>. CLI commands require downloading, reviewing and extracting its package first.</p>
         </div>
       </div>
       <div class="capabilities">
         <article class="capability">
           <h3>RabbitSoftware assistant</h3>
-          <p>Ask about local nodes, research status, or published chain entries. Chain lookups search public entries already stored in your local node data.</p>
-          <pre><code>python rabbit.py chat
-python rabbit.py ask "what's on the chain"
-python rabbit.py ask "find BRCA1 on the chain"</code></pre>
+          <p>The <a href="cli.html">read-only CLI</a> can search explicitly selected files or synthetic demo records. This is deterministic lookup, not generative AI or an automatically connected account.</p>
+          <pre><code>python rabbit.py --demo chat
+python rabbit.py --demo ask "what's on the chain"
+python rabbit.py --demo ask "find BRCA1 on the chain"</code></pre>
         </article>
         <article class="capability">
-          <h3>Literature research agent</h3>
-          <p>Run the host-side agent from the repository. The explicit loopback bind keeps its node on this computer; live collection queries public research sources and uses network access.</p>
-          <pre><code>python run_agent.py --host 127.0.0.1 --port 8765</code></pre>
-          <p>Stop it with <code>Ctrl+C</code>. The default interval is hourly; upstream services impose request limits.</p>
+          <h3>Research AI destinations</h3>
+          <p>Research AI offers <strong>hosted Qwen3 / Cloudflare</strong> without a local install, the existing hosted Hugging Face provider, or <a href="local.html">Local Ollama</a> through your loopback server. Choose a provider and approve each message; hosted prompts leave your computer. <a href="research-agent.html">Live public search</a> remains separate.</p>
+          <p>The historical <a href="agent.html">browser-agent ZIP</a> is unavailable. Current <a href="setup.html">backend and research prototypes</a> have their own setup; they do not restore that missing package.</p>
         </article>
         <article class="capability">
           <h3>Browse chain entries</h3>
-          <p>Read the merged local research chain in a loopback-only viewer, or list, search, and inspect entries through the assistant.</p>
-          <pre><code>python research_viewer.py
-python rabbit.py ask "what's on the chain"
-python rabbit.py ask "show entry 2"</code></pre>
-          <p>The viewer listens on <code>127.0.0.1:8791</code>. The chain holds public events and fingerprints; it is not an online public endpoint for this website.</p>
+          <p>The <a href="chain.html">browser viewer</a> searches bundled public metadata and reads one JSON file you select. Queries and file contents stay in this tab. It does not log into a cloud account or verify blockchain consensus.</p>
+          <p>Run the <a href="local.html">website locally</a> for offline viewing after obtaining its assets. Opening a third-party source link or hosted tool still requires internet.</p>
         </article>
       </div>
-      <p class="local-note">These commands describe the original application and require source files that have not yet been recovered. TwinOS peer agents are also local-first. Remote peers require explicit trust and policy approval; this website does not accept agent messages or expose agent credentials.</p>
+      <p class="local-note">No automatic vault, account, device or peer connection. Each prototype has separate prerequisites and trust boundaries; the website does not register services or expose agent credentials.</p>
     </section>
 
     <section class="caveat wrap" aria-labelledby="caveat-title">
@@ -579,15 +629,16 @@ python rabbit.py ask "show entry 2"</code></pre>
       <nav class="footer-links" aria-label="Project resources">
         <a href="research.html">Research library</a>
         <a href="status.html">Status</a>
+        <a href="development.html">Development guide</a>
         <a href="reporting.html">Reporting contacts</a>
-        <a href="https://github.com/DNA-Blockchain/Helloworld">Repository</a>
-        <a href="https://github.com/DNA-Blockchain/Helloworld#readme">README</a>
-        <a href="https://github.com/DNA-Blockchain/Helloworld/blob/master/PRIVACY.md">Privacy policy</a>
-        <a href="https://github.com/DNA-Blockchain/Helloworld/blob/master/LICENSE">License</a>
+        <a href="https://github.com/ringquistchase-collab/rabbitsoftware-cloudflare">Website source</a>
+        <a href="setup.html">Application setup</a>
+        <a href="privacy.html">Privacy policy</a>
+        <a href="license.html">License</a>
         <a href="LICENSES.md">License scopes and authorship</a>
         <a href="chain-identifiers.md">Chain and block identifiers</a>
-        <a href="https://github.com/DNA-Blockchain/Helloworld/blob/master/KNOWN_GAPS.md">Known gaps</a>
-        <a href="https://github.com/DNA-Blockchain/Helloworld/releases">Releases</a>
+        <a href="recovery.html">Known gaps</a>
+        <a href="local.html">Local and hosted features</a>
         <a href="mailto:contact@rabbitsoftware.io">Contact</a>
       </nav>
     </section>
@@ -620,22 +671,28 @@ python rabbit.py ask "show entry 2"</code></pre>
         <section class="chat-pane" id="pane-local" role="tabpanel" aria-labelledby="tab-local" tabindex="0">
           <h3>Your Twin stays on your device</h3>
           <p>Run the RabbitSoftware assistant locally. This public page cannot see your files, personal research, vault, local chains, or terminal.</p>
-          <div class="chat-command"><code>python rabbit.py chat</code><button class="chat-copy" type="button" data-copy="python rabbit.py chat">Copy</button></div>
-          <p>This is a historical application command, not a working installer. The original application source is still incomplete. <a href="recovery.html">Recovery status</a>.</p>
+          <div class="chat-command"><code>python rabbit.py --demo chat</code><button class="chat-copy" type="button" data-copy="python rabbit.py --demo chat">Copy</button></div>
+          <p>The historical TwinOS application is not recovered. Use the <a href="cli.html">read-only CLI</a> for local/demo lookup, or <a href="local.html">Local Ollama</a> for separately configured AI. <a href="recovery.html">Recovery status</a>.</p>
           <ul class="chat-links">
-            <li><a href="https://github.com/DNA-Blockchain/Helloworld#install-rabbitsoftwareinc" target="_blank" rel="noreferrer">Install and run RabbitSoftware</a></li>
-            <li><a href="https://github.com/DNA-Blockchain/Helloworld/blob/master/docs/twinos/README.md" target="_blank" rel="noreferrer">TwinOS trust and approval guide</a></li>
+            <li><a href="setup.html">Prepare current local prototypes</a></li>
+            <li><a href="local.html">Local and hosted feature boundaries</a></li>
           </ul>
           <p class="chat-notice">The local assistant can use your local setup. Public searches require approval; hosted requests follow your local consent settings. This site does not start commands or connect to your device.</p>
         </section>
         <section class="chat-pane" id="pane-research" role="tabpanel" aria-labelledby="tab-research" tabindex="0" hidden>
           <h3>Ask about the reviewed research</h3>
-          <p>Answers use the two public summaries linked below and the hosted model. This is not a live literature search; new studies are not automatically fetched.</p>
+          <p>Answers use the two public summaries linked below and your selected AI destination: hosted Qwen3 on Cloudflare, the existing hosted Hugging Face model, or Local Ollama through your local website server. Hosted choices require internet, not an Ollama installation. This is not live literature search; new studies are not automatically fetched. No automatic provider fallback.</p>
           <div class="chat-log" id="chat-log" role="log" aria-live="polite" aria-relevant="additions"></div>
           <form class="chat-form" id="chat-form">
+            <label for="chat-provider">AI destination (switching clears chat context)</label>
+            <select id="chat-provider">
+              <option value="hosted">Hosted Cloudflare / Hugging Face</option>
+              <option value="qwen">Hosted Qwen3 / Cloudflare (online)</option>
+              <option value="local" disabled>Local Ollama (requires local website server)</option>
+            </select>
             <label for="chat-question">Your question</label>
             <textarea id="chat-question" maxlength="2000" required placeholder="Ask about methods, evidence, or limitations"></textarea>
-            <label class="chat-consent"><input id="chat-consent" type="checkbox"><span>For this message, I approve sending my question and the most recent messages from this tab's conversation, along with the published research summaries, through Cloudflare to RabbitSoftware's Hugging Face hosted model. I will not include personal or identifying health data.</span></label>
+            <label class="chat-consent"><input id="chat-consent" type="checkbox"><span id="chat-consent-text">For this message, I approve sending my question and the most recent messages from this tab's conversation, along with the published research summaries, through Cloudflare to RabbitSoftware's Hugging Face hosted model. I will not include personal or identifying health data.</span></label>
             <div class="chat-actions">
               <button class="chat-clear" id="chat-clear" type="button">Clear chat</button>
               <button class="chat-clear" id="chat-download" type="button" disabled>Download plain text</button>
@@ -643,7 +700,7 @@ python rabbit.py ask "show entry 2"</code></pre>
             </div>
             <p class="chat-status" id="chat-status" role="status" aria-live="polite"></p>
           </form>
-          <p class="chat-notice">Messages are kept in this tab's memory only and are not saved by this page. The page blocks common email, phone, ID, birth-date, street-address, and long DNA/RNA patterns before sending; this check can miss personal data. Do not send private, identifying, genomic, or biosignal data. The Cloudflare gateway applies usage limits and does not log prompts or answers; it forwards approved requests to the Hugging Face model endpoint. <a href="https://github.com/DNA-Blockchain/Helloworld/blob/master/PRIVACY.md" target="_blank" rel="noreferrer">Privacy policy</a>. Research is not medical advice.</p>
+          <p class="chat-notice">Messages are kept in this tab's memory only and are not saved by this page. The page blocks common email, phone, ID, birth-date, street-address, and long DNA/RNA patterns before sending; this check can miss personal data. Do not send private, identifying, genomic, or biosignal data. Hosted gateways enforce usage limits and route only to your selected Cloudflare Qwen or Hugging Face provider. Local Ollama stays on your computer. No automatic provider fallback. <a href="privacy.html">Privacy policy</a>. Research is not medical advice.</p>
           <details class="chat-sources" id="chat-record-details">
             <summary>Encrypted local research record</summary>
             <p class="chat-notice">Reconstructed feature: optional local download of inputs, outputs, source context, and request status. No uploads, training sharing, or chain publication. New recovery-format records use AES-256-GCM / PBKDF2-SHA256 (600,000 iterations). Older records and .dvault files are not supported by this rebuilt module; keep their original copies. The passphrase cannot be recovered. Opened records are read-only and are never added to hosted prompts. Model output is unverified.</p>
@@ -671,12 +728,12 @@ python rabbit.py ask "show entry 2"</code></pre>
         <section class="chat-pane" id="pane-code" role="tabpanel" aria-labelledby="tab-code" tabindex="0" hidden>
           <h3>Code and documentation, locally</h3>
           <p>Browse the source and documentation below, or ask the local assistant about project research and supported status checks. This panel is a read-only guide, not a connected coding agent; it cannot inspect your checkout or execute terminal commands.</p>
-          <div class="chat-command"><code>python rabbit.py chat</code><button class="chat-copy" type="button" data-copy="python rabbit.py chat">Copy</button></div>
+          <div class="chat-command"><code>python rabbit.py --demo chat</code><button class="chat-copy" type="button" data-copy="python rabbit.py --demo chat">Copy</button></div>
           <ul class="chat-links">
-            <li><a href="https://github.com/DNA-Blockchain/Helloworld/blob/master/README.md" target="_blank" rel="noreferrer">Project README</a></li>
-            <li><a href="https://github.com/DNA-Blockchain/Helloworld/tree/master/docs" target="_blank" rel="noreferrer">Documentation index</a></li>
-            <li><a href="https://github.com/DNA-Blockchain/Helloworld/blob/master/docs/research/eeg-to-image-reconstruction.md" target="_blank" rel="noreferrer">EEG research report</a></li>
-            <li><a href="https://github.com/DNA-Blockchain/Helloworld/blob/master/docs/research/dna-editing-and-cancer-remission.md" target="_blank" rel="noreferrer">Genomics research report</a></li>
+            <li><a href="setup.html">Application setup guide</a></li>
+            <li><a href="local.html">Local / hosted functionality</a></li>
+            <li><a href="research.html#eeg">EEG research summary</a></li>
+            <li><a href="research.html#oncology">Genomics research summary</a></li>
           </ul>
           <p class="chat-notice">This browser page does not upload code or access your terminal. Hosted Research AI is a separate mode and only receives data after a fresh consent for each message.</p>
         </section>

@@ -4,14 +4,40 @@
   "description": "Rabbitsoftware Cloudflare site and Workers",
   "scripts": {
     "dev:site": "wrangler pages dev site --port 8788",
-    "dev:sync": "wrangler dev --config workers/sync/wrangler.toml --local --port 8801",
-    "dev:node-worker": "wrangler dev --config workers/node-worker/wrangler.toml --local --port 8802",
-    "dev:gateway": "wrangler dev --config workers/gateway/wrangler.toml --local --port 8803",
+    "dev:sync": "wrangler dev --config workers/sync/wrangler.dev.toml --local --port 8801",
+    "dev:node-worker": "wrangler dev --config workers/node-worker/wrangler.dev.toml --local --port 8802",
+    "dev:gateway": "wrangler dev --config workers/gateway/wrangler.dev.toml --local --port 8803",
+    "dev:vault-agent": "wrangler dev --config workers/vault-agent/wrangler.dev.jsonc --local --port 8805",
+    "dev:cloudshell": "wrangler dev --config workers/cloudshell/wrangler.jsonc --local --port 8806",
+    "test:cloudshell": "node --test scripts/test-cloudshell.mjs scripts/test-cloud-access.mjs scripts/test-vault-cloud-access.mjs",
+    "typecheck:cloudshell": "tsc -p workers/cloudshell/tsconfig.json",
+    "vault:agents": "node scripts/vault-agent-sync.mjs",
+    "vault:agent": "node scripts/vault-agent.mjs",
+    "vault:tasks": "node scripts/vault-agent-tasks.mjs",
+    "vault:network": "node scripts/vault-agent-network.mjs",
+    "vault:dispatch": "node scripts/vault-agent-dispatch.mjs",
+    "vault:cloud-access": "node scripts/vault-cloud-access.mjs",
+    "vault:agent:install": "node scripts/install-vault-agent.mjs",
+    "test:vault-agent": "node --test scripts/test-vault-agent.mjs scripts/test-vault-agent-runtime.mjs scripts/test-vault-agent-tasks.mjs scripts/test-vault-agent-coding.mjs scripts/test-vault-agent-network.mjs scripts/test-vault-agent-packages.mjs scripts/test-vault-mailbox-clients.mjs scripts/test-vault-agent-dispatch.mjs scripts/test-vault-agent-review.mjs scripts/test-vault-agent-transports.mjs",
+    "test:gateway": "node --test scripts/test-gateway-quota.mjs scripts/test-qwen-gateway.mjs scripts/test-qwen-quota.mjs",
+    "test:vault-mailbox-clients": "tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext --allowImportingTsExtensions tools/vault-agent/clients/VaultMailbox.mts tools/vault-agent/examples/complete-task.mts && node --test scripts/test-vault-mailbox-clients.mjs scripts/test-vault-mailbox-java.mjs",
     "preview:site": "wrangler pages deploy site --project-name rabbitsoftware-site --branch preview",
     "probe": "node scripts/probe.mjs",
-    "check:csp": "node scripts/check-csp.mjs"
+    "check:csp": "node scripts/check-csp.mjs",
+    "supabase:start": "npx supabase start",
+    "supabase:stop": "npx supabase stop",
+    "supabase:link": "npx supabase link --project-ref ludxbakxpmdqhfgdenwp",
+    "supabase:diff": "npx supabase db diff",
+    "supabase:types": "npx supabase gen types typescript --linked"
+  },
+  "dependencies": {
+    "@babel/helper-module-imports": "^8.0.0",
+    "@cloudflare/sandbox": "0.13.0-next.776.1",
+    "undici": "^7.29.1"
   },
   "devDependencies": {
+    "@types/node": "^24",
+    "typescript": "^5.9",
     "wrangler": "^4"
   }
 }
