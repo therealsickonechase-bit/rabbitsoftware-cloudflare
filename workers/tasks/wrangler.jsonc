@@ -1,0 +1,24 @@
+{
+  // Public visitor tasks: the website submits, this Worker queues and runs them with hosted Qwen.
+  "name": "rabbitsoftware-tasks",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-11",
+  "workers_dev": true,
+  "ai": { "binding": "AI" },
+  "vars": {
+    "TASK_ALLOWED_ORIGINS": "https://rabbitsoftware.io,https://preview.rabbitsoftware-site.pages.dev",
+    "TASK_DAILY_LIMIT": "100",
+    "TASKS_PER_CLIENT_PER_HOUR": "5",
+    "TASK_MAX_QUEUED": "25",
+    "TASK_RETENTION_DAYS": "7"
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "TASK_BOARD", "class_name": "TaskBoard" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["TaskBoard"] }],
+  "observability": {
+    "enabled": true,
+    "logs": { "enabled": true, "head_sampling_rate": 1 },
+    "traces": { "enabled": true, "head_sampling_rate": 0.01 }
+  }
+}

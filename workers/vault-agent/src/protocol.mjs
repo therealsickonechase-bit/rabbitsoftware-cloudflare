@@ -76,7 +76,7 @@ export function validId(id) {
   return id;
 }
 
-export async function readJson(request) {
+export async function readJson(request, limit = MAX_BYTES) {
   if (!request.body) throw new InputError("Send a JSON body.");
   if (request.headers.get("Content-Type")?.split(";")[0].trim() !== "application/json") {
     throw new InputError("Send application/json.");
@@ -88,9 +88,9 @@ export async function readJson(request) {
     const { done, value } = await reader.read();
     if (done) break;
     size += value.byteLength;
-    if (size > MAX_BYTES) {
+    if (size > limit) {
       await reader.cancel();
-      throw new InputError("Request exceeds 64 KiB.");
+      throw new InputError(`Request exceeds ${limit / 1024} KiB.`);
     }
     chunks.push(value);
   }

@@ -13,6 +13,7 @@ from pathlib import Path
 
 
 LOG = logging.getLogger("vault-sync")
+VAULT_SELF_REPOS = {"obsidian-rabbitos-vault", "rabbitos-vault"}
 ENV = {**os.environ, "GIT_TERMINAL_PROMPT": "0", "GCM_INTERACTIVE": "Never",
        "GIT_LFS_SKIP_SMUDGE": "1"}
 TRAILER = "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
@@ -327,26 +328,37 @@ def fetch_all_lfs(folder, repo):
             repo["full_name"], parent["full_name"],
         )
         git(folder, "config", "remote.vault-lfs-source.url", parent["clone_url"])
-        git(folder, "lfs", "fetch", "--all", "vault-lfs-source")
+        try:
+            git(folder, "lfs", "fetch", "--all", "vault-lfs-source")
+        except RuntimeError as parent_error:
+            # A public fork whose LFS is disabled everywhere is not a sync failure: Git history is complete.
+            LOG.warning("%s: LFS objects unavailable from fork and parent; history kept without them (%s)",
+                        repo["full_name"], str(parent_error).splitlines()[0][:160])
 
 
 def sync(root, setup, selected=None):
-    owner = api("user")["login"]
+    user = api("user")["login"]
     policy_path = root / "policy.json"
     if not policy_path.exists():
         if not setup:
             raise RuntimeError("Run --setup before enabling scheduled sync")
         save_json(policy_path, {
-            "owner": owner, "auto_push_public": True,
+            "owner": user, "auto_push_public": True,
             "auto_push_private": False, "interval_minutes": 5,
         })
     policy = json.loads(policy_path.read_text(encoding="utf-8"))
-    if policy["owner"] != owner or policy.get("auto_push_private") is not False:
-        raise RuntimeError("Owner mismatch or unsafe private-repository publishing policy")
-    repos = [
-        repo for repo in api("user/repos?affiliation=owner&per_page=100&sort=full_name", pages=True)
-        if repo["owner"]["login"].lower() == owner.lower()
-    ]
+    if policy.get("auto_push_private") is not False:
+        raise RuntimeError("Unsafe private-repository publishing policy")
+    # The policy owner is the signed-in user or an organization they administer (repos moved to rabbitsoftware-io).
+    owner = policy["owner"]
+    if owner.lower() == user.lower():
+        listing = api("user/repos?affiliation=owner&per_page=100&sort=full_name", pages=True)
+    else:
+        membership = api(f"user/memberships/orgs/{owner}")
+        if membership.get("state") != "active" or membership.get("role") != "admin":
+            raise RuntimeError(f"Policy owner {owner} is not an organization you administer")
+        listing = api(f"orgs/{owner}/repos?type=all&per_page=100&sort=full_name", pages=True)
+    repos = [repo for repo in listing if repo["owner"]["login"].lower() == owner.lower()]
     if selected:
         unknown = set(selected) - {repo["full_name"] for repo in repos}
         if unknown:

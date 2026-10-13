@@ -5,6 +5,8 @@
   "compatibility_date": "2026-10-12",
   "workers_dev": true,
   "ai": { "binding": "AI" },
+  "vectorize": [{ "binding": "CORPUS", "index_name": "rabbitsoftware-corpus" }],
+  "vars": { "AGENT_DAILY_LIMIT": "1000", "CORPUS_SEARCH_DAILY_LIMIT": "3000", "CORPUS_UPSERT_DAILY_LIMIT": "2000" },
   "r2_buckets": [{ "binding": "VAULT", "bucket_name": "rabbitsoftware-vault-agent" }],
   "workflows": [{ "binding": "JOBS", "name": "rabbitsoftware-vault-jobs", "class_name": "VaultJob" }],
   "durable_objects": { "bindings": [{ "name": "BUDGET", "class_name": "VaultBudget" }] },

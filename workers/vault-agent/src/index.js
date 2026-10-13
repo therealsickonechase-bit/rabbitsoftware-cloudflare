@@ -1,5 +1,8 @@
 import { DurableObject, WorkflowEntrypoint } from "cloudflare:workers";
 import { InputError, digest, infer, normalizeJob, readJson, validId } from "./protocol.mjs";
+import { chat, dailyLimit, remove, search, upsert } from "./live.mjs";
+
+const LIVE_ROUTES = { "/v1/chat/completions": chat, "/v1/corpus/search": search, "/v1/corpus/upsert": upsert, "/v1/corpus/delete": remove };
 
 export class VaultBudget extends DurableObject {
   constructor(ctx, env) {
@@ -7,12 +10,13 @@ export class VaultBudget extends DurableObject {
     this.ctx.storage.sql.exec("CREATE TABLE IF NOT EXISTS budget (day TEXT PRIMARY KEY, attempts INTEGER NOT NULL)");
   }
 
-  reserve() {
+  // Each named instance is a separate daily budget (job inference, agent chat, corpus search, corpus indexing).
+  reserve(limit = 20) {
     const day = new Date().toISOString().slice(0, 10);
     return this.ctx.storage.transactionSync(() => {
       this.ctx.storage.sql.exec("DELETE FROM budget WHERE day <> ?", day);
       const rows = this.ctx.storage.sql.exec("SELECT attempts FROM budget WHERE day = ?", day).toArray();
-      if ((rows[0]?.attempts ?? 0) >= 20) return false;
+      if ((rows[0]?.attempts ?? 0) >= limit) return false;
       this.ctx.storage.sql.exec("INSERT INTO budget VALUES (?, 1) ON CONFLICT(day) DO UPDATE SET attempts = attempts + 1", day);
       return true;
     });
@@ -64,7 +68,13 @@ export default {
       if (!crypto.subtle.timingSafeEqual(provided, expected)) return reply(401, { error: "Unauthorized." });
       const path = new URL(request.url).pathname;
       if (request.method === "GET" && path === "/health") {
-        return reply(200, { ok: true, modes: ["task", "answer", "organize"], dailyAttempts: 20 });
+        return reply(200, { ok: true, modes: ["task", "answer", "organize"], dailyAttempts: 20,
+          live: { chat: dailyLimit(env.AGENT_DAILY_LIMIT, 1000), corpus: Boolean(env.CORPUS) } });
+      }
+      if (request.method === "POST" && Object.hasOwn(LIVE_ROUTES, path)) {
+        if (path.startsWith("/v1/corpus/") && !env.CORPUS) return reply(503, { error: "Corpus index is not bound." });
+        const { status, body } = await LIVE_ROUTES[path](env, await readJson(request, 131072));
+        return reply(status, body);
       }
       if (request.method === "POST" && path === "/jobs") {
         const job = normalizeJob(await readJson(request));

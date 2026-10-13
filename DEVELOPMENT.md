@@ -48,6 +48,41 @@ verify real non-private inference, then publish the website and RabbitOS.
 No provider API credential belongs in browser code. Origins are browser
 controls, not authentication; global quotas also cover direct API abuse.
 
+## Public visitor tasks
+
+`site/tasks.html` lets any visitor queue a small task (`answer`, `summarize` or
+`explain`) for `workers/tasks/` (`rabbitsoftware-tasks`). The Worker validates
+the request (allowed site origin, JSON, 8000 characters, the gateway's
+personal-information patterns and the vault agent's credential check), then
+stores it in one SQLite Durable Object (`TaskBoard`, instance `public-tasks`).
+A Durable Object alarm runs queued tasks one at a time, at most three per alarm,
+with fixed Workers AI Qwen (`@cf/qwen/qwen3-30b-a3b-fp8`, 1200 output tokens).
+There are no retries or other providers, and a task left running by a crash
+fails rather than rerunning.
+
+- `POST /v1/tasks` `{kind, input}` returns `202 {id, status, position}`; it
+  needs an allowed `Origin`, so plain scripts cannot submit.
+- `GET /v1/tasks/<32 hex id>` returns status and, when done, the result. The
+  random ID is the only access control: anyone with it can read the result.
+- `GET /health` lists the task kinds.
+
+Caps (`wrangler.jsonc` vars): 5 tasks per hashed network address per hour, 100
+per UTC day for everyone, 25 waiting at once. Accepted tasks count even if they
+fail. These are separate from the Qwen chat Worker's 500/day, so Workers AI
+usage from both can add up. The task text is cleared when the task finishes;
+results are deleted after 7 days. The page keeps task IDs only in the visitor's
+`localStorage` and renders results as plain text.
+
+```powershell
+npm run test:tasks
+npx wrangler deploy --config workers\tasks\wrangler.jsonc --dry-run
+```
+
+Tests back the board with `node:sqlite` and use a fake AI binding; no inference
+is called. Deploying the Worker (and then the site, whose CSP allows the task
+origin) is a separate approved step. Verify `/health`, one real non-private
+task, and a refused origin before linking the page more widely.
+
 ## Dev site (static, no tooling)
 
 ```powershell
@@ -131,6 +166,66 @@ unavailable; do not fabricate replacement downloads.
 `node --test scripts\test-chain-viewer.mjs` checks the restored viewer's bounded
 format adapters and account-scope omission. Published CLI ZIPs and simulation
 source were recovered from the existing public website, not private backups.
+
+## CRISPR and bio research tools
+
+These live in the sibling repository `rabbitsoftware-io/research-agents`
+(`C:\Users\odaat\Projects\research-agents`, reachable from the vault as
+`Code/research-agents`). Everything works on text and public read-only data: no
+lab protocol, no delivery method, no pathogen or toxin work, and nothing for use
+on a person. Guide scores are a GC + seed-region heuristic, **not** a validated
+efficiency or off-target model; real work needs CRISPOR or Cas-OFFinder and lab
+testing.
+
+| Need | Call |
+|---|---|
+| Transcripts, guides, CRISPR literature, audit-chain digest | `python crispr_data.py` (`--gene BRCA1`, `--no-literature`) |
+| Guide finder (20-mer + NGG, both strands) | `crispr_guide_design.find_guide_candidates(seq, top_n)` |
+| Spacer checks (GC, poly-T, self-folding) and protein effect of an edit | `bio_tools.guide_quality(guide)`, `bio_tools.edit_effect(cds, index, edit)` |
+| All four pieces together | `python crispr_research_suite.py` |
+| Literature only (trials, papers, preprints) | `python crispr_cancer_research.py`, continuous: `crispr_research_agent.py` |
+
+Records are written to `crispr_records.json` and reach RabbitOS only through
+`rabbit_sync.py`'s signed ingest, the same path the other agents use.
+
+```powershell
+cd C:\Users\odaat\Projects\research-agents
+python -m unittest test_crispr_data test_bio_tools
+```
+
+The repo's interpreter is `.venv-eeg` (VS Code `.vscode/settings.json` selects it
+and loads `.env` into new terminals). It started as the EEG environment, so the
+bio packages were added separately: `python -m pip install biopython ViennaRNA
+primer3-py`. Without biopython every `bio_tools` test errors with
+`No module named 'Bio'`.
+
+On `main`, `test_crispr_data.test_real_transcripts` fails with
+`AttributeError: 'list' object has no attribute 'upper'`: `crispr_data.py` caches
+coding-region ranges under `cds:<accession>` keys in `crispr_cache.json`, and the
+test treats every cache entry as a sequence. PR #6 carries the two-line fix
+(skip keys starting `cds:`), so merging it repairs the suite.
+
+`.claude/skills/crispr-guide-design/SKILL.md` is the Claude Code skill that
+routes CRISPR questions to these tools; keep its table in step with the one above.
+
+### crispr_tool.py (one-stop CLI, PR #6, not yet merged)
+
+Branch `crispr-tool` adds a single command-line entry point: guides on a built-in
+gene (BRCA1, BRCA2, PARP1 real RefSeq transcripts, downloaded once and cached),
+on a pasted sequence or on a FASTA file, with quality flags and an optional edit
+preview that reports the protein change.
+
+```powershell
+python crispr_tool.py --gene BRCA1                       # top guides
+python crispr_tool.py --gene BRCA1 --guide 1 --delete 1  # preview a 1-base deletion at the cut
+python crispr_tool.py --seq ACGT... --cds 1 300 --json   # your own sequence, machine-readable
+python -m unittest test_crispr_tool
+```
+
+It reuses `crispr_data.guide_records` and a new `bio_tools.protein_change`, so
+the CLI and the RabbitOS path agree on guides and on edit effects. Reverse-strand
+edits are applied in the guide's own orientation and reported in forward
+coordinates. Review and merge PR #6 before documenting it as available.
 
 ## Obsidian, Copilot, and GitHub
 
@@ -1369,15 +1464,69 @@ explicitly referenced or top-matching notes before invoking the model. These
 verified tool outputs bootstrap the model rather than relying on it to choose
 retrieval correctly. It can request further reads through the tool loop.
 
-Default inference uses the already-installed local Ollama `qwen2.5:3b`. It works
-without internet while Ollama and this computer are running. Structured JSON
-schemas constrain model actions; input, output, context, and turn limits fail
-explicitly instead of truncating or silently switching providers. These are client
-budgets; the selected model's own context window still applies. The small local
-model explicitly uses its existing 4096-token context and a 600-output-token cap
-to avoid expanding memory use on this 8 GB, CPU-only machine. Initial evidence
-marks its two-snippet limit and summarized resource inventory; more detailed
-discovery and reads remain available through tools.
+Without a config the runtime uses the already-installed local Ollama
+`qwen2.5:3b`, which works offline but takes minutes per task on this 8 GB,
+CPU-only machine. It runs with an 8192-token context and a 1500-output-token
+cap. Structured JSON schemas constrain model actions; input, output, context, and
+turn limits fail explicitly instead of silently switching providers. A reply that
+is cut off or is not valid JSON is re-requested (shorter) up to two times before
+the run fails. Initial evidence marks its two-snippet limit and summarized
+resource inventory; more detailed discovery and reads remain available through
+tools. The Obsidian plugin now uses the hosted model instead (next section).
+
+### Hosted model and corpus search
+
+The plugin's `local-provider.json` selects `openai-compatible` hosted Qwen through
+the vault agent Worker (`POST /v1/chat/completions`), which answers in seconds.
+The bearer token is read from `tokenFile` (`rabbit-web\.env.cloud-supabase`,
+`VAULT_AGENT_TOKEN`), outside the vault, because the vault and this config file
+are published to GitHub. `local-provider.ollama.json` keeps the offline config;
+copy it over `local-provider.json` for the cloud-access status command, which
+only runs with the local model.
+
+Hosted runs can read only notes with `cloud-agent-share: true`. Everything else
+comes from the vector corpus: the Worker embeds text with
+`@cf/baai/bge-base-en-v1.5` into Vectorize index `rabbitsoftware-corpus` (768
+dimensions, cosine, `source` metadata index). Every task starts with one
+`corpus_search` of the prompt and the model can search again; retrieved passages
+are listed under "Corpus passages retrieved" in the result note.
+
+Worker routes (all behind `VAULT_AGENT_TOKEN`, each with its own UTC daily cap in
+`VaultBudget`): `/v1/chat/completions` (1000 calls), `/v1/corpus/search` (3000),
+`/v1/corpus/upsert` (2000 requests of up to 25 chunks), `/v1/corpus/delete`.
+
+```powershell
+node scripts\vault-corpus-index.mjs --plan     # counts only, no network
+node scripts\vault-corpus-index.mjs --apply    # upload changed chunks, delete removed ones
+node scripts\vault-corpus-index.mjs --apply --repos ""   # without repository docs
+```
+
+The indexer reads public vault notes from the vault's published `origin/main`
+(skipping agent results, proposals, coordinator state and notes marked
+`cloud-agent-share: false`), the website's public research corpus, and tracked
+Markdown in the `rabbit-web`, `rabbitsoftware-cloudflare` and `research-agents`
+repositories. Those repositories are private: their docs now live in Vectorize,
+and agent answers can quote them. Result notes are published by Git Sync unless
+`Cloud Agents/Results/**` and `Cloud Agents/Proposals/**` are in its exclude
+patterns. Chunks matching credential patterns are skipped. Run `--apply` again
+after documentation changes; unchanged chunks are not re-sent.
+
+`npm run vault:live` (`scripts/vault-live.mjs`) re-indexes the corpus and pulls
+finished cloud job results, logging to `.wrangler/vault-live.log`. It never
+uploads notes and never runs task queues or dispatchers, which stay operator
+decisions. The vault's `.gitignore` keeps new `Cloud Agents/Results/` and
+`Cloud Agents/Proposals/` out of the 30-minute `Tools/sync-vault.ps1` push; the
+Git Sync plugin needs the same folders in its own exclude patterns. To run it
+every 15 minutes:
+
+```powershell
+$repo = "C:\Users\odaat\Projects\rabbitsoftware-cloudflare"
+Register-ScheduledTask -TaskName "RabbitOS Vault agents" `
+  -Action (New-ScheduledTaskAction -Execute (Get-Command node).Source -Argument "`"$repo\scripts\vault-live.mjs`"" -WorkingDirectory $repo) `
+  -Trigger (New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(2) -RepetitionInterval (New-TimeSpan -Minutes 15)) `
+  -Settings (New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Minutes 30) -Hidden)
+# Remove: Unregister-ScheduledTask -TaskName "RabbitOS Vault agents" -Confirm:$false
+```
 
 ```powershell
 npm run vault:agent -- --vault "C:\Users\odaat\Documents\RabbitOS Vault" --search "agents workers"

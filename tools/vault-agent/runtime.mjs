@@ -7,6 +7,7 @@ import { requestAgent } from "./dispatcher.mjs";
 import { networkFetch, proxySettings } from "./network-transport.mjs";
 import { persistRunReport } from "./run-report.mjs";
 import { cloudAccessTool } from "./cloud-access.mjs";
+import { corpusTool, tokenFromFile } from "./corpus.mjs";
 import { Agent } from "undici";
 
 export const LOCAL_ROOTS = ["Agents", "Workers", "Platform", "Pathways", "Tools", "Cloud Agents/Knowledge", "Cloud Agents/Learned"];
@@ -70,7 +71,7 @@ export function createTools(vault, remote, id) {
           agentDispatch: "agent_request retains a task for a named local dispatcher; operator approval and --run call configured Copilot/AI/agent adapters. Each dispatcher owns its queue and returns results to the requester; no implicit execution permission.",
           responseReview: "Dispatcher --review checks retained evidence and can discover current authorized capabilities without task execution. New responses carry review verdicts; provider prose is not proof. --editor reads bounded source pages, and --propose-scope retains agent-selected extra files for approval, not automatic edit permission.",
           networkTransports: "OS-managed IP works over configured cellular/tethering/satellite links; explicit HTTPS CONNECT proxies are supported on task/agent/model bridges. vault:network --diagnose is bounded, and opt-in --export-relay/--import-relay handles offline files. No modem/terminal control, unknown protocol support, auth bypass or universal connectivity.",
-          localModel: "Ollama qwen2.5:3b",
+          localModel: remote ? "Hosted Qwen through the vault agent Worker (only opted-in notes are readable; use corpus_search for public notes, research and repo docs)" : "Ollama qwen2.5:3b",
           cloudJobs: "Cloudflare vault-agent adapter: durable selected-note jobs, configured credentials and connectivity required",
           taskCoordination: "vault:tasks: versioned dependency tasks, content-addressed artifacts, offline queue, explicit local/Cloudflare/agent HTTP/cloud-shell HTTP adapters. Discover before running; no automatic shell provisioning or peer trust.",
           autonomousCoding: "Optional coding-local adapter: installed Copilot CLI, approved exact source/test paths, copied workspace, bounded repair rounds, fixed Node tests and conflict-checked apply. Hosted Copilot inference needs explicit sharing; not an offline model or OS sandbox.",
@@ -217,7 +218,7 @@ export async function generator(config, transport = networkFetch, names = ["reso
       ...(localDispatcher ? { dispatcher: localDispatcher } : {}),
       headers: { "Content-Type": "application/json", ...(config.type === "openai-compatible" ? { Authorization: `Bearer ${config.token}` } : {}) },
       body: JSON.stringify(config.type === "ollama"
-        ? { model: config.model, messages, stream: false, format: actionSchema(names), options: { temperature: 0.2, num_predict: 600, num_ctx: 4096 } }
+        ? { model: config.model, messages, stream: false, format: actionSchema(names), options: { temperature: 0.2, num_predict: 1500, num_ctx: 8192 } }
         : { model: config.model, messages, stream: false, temperature: 0.2, max_tokens: 2000, response_format: { type: "json_object" } }),
     }, proxy);
     const value = await readJson(response);
@@ -271,6 +272,15 @@ export async function execute(vault, prompt, config, transport) {
     context.tools.cloud_access = cloudAccessTool(config.cloudStatusOnly === true
       ? { ...config.cloudAccess, actions: ["status"] } : config.cloudAccess, config.type !== "ollama", transport);
   }
+  const corpusSources = new Map();
+  if (config.corpus !== undefined && config.cloudStatusOnly !== true) {
+    const tool = corpusTool(config.corpus, transport);
+    context.tools.corpus_search = { ...tool, async execute(args) {
+      const found = await tool.execute(args);
+      for (const match of found.matches) corpusSources.set(`${match.source}:${match.path}`, match);
+      return found;
+    } };
+  }
   if (config.cloudStatusOnly === true) {
     for (const name of Object.keys(context.tools)) if (name !== "cloud_access") delete context.tools[name];
   }
@@ -289,6 +299,8 @@ export async function execute(vault, prompt, config, transport) {
     ...[...prompt.matchAll(/(?:Agents|Workers|Platform|Pathways|Tools|Cloud Agents\/(?:Knowledge|Learned))\/[^\r\n"<>]+?\.md\b/g)].map(match => match[0])];
   const selected = [...new Set(explicit.length ? explicit : search.matches.map(match => match.path))].slice(0, 2);
   for (const path of selected) await call("read", { path });
+  // Hosted runs can read only opted-in notes, so ground every task in the corpus; the model may search again.
+  if (context.tools.corpus_search) await call("corpus_search", { query: prompt.slice(0, 500) });
   }
   const result = await runAgent(prompt, context.tools, generate, {
     initialCalls, requiredCalls: config.cloudStatusOnly === true
@@ -297,7 +309,7 @@ export async function execute(vault, prompt, config, transport) {
   const relative = `Cloud Agents/Results/local-${id}.md`;
   const path = await safePath(vault, relative, true);
   const sources = [...context.cited.values()];
-  const content = `---\ncloud-agent-share: false\n---\n# Vault agent result\n\nProvider: ${config.type}; model: ${config.model}\n\n${result.answer}\n\n## Evidence\n\n${sources.map(source => `- [[${source.path.replace(/\.md$/, "")}]] (SHA-256 ${source.hash})`).join("\n") || "No vault source was read."}\n\n## Staged outputs\n\n${context.staged.map(path => `- [[${path.replace(/\.json$/, "")}]] (review data: ${path})`).join("\n") || "None."}\n`;
+  const content = `---\ncloud-agent-share: false\n---\n# Vault agent result\n\nProvider: ${config.type}; model: ${config.model}\n\n${result.answer}\n\n## Evidence\n\n${sources.map(source => `- [[${source.path.replace(/\.md$/, "")}]] (SHA-256 ${source.hash})`).join("\n") || "No vault source was read."}${corpusSources.size ? `\n\n## Corpus passages retrieved\n\n${[...corpusSources.values()].map(match => `- ${match.source}: ${match.source === "vault" ? `[[${match.path.replace(/\.md$/, "")}]]` : match.url ? `[${match.title || match.path}](${match.url})` : `\`${match.path}\``} (score ${match.score})`).join("\n")}` : ""}\n\n## Staged outputs\n\n${context.staged.map(path => `- [[${path.replace(/\.json$/, "")}]] (review data: ${path})`).join("\n") || "None."}\n`;
   await writeFile(path, content, { flag: "wx" });
   report.status = "completed";
   report.result = relative;
@@ -336,5 +348,14 @@ export async function approveLearning(vault, relative) {
 export async function loadConfig(path) {
   if (!path) return { type: "ollama", model: "qwen2.5:3b" };
   const data = JSON.parse(await readFile(path, "utf8"));
-  return data.provider ?? data;
+  const config = data.provider ?? data;
+  // Hosted credentials come from a file outside the vault, never from this (published) config file.
+  if (config.type === "openai-compatible" && config.tokenFile && !config.token) {
+    config.token = await tokenFromFile(config.tokenFile, config.tokenName);
+  }
+  if (config.corpus && !config.corpus.token) {
+    config.corpus = { ...config.corpus, token: config.corpus.tokenFile
+      ? await tokenFromFile(config.corpus.tokenFile, config.corpus.tokenName) : config.token };
+  }
+  return config;
 }
