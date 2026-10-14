@@ -3,7 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="RabbitSoftware connects a public research website, a hosted RabbitOS console, and separately installed Python research prototypes. Review setup code and data boundaries before use.">
+  <meta name="description" content="RabbitSoftware is a public research website and RabbitOS, an account-free online workspace for research, Qwen chat, a hash-chained public ledger and open data, plus separately installed Python research tools. Every source and data boundary is documented.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="RabbitSoftware | Research systems, built to be inspected">
+  <meta property="og:description" content="Open RabbitOS: an account-free research workspace with a public, verifiable ledger and open data.">
+  <meta property="og:image" content="https://rabbitsoftware.io/assets/rabbitos-street.jpg">
+  <meta property="og:image:alt" content="A Teletubby figure in a black-and-white street scene holds up a rugged laptop while a horse-drawn carriage and a taxi pass behind.">
+  <meta name="twitter:card" content="summary_large_image">
   <meta name="theme-color" content="#f2f4ee">
   <title>RabbitSoftware | Research systems, built to be inspected</title>
   <link rel="icon" type="image/png" href="assets/rabbitsoftware.png">
@@ -398,7 +404,16 @@
   
     .rabbitos { background: var(--night); color: var(--night-ink); border-bottom: 1px solid var(--line); }
     .rabbitos-inner { padding-block: 56px; text-align: center; }
-    .rabbitos-art { width: min(720px, 100%); height: auto; margin: 0 auto 28px; border-radius: 8px; border: 1px solid rgba(157, 215, 180, 0.3); }
+    .rabbitos-figure { margin: 0 auto 28px; width: min(960px, 100%); }
+    .rabbitos-figure a { display: block; border-radius: 8px; }
+    .rabbitos-figure a:focus-visible { outline: 3px solid var(--night-ink); outline-offset: 3px; }
+    .rabbitos-art { display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid rgba(157, 215, 180, 0.3); }
+    .rabbitos-figure figcaption { margin-top: 10px; font-size: 0.85rem; color: var(--night-muted); }
+    .rabbitos-features { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; max-width: 960px; margin: 0 auto 26px; padding: 0; list-style: none; text-align: left; }
+    .rabbitos-features li { padding: 14px 16px; border: 1px solid rgba(157, 215, 180, 0.25); border-radius: 8px; }
+    .rabbitos-features b { display: block; margin-bottom: 4px; }
+    .rabbitos-features span { color: var(--night-muted); font-size: 0.92rem; }
+    .rabbitos-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 14px; }
     .rabbitos h2 { max-width: none; margin: 0 auto 8px; font-size: 1.7rem; line-height: 1.2; text-align: center; }
     .rabbitos p { max-width: 56ch; margin: 0 auto 22px; color: var(--night-muted); }
     .rabbitos .button { display: inline-block; }
@@ -415,6 +430,7 @@
       <a href="#rabbitos">RabbitOS</a>
       <a href="#system">The system</a>
       <a href="research.html">Research</a>
+      <a href="data.html">Data hub</a>
       <a href="#boundaries">Data boundaries</a>
       <a href="#agents-chains">Agents &amp; chains</a>
       <a href="#start">Get started</a>
@@ -456,10 +472,25 @@
 
   <section class="rabbitos" id="rabbitos" aria-labelledby="rabbitos-title">
     <div class="rabbitos-inner wrap">
-      <img class="rabbitos-art" src="assets/brain-network.svg" width="900" height="560" alt="A brain drawn as a network of connected glowing nodes" loading="lazy">
+      <figure class="rabbitos-figure">
+        <a href="https://app.rabbitsoftware.io/" aria-label="Open RabbitOS">
+          <img class="rabbitos-art" src="assets/rabbitos-street.jpg" width="1806" height="871" alt="A Teletubby figure in a black-and-white street scene holds up a rugged laptop while a horse-drawn carriage, a taxi and a motorbike pass behind it." loading="lazy" decoding="async">
+        </a>
+        <figcaption>RabbitOS: powerful research tools, carried anywhere, opened in a browser.</figcaption>
+      </figure>
       <h2 id="rabbitos-title">RabbitOS</h2>
-      <p>RabbitOS is the account-free workspace at app.rabbitsoftware.io: public research, hosted Qwen chat, local brain/body tools, and browser-local notes and settings. No email, password, or CAPTCHA is needed. Existing private account data stays inaccessible. Opening the console does not install software or automatically connect your files, vault, or devices.</p>
+      <p>RabbitOS is the account-free workspace at app.rabbitsoftware.io. Open it in your browser with no email, password or CAPTCHA. Opening it does not install software or connect your files, vault or devices.</p>
+      <ul class="rabbitos-features">
+        <li><b>Public research</b><span>Browse research records with their source links, then ask the hosted Qwen model about them. Your chats and notes stay in this browser.</span></li>
+        <li><b>Open data</b><span>Search, sort and download research and ledger data as JSON or CSV, or read it from a command line.</span></li>
+        <li><b>Verifiable ledger</b><span>A hash-chained public log of changes that anyone can check in their own browser.</span></li>
+        <li><b>Brain and body explorer</b><span>A 3D brain and body with research connected to it. Live signals stay on your own computer.</span></li>
+      </ul>
       <a class="button primary" href="https://app.rabbitsoftware.io/">Open RabbitOS</a>
+      <div class="rabbitos-links">
+        <a class="button" href="data.html">Browse the open data</a>
+        <a class="button" href="chain.html">Read about the chain</a>
+      </div>
     </div>
   </section>
 
@@ -628,6 +659,7 @@ python rabbit.py --demo ask "find BRCA1 on the chain"</code></pre>
       </div>
       <nav class="footer-links" aria-label="Project resources">
         <a href="research.html">Research library</a>
+        <a href="data.html">Data hub</a>
         <a href="status.html">Status</a>
         <a href="development.html">Development guide</a>
         <a href="tasks.html">Agent tasks</a>

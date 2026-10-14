@@ -1,0 +1,48 @@
+#!/bin/bash
+# rabbit-net: look at the sandbox's normal (allowlisted) connection. HTTPS HEAD requests to the allowed hosts only.
+# No scanning, no raw sockets, no ping/DNS/traceroute tools (they are not installed in this image, on purpose).
+# Keep HOSTS in step with src/egress.mjs (a test compares them).
+HOSTS="registry.npmjs.org registry.yarnpkg.com pypi.org files.pythonhosted.org github.com raw.githubusercontent.com codeload.github.com objects.githubusercontent.com api.anthropic.com generativelanguage.googleapis.com api.githubcopilot.com api.github.com app.rabbitsoftware.io"
+
+url_for() {
+  case "$1" in
+    api.github.com) echo "https://api.github.com/user" ;;          # the only api.github.com path the sandbox may read besides /copilot_internal/
+    app.rabbitsoftware.io) echo "https://app.rabbitsoftware.io/api/chain/head" ;;
+    *) echo "https://$1/" ;;
+  esac
+}
+
+usage() {
+  cat <<'USAGE'
+rabbit-net status   show the normal, allowlisted connection of this sandbox
+rabbit-net check    HTTPS reachability test (curl --head, 5 s timeout) of each allowlisted host
+rabbit-net help     this text
+
+Only the hosts listed by "rabbit-net status" can be reached. Any HTTP answer (even 401 or 404) means the host is reachable.
+USAGE
+}
+
+case "${1:-status}" in
+  status)
+    echo "Connection: normal (no proxy, no VPN). All traffic goes out through the sandbox egress allowlist."
+    echo "Allowed: HTTPS (port 443) to these host names only; names, not IP addresses; read-only (GET/HEAD) on most of them:"
+    for h in $HOSTS; do echo "  $h"; done
+    echo
+    echo "Not available here on purpose: ping/ICMP, DNS lookup tools, traceroute, nmap, netcat, port scanners, raw sockets."
+    echo "They cannot work through an HTTPS allowlist and would only be useful for scanning other hosts. See help-rabbit."
+    echo "Run:  rabbit-net check"
+    ;;
+  check)
+    fail=0
+    printf '%-38s %-6s %s\n' HOST HTTP TIME
+    for h in $HOSTS; do
+      out=$(curl --head --silent --show-error --output /dev/null --max-time 5 --connect-timeout 5 --max-redirs 0 --write-out '%{http_code} %{time_total}' "$(url_for "$h")" 2>/dev/null)
+      code=${out%% *}; secs=${out#* }
+      if [ -n "$code" ] && [ "$code" != "000" ]; then printf '%-38s %-6s %ss\n' "$h" "$code" "$secs"
+      else printf '%-38s %-6s %s\n' "$h" FAIL "no answer within 5 s"; fail=1; fi
+    done
+    exit $fail
+    ;;
+  help|-h|--help) usage ;;
+  *) usage >&2; exit 2 ;;
+esac

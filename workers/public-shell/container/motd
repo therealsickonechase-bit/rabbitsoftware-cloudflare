@@ -1,0 +1,15 @@
+
+  RabbitOS public sandbox
+  -----------------------
+  * No secrets are present. This container holds only public code (read-only in /workspace).
+  * This session is deleted after 10 idle minutes or 30 minutes total. Nothing is kept.
+  * Bring your own API key: use the "API keys" drawer on the page. Keys exist only for this
+    session's process and are never stored by the server. Use a low-limit or throwaway key.
+  * Network access is limited to package registries, public GitHub, api.anthropic.com,
+    generativelanguage.googleapis.com, the Copilot CLI hosts and the public RabbitOS chain endpoints.
+  * Login shell is bash. PowerShell 7 is installed: type  pwsh  (exit returns to bash). Normal connection only: rabbit-net status / check.
+  * Public, shared, rate-limited. Mining, scanning and abuse are blocked and logged by address hash.
+
+  Try:  ledger        (public RabbitOS chain)     gemini      claude      copilot      repos
+  Type  help-rabbit   for the full guide (first steps, keys, commands, limits).
+

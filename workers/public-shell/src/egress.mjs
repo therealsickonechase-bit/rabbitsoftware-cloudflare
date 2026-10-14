@@ -1,0 +1,40 @@
+// Outbound allowlist for sandbox containers. Used twice: as the Container `allowedHosts` list and inside the outbound handler
+// (defence in depth). What the platform cannot restrict is documented in README.md.
+
+/** Exact host names the sandbox may reach (HTTPS only, port 443). */
+export const EGRESS_HOSTS = Object.freeze([
+  'registry.npmjs.org', 'registry.yarnpkg.com',                   // npm / yarn
+  'pypi.org', 'files.pythonhosted.org',                           // pip
+  'github.com', 'raw.githubusercontent.com', 'codeload.github.com', 'objects.githubusercontent.com',   // public code only; no credentials exist in the sandbox
+  'api.anthropic.com',                                            // Claude Code with the visitor's own key
+  'generativelanguage.googleapis.com',                            // Gemini CLI with the visitor's own key
+  'api.githubcopilot.com',                                        // Copilot CLI API (matches GitHub's documented *.githubcopilot.com entry)
+  'api.github.com',                                               // Copilot CLI user/token calls only: /user and /copilot_internal/ (see egressDecision)
+  'app.rabbitsoftware.io',                                        // the public RabbitOS origin (ledger, head, read-only data hub)
+])
+
+const IPV4 = /^\d{1,3}(\.\d{1,3}){3}$/
+
+/** @returns {{allow: boolean, reason?: string}} */
+export function egressDecision(url, method = 'GET') {
+  let u
+  try { u = new URL(url) } catch { return { allow: false, reason: 'bad_url' } }
+  if (u.protocol !== 'https:') return { allow: false, reason: 'https_only' }
+  if (u.port && u.port !== '443') return { allow: false, reason: 'port' }
+  const host = u.hostname.toLowerCase().replace(/\.$/, '')
+  if (IPV4.test(host) || host.includes(':') || host.startsWith('[')) return { allow: false, reason: 'ip_literal' }
+  if (!EGRESS_HOSTS.includes(host)) return { allow: false, reason: 'host' }
+  const m = method.toUpperCase()
+  const read = m === 'GET' || m === 'HEAD'
+  // Source hosts are read-only, except git's smart-HTTP fetch endpoint on github.com.
+  if (host === 'api.github.com' && !(read && (u.pathname === '/user' || u.pathname.startsWith('/copilot_internal/')))) return { allow: false, reason: 'github_api_copilot_only' }
+  if (/(^|\.)github(usercontent)?\.com$/.test(host) && !read) {
+    const gitFetch = host === 'github.com' && m === 'POST' && u.pathname.endsWith('/git-upload-pack')
+    // Copilot CLI device-code login (/login/device/code, /login/oauth/access_token); GitHub documents github.com/login/* for Copilot auth.
+    const login = host === 'github.com' && m === 'POST' && u.pathname.startsWith('/login/')
+    if (!gitFetch && !login) return { allow: false, reason: 'read_only_host' }
+  }
+  // RabbitOS: reads only, and only the public ledger (/api/chain/) and the read-only data hub (/api/data, /api/data/<dataset>).
+  if (host === 'app.rabbitsoftware.io' && (!read || !(u.pathname.startsWith('/api/chain/') || u.pathname === '/api/data' || u.pathname.startsWith('/api/data/')))) return { allow: false, reason: 'rabbitos_chain_reads_only' }
+  return { allow: true }
+}

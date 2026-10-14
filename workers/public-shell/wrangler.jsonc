@@ -1,0 +1,33 @@
+{
+  // Public sandbox shell. Separate from workers/cloudshell (the owner shell): no shared bindings, secrets or Durable Objects.
+  // Deliberately absent: Supabase, vault, owner tokens, deploy tokens, service-role keys. Only the two secrets below are ever set.
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "rabbitsoftware-public-shell",
+  "account_id": "f78fa7ea6c63f95d9512053554416e32",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-12",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "secrets": { "required": ["TURNSTILE_SECRET_KEY", "SESSION_SIGNING_KEY"] },
+  "vars": {
+    // Kill switch: anything other than the exact string "true" turns the service off (checked on every request and every sweep).
+    "PUBLIC_SHELL_ENABLED": "false",
+    // Browser origins allowed to create sessions and open the terminal (comma separated, exact match).
+    "ALLOWED_ORIGINS": "https://app.rabbitsoftware.io"
+  },
+  "containers": [{
+    "class_name": "PublicSandbox",
+    "image": "./Dockerfile",
+    "max_instances": 6,
+    // basic = 1/4 vCPU, 1 GiB memory, 4 GB disk: the per-visitor CPU/memory/disk cap.
+    "instance_type": "basic"
+  }],
+  "durable_objects": {
+    "bindings": [
+      { "name": "SANDBOX", "class_name": "PublicSandbox" },
+      { "name": "GATE", "class_name": "Gate" }
+    ]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["PublicSandbox", "Gate"] }],
+  "observability": { "enabled": true }
+}

@@ -129,7 +129,7 @@ claimed. See [portable transports](DEVELOPMENT.md#portable-network-transports).
 
 ## The website (`site/`)
 
-Static files, no build step. It links to RabbitOS (section `#rabbitos`, with `assets/brain-network.svg`) and has `status.html`, which checks the website, the RabbitOS
+Static files, no build step. It links to RabbitOS (section `#rabbitos`, with `assets/rabbitos-street.jpg`) and has `status.html`, which checks the website, the RabbitOS
 console and its database from the browser. `npm run probe` runs the same checks from the command line (`scripts/probe.mjs`, with the vendored `tools/gprobe`).
 `SITE-DEPLOYMENT-NOTES.txt` is the October 8 recovery record, kept as history.
 

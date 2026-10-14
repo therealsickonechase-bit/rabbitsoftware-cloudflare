@@ -209,3 +209,30 @@ support an explicitly configured Access-protected API. Optional
 `CLOUD_TOOLS_PROXY_URL`/`CLOUD_TOOLS_PROXY_TOKEN_ENV` reuse the existing explicit
 CONNECT/TLS transport; no insecure proxy fallback. Offline calls fail visibly
 and retain the failure; they are not automatically replayed or approved.
+
+## Confirm-then-run coding agent
+
+`npm run agent:code -- "task"` lets a model propose files plus one bash command per
+step. The script prints them and asks `Run this in CloudShell? [y/N/e(dit)/q]` on the
+terminal. **Every command needs your explicit y**; there is no auto-confirm option and
+it refuses to run without a TTY. It also needs an active, separately approved
+one-hour grant: request one with
+`npm run vault:cloud-access -- --vault <vault-path> --request shell.execute`
+and wait for the approval agent (this tool never approves itself or touches the
+approval token). Each command runs in a container that is destroyed afterwards and
+holds no secrets; nothing persists between steps. Max 8 steps; a denied/expired
+grant (HTTP 401/403) stops the run. Commands that dump the environment or read
+`~/.ssh` are refused locally; `curl | sh` needs an extra y. Output fed back to the
+model is scrubbed of credential patterns and capped at 16 KB.
+
+Environment: `CLOUD_TOOLS_AGENT_TOKEN`, `RABBIT_CLOUD_TOOLS_URL` (shell caller), and
+`CODING_AGENT_PROVIDER` = `gemini` (`GEMINI_API_KEY`, `CODING_AGENT_MODEL` required),
+`claude` (`ANTHROPIC_API_KEY`; model defaults to `claude-sonnet-5-5`) or `ollama`
+(`OLLAMA_HOST`, default `http://127.0.0.1:11434`, and `CODING_AGENT_MODEL`). Keys
+are read only from the environment and sent only to the provider endpoint.
+`--report-dir DIR` (default `./.coding-agent-reports`, gitignored) receives a private
+`Cloud Agents/Results/coding-agent-<uuid>.json` audit file with request hashes,
+decisions and exit codes (no command text). Tests: `npm run test:coding-agent`.
+
+**The pilot service token expired 2026-10-13T18:44:42Z and needs operator renewal
+before any live use.**

@@ -1,0 +1,4 @@
+#!/bin/sh
+echo "Read-only public code in /workspace:"
+for d in /workspace/*/; do echo "  $d"; done
+echo "Copy one to work on it:  cp -r /workspace/rabbit-web ~/work/"

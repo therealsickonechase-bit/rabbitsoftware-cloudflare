@@ -1,0 +1,5 @@
+#!/bin/sh
+# Launcher for PowerShell 7 in the public sandbox. The login shell stays bash; type `pwsh` to start PowerShell.
+# Invariant globalization avoids needing ICU libraries; telemetry and update checks are off (and the update check would be blocked by egress anyway).
+export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 DOTNET_CLI_TELEMETRY_OPTOUT=1 POWERSHELL_TELEMETRY_OPTOUT=1 POWERSHELL_UPDATECHECK=Off
+exec /opt/microsoft/powershell/7/pwsh "$@"

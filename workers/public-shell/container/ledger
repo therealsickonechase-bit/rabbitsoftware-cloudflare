@@ -1,0 +1,7 @@
+#!/bin/sh
+# Show the public RabbitOS chain: head, then the ledger. Public endpoints only; no credentials involved.
+base="${RABBITOS_ORIGIN:-https://app.rabbitsoftware.io}"
+for path in /api/chain/head /api/chain/ledger; do
+  echo "== $base$path"
+  curl -fsS --max-time 20 --max-filesize 1048576 "$base$path" | { jq . 2>/dev/null || cat; } | head -n 80
+done

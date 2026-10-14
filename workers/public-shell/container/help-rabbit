@@ -1,0 +1,40 @@
+#!/bin/sh
+cat <<'EOF'
+
+  RabbitOS public sandbox guide
+  -----------------------------
+  First steps
+    1. Copy a repo to work on:   repos      then   cp -r /workspace/rabbit-web ~/work/
+    2. Look around:              cd, ls, cat, rg "text" .
+    3. Public chain ledger:      ledger
+    4. Public research data:     curl -fsS "https://app.rabbitsoftware.io/api/data" | jq     (read-only; datasets, columns, row counts)
+                                 curl -fsS "https://app.rabbitsoftware.io/api/data/research_records?limit=50" | jq
+                                 add  &format=csv  or  &format=ndjson ; page with the nextCursor value as  &cursor=...
+
+  Coding agents (bring your own key; /workspace is read-only, work in ~/work)
+    gemini     needs GEMINI_API_KEY (or GOOGLE_API_KEY)  - paste it in the "API keys" drawer before you start
+    claude     needs ANTHROPIC_API_KEY                   - same drawer
+    copilot    needs a GitHub Copilot subscription. Either run  /login  inside copilot
+               (device-code flow: open the URL it prints in YOUR browser), or paste a
+               fine-grained token with the "Copilot Requests" permission into the drawer
+               (COPILOT_GITHUB_TOKEN). Use a low-limit or short-lived key; this box is shared.
+    The page's "Start my default agent" button types the agent name; press Enter yourself.
+
+  PowerShell and the network
+    pwsh             start PowerShell 7 (the login shell stays bash; type  exit  to leave). Invoke-WebRequest / Invoke-RestMethod work, but only
+                     through the same allowlist as curl (HTTPS, the hosts below, mostly read-only).
+    rabbit-net status   show the normal, allowlisted connection (no proxy, no VPN)
+    rabbit-net check    HTTPS reachability test (HEAD, 5 s timeout) of the allowed hosts only
+    Not installed on purpose: ping/ICMP, DNS lookup tools, traceroute, nmap, netcat and other scanners. Only HTTPS to named hosts can leave this box,
+    so those tools could not work anyway and would only be useful for probing other people's machines. Run them on your own PC instead
+    (RabbitNet PowerShell module in rabbit-web/scripts/powershell, see docs/rabbitos.md).
+
+  Common commands
+    cd DIR   ls -la   cat FILE   rg PATTERN   git status / git log   node FILE.js   python3 FILE.py
+
+  Limits
+    Login shell is bash (pwsh is available). 1/4 vCPU, 1 GiB RAM, small disk. Ends after 10 idle
+    minutes or 30 minutes total; nothing is kept. Network: package registries, public
+    GitHub, api.anthropic.com, generativelanguage.googleapis.com, Copilot hosts, RabbitOS chain and data hub (reads only).
+
+EOF

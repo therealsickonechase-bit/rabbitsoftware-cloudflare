@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="author" content="Chase Allen Ringquist">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Public, read-only explorer for RabbitOS research data and the chain ledger. Search, sort, page and download JSON or CSV.">
+  <meta name="theme-color" content="#f2f4ee">
+  <title>Research data hub | RabbitSoftware</title>
+  <link rel="icon" type="image/svg+xml" href="assets/rabbit-mark.svg">
+  <link rel="stylesheet" href="polish.css">
+  <script type="module" src="data.js"></script>
+  <style>
+    .data-tool { border-block: 1px solid var(--line); padding-block: 24px; }
+    .data-tool label { display: block; margin-block: 0 6px; }
+    .data-tool input, .data-tool select { min-height: 44px; padding: 8px 12px; color: var(--ink); background: var(--paper); border: 1px solid var(--line); font: inherit; max-width: 100%; }
+    .data-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
+    .data-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+    .data-actions button, .data-actions a { min-height: 44px; padding: 9px 16px; color: var(--green); background: transparent; border: 1px solid var(--green); font: inherit; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; }
+    .data-actions button:disabled { opacity: .55; cursor: not-allowed; }
+    .data-status { color: var(--muted); font-size: 15px; }
+    .data-error { border-left: 4px solid var(--focus); padding: 12px 16px; }
+    .data-scroll { overflow-x: auto; }
+    .data-scroll table { border-collapse: collapse; width: 100%; font-size: 14px; }
+    .data-scroll th, .data-scroll td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; max-width: 28ch; }
+    .data-scroll th button { all: unset; cursor: pointer; font-weight: 700; text-decoration: underline; }
+    .data-json { max-height: 18rem; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; }
+    code { overflow-wrap: anywhere; }
+  </style>
+</head>
+<body class="document-page">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="top wrap">
+    <a class="brand" href="index.html"><img src="assets/rabbit-mark.svg" width="34" height="34" alt="">RabbitSoftware</a>
+    <a class="back" href="index.html#tools">All website tools</a>
+  </header>
+  <main class="document-main wrap" id="main">
+    <p class="eyebrow">Public / read-only / permanent once copied</p>
+    <h1>Research data hub</h1>
+    <p class="intro">Research records, topics, runs, AI summaries, agents, network blocks, scores, audit entries and the chain ledger from RabbitOS, read live from <code>app.rabbitsoftware.io/api/data</code>. Nothing here is personal data: chats, notes, collections, EEG, wearables, labs and accounts are not in the hub. Anything you copy stays copied.</p>
+
+    <section aria-labelledby="head-title">
+      <h2 id="head-title">Ledger head</h2>
+      <p id="head-line" class="data-status" role="status">Loading the ledger head…</p>
+      <p><a href="chain.html">Corpus and local chain files</a> · <a href="https://app.rabbitsoftware.io/ledger">Public ledger on RabbitOS</a></p>
+    </section>
+
+    <section aria-labelledby="explore-title">
+      <h2 id="explore-title">Explore a dataset</h2>
+      <p id="load-error" class="data-error" role="alert" hidden></p>
+      <form id="data-form" class="data-tool" autocomplete="off">
+        <div class="data-row">
+          <div><label for="dataset"><strong>Dataset</strong></label><select id="dataset" disabled><option>Loading…</option></select></div>
+          <div><label for="q"><strong>Search</strong></label><input id="q" type="search" maxlength="80" placeholder="text"></div>
+          <div><label for="sort"><strong>Sort</strong></label><select id="sort"><option value="">default</option></select></div>
+          <div><label for="dir"><strong>Order</strong></label><select id="dir"><option value="">default</option><option value="asc">ascending</option><option value="desc">descending</option></select></div>
+          <div><label for="limit"><strong>Rows</strong></label><select id="limit"><option>10</option><option selected>25</option><option>50</option><option>100</option><option>200</option></select></div>
+        </div>
+        <p id="dataset-note" class="data-status"></p>
+        <p id="data-status" class="data-status" role="status" aria-live="polite">Loading the dataset list…</p>
+      </form>
+      <div class="data-scroll"><table id="data-table" hidden><thead></thead><tbody></tbody></table></div>
+      <div class="data-actions">
+        <button id="prev" type="button" disabled>Previous</button>
+        <button id="next" type="button" disabled>Next</button>
+        <a id="dl-json" href="#" hidden>Download JSON</a>
+        <a id="dl-csv" href="#" hidden>Download CSV</a>
+        <button id="copy-json" type="button" disabled>Copy this page as JSON</button>
+      </div>
+    </section>
+
+    <section aria-labelledby="shell-title">
+      <h2 id="shell-title">Read it from CloudShell</h2>
+      <p>The public sandbox at <a href="https://app.rabbitsoftware.io/cloudshell-public">app.rabbitsoftware.io/cloudshell-public</a> may read this API (GET only). Paste this command there:</p>
+      <pre><code id="curl-line">curl -fsS "https://app.rabbitsoftware.io/api/data" | jq</code></pre>
+      <div class="data-actions"><button id="copy-curl" type="button">Copy command</button></div>
+      <p id="copy-status" class="data-status" role="status" aria-live="polite"></p>
+    </section>
+    <p>By Chase Allen Ringquist. See the <a href="privacy.html">website privacy policy</a> and <a href="license.html">author and license</a>.</p>
+  </main>
+  <footer class="wrap"><p><a href="index.html">RabbitSoftware home</a> · <a href="chain.html">Corpus and chain files</a> · <a href="research.html">Research library</a> · <a href="privacy.html">Privacy policy</a></p></footer>
+</body>
+</html>

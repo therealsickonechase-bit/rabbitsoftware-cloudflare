@@ -11,3 +11,5 @@ backup/
 .claude/skills/
 skills-lock.json
 tools/rf-nexus-preview/public/
+
+.coding-agent-reports/
