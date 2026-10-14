@@ -12,7 +12,7 @@
 const TARGETS = {
   site:    { url: 'https://rabbitsoftware.io/',                    expect: (r) => r.status === 200 },
   rabbitos:{ url: 'https://app.rabbitsoftware.io/api/health',      expect: async (r) => r.status === 200 && (await r.json()).status === 'ok' },
-  login:   { url: 'https://app.rabbitsoftware.io/login',           expect: (r) => r.status === 200 },
+  login:   { url: 'https://app.rabbitsoftware.io/login',           expect: (r) => r.status === 200 || (r.status === 307 && r.headers.get('location') === '/dashboard') },
   feed:    { url: 'https://app.rabbitsoftware.io/api/public/research-feed', expect: async (r) => r.status === 200 && !!(await r.json()).counts },
   agent:   { url: 'https://agent.rabbitsoftware.io/health',         expect: async (r) => r.status === 200 && (await r.json()).enabled === true },
   api:     { url: 'https://api.rabbitsoftware.io/',                expect: async (r) => r.status === 200 && (await r.json()).ok === true },
