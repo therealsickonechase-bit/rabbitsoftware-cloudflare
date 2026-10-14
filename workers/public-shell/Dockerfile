@@ -38,12 +38,11 @@ COPY container/pwsh /usr/local/bin/pwsh
 # Unprivileged account for the visitor's terminal. The Sandbox control server keeps running as root; the PTY is started via `runuser -u visitor`.
 RUN useradd --create-home --home-dir /home/visitor --shell /bin/bash --uid 1500 visitor
 
-# Read-only public code only. Shallow clones of PUBLIC repos; .git, env files, .claude, private data are removed.
-# rabbitsoftware-cloudflare: only the static site is taken (sparse checkout of site/).
-RUN mkdir -p /workspace \
- && git clone --depth 1 https://github.com/therealsickonechase-bit/rabbit-web.git /workspace/rabbit-web \
- && git clone --depth 1 --filter=blob:none --sparse https://github.com/therealsickonechase-bit/rabbitsoftware-cloudflare.git /workspace/rabbitsoftware-site \
- && git -C /workspace/rabbitsoftware-site sparse-checkout set site \
+# Read-only public code only, copied from a clean snapshot made by scripts/prepare-workspace.ps1 (committed files only, no git history,
+# no .env, no .claude, personal email redacted, credential scan passed). Run that script before `wrangler deploy`.
+# rabbitsoftware-cloudflare: only the static site is taken.
+COPY workspace-src/ /workspace/
+RUN test -d /workspace/rabbit-web && test -d /workspace/rabbitsoftware-site \
  && for d in /workspace/rabbit-web /workspace/rabbitsoftware-site; do \
       rm -rf "$d/.git" "$d/.claude" "$d/.agents" "$d/backup" "$d/supabase" "$d/node_modules"; \
       find "$d" \( -name '.env' -o -name '.env.*' -o -name '.dev.vars*' -o -name '*.pem' -o -name '*.key' -o -name '*.sqlite' -o -name '*.db' \) -delete; \
