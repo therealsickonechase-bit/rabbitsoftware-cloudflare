@@ -1,0 +1,10 @@
+{
+  "name": "rabbitsoftware-run-proxy",
+  "account_id": "f78fa7ea6c63f95d9512053554416e32",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-12",
+  "workers_dev": false,
+  "routes": [{ "pattern": "run.rabbitsoftware.io", "custom_domain": true }],
+  "vars": { "ORIGIN": "https://rabbit-web-1087712653995.us-west2.run.app", "PUBLIC_HOST": "run.rabbitsoftware.io" },
+  "observability": { "enabled": true }
+}
