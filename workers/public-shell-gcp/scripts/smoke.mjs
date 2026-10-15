@@ -3,12 +3,26 @@
 // Opens ONE session (the server serves a single visitor and then exits), runs a few commands and checks the isolation it promises.
 import { PTY_PROTOCOL, signBridgeToken } from '../src/protocol.mjs'
 
+// Two ways in:
+//   direct  PTY_URL + PTY_BRIDGE_SECRET: straight to the Cloud Run service with a token signed here
+//   worker  WORKER_URL: through the staging gate Worker (workers/public-shell/wrangler.gcp-test.jsonc), which uses Cloudflare's always-pass Turnstile TEST key.
+//           This is the real path a visitor takes: Worker (gate, quotas) -> Cloud Run (terminal) -> proxy (allowlist).
+const workerUrl = process.env.WORKER_URL
 const url = process.env.PTY_URL
 const secret = process.env.PTY_BRIDGE_SECRET
-if (!url || !secret) { console.error('Set PTY_URL and PTY_BRIDGE_SECRET.'); process.exit(2) }
+if (!workerUrl && (!url || !secret)) { console.error('Set WORKER_URL, or PTY_URL and PTY_BRIDGE_SECRET.'); process.exit(2) }
 
-const token = signBridgeToken(secret, 'smoke' + Date.now().toString(36), Date.now() + 5 * 60_000)
-const ws = new WebSocket(url, [PTY_PROTOCOL, token])
+let ws
+if (workerUrl) {
+  const origin = 'https://app.rabbitsoftware.io'
+  const session = await fetch(`${workerUrl}/session`, { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: origin }, body: JSON.stringify({ turnstile: 'XXXX.DUMMY.TOKEN.XXXX' }) })
+  const made = await session.json().catch(() => ({}))
+  if (!session.ok || !made.token) { console.error(`FAIL  could not open a session through the Worker: HTTP ${session.status} ${JSON.stringify(made).slice(0, 200)}`); process.exit(1) }
+  ws = new WebSocket(`${workerUrl.replace(/^http/, 'ws')}/ws`, { protocols: ['rabbit-shell.v1', made.token], headers: { Origin: origin } })
+} else {
+  const token = signBridgeToken(secret, 'smoke' + Date.now().toString(36), Date.now() + 5 * 60_000)
+  ws = new WebSocket(url, [PTY_PROTOCOL, token])
+}
 ws.binaryType = 'arraybuffer'
 let screen = ''
 const decoder = new TextDecoder()
@@ -37,7 +51,7 @@ const closed = new Promise((resolve) => { ws.onclose = (e) => resolve(e) })
 
 try {
   await opened
-  ws.send(JSON.stringify({ t: 'start', cols: 120, rows: 30 }))
+  ws.send(JSON.stringify(workerUrl ? { t: 'hello', cols: 120, rows: 30, keys: {} } : { t: 'start', cols: 120, rows: 30 }))
   check('shell prompt appears', await until(/visitor@rabbitos/, 30_000), screen.slice(-200))
 
   let out = await run('echo $((6*7))', 'DONE1')

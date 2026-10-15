@@ -1,7 +1,25 @@
 // Public sandbox shell: one throwaway container per visitor session, behind Turnstile, quotas and an egress allowlist.
 // No bindings to Supabase, the vault or owner secrets exist in this Worker. See README.md.
 import { DurableObject } from "cloudflare:workers";
-import { ContainerProxy, getSandbox, Sandbox, type Terminal } from "@cloudflare/sandbox";
+import { ContainerProxy, getSandbox, Sandbox } from "@cloudflare/sandbox";
+import { gcpTarget, openGcpTerminal } from "./gcp-terminal.mjs";
+
+/** What the bridge needs from a terminal. The Cloudflare Sandbox terminal and the GCP adapter both fit. */
+type TerminalLike = {
+  output(options?: { follow?: boolean; replay?: boolean }): Promise<ReadableStream<{ type: string; data: Uint8Array }>>;
+  write(data: Uint8Array): Promise<unknown>;
+  resize(cols: number, rows: number): Promise<unknown>;
+  terminate(): Promise<unknown>;
+};
+
+/** Opens the outbound WebSocket to the GCP service. Cloud Run may need a cold start, so the connect gets up to 60 seconds. */
+async function connectPty(origin: string, protocols: string[]): Promise<WebSocket> {
+  const response = await fetch(`${origin}/pty`, { headers: { Upgrade: "websocket", "Sec-WebSocket-Protocol": protocols.join(", ") }, signal: AbortSignal.timeout(60_000) });
+  const socket = response.webSocket;
+  if (!socket) throw new Error(`GCP shell refused (${response.status})`);
+  socket.accept();
+  return socket;
+}
 import { LIMITS, WS_PROTOCOL, allowedOrigins, originAllowed, shellEnabled } from "./limits.mjs";
 import * as quota from "./quota.mjs";
 import { ipKey, newSessionId, secretUsable, signToken, verifyToken } from "./tokens.mjs";
@@ -208,7 +226,7 @@ const text = (ws: WebSocket, message: string) => { try { ws.send(new TextEncoder
 /** Pump frames between the browser and one PTY. Keys from the hello frame go into this launch's env only. */
 async function bridge(ws: WebSocket, env: Env, sid: string, expiresAt: number): Promise<void> {
   const gate = gateOf(env);
-  let terminal: Terminal | null = null;
+  let terminal: TerminalLike | null = null;
   let started = false;
   let output = 0;
   let lastTouch = 0;
@@ -231,11 +249,17 @@ async function bridge(ws: WebSocket, env: Env, sid: string, expiresAt: number): 
       if (!keys.ok) { safeClose(ws, 1008, keys.error); closed(); return; }
       started = true;
       clearTimeout(hello);
-      const sandbox = getSandbox(env.SANDBOX, sid, { sleepAfter: "10m", keepAlive: false, containerTimeouts: { instanceGetTimeoutMS: 30000, portReadyTimeoutMS: 90000 } });
-      terminal = await sandbox.createTerminal({
-        command: ["/usr/sbin/runuser", "-u", "visitor", "--", "/bin/bash", "-l"],
-        cwd: "/workspace", env: terminalEnv(keys.env), cols: frame.cols, rows: frame.rows, bufferSize: 256 * 1024,
-      });
+      const gcp = gcpTarget(env);
+      if (gcp) {
+        // Terminal on Google Cloud (Cloud Run behind the VPC allowlist proxy). Same gating as below; only the terminal moves.
+        terminal = await openGcpTerminal({ connect: (_url: string, protocols: string[]) => connectPty(gcp, protocols), origin: gcp, secret: env.PTY_BRIDGE_SECRET as string, sid, expiresAt, cols: frame.cols, rows: frame.rows, keys: frame.keys }) as TerminalLike;
+      } else {
+        const sandbox = getSandbox(env.SANDBOX, sid, { sleepAfter: "10m", keepAlive: false, containerTimeouts: { instanceGetTimeoutMS: 30000, portReadyTimeoutMS: 90000 } });
+        terminal = await sandbox.createTerminal({
+          command: ["/usr/sbin/runuser", "-u", "visitor", "--", "/bin/bash", "-l"],
+          cwd: "/workspace", env: terminalEnv(keys.env), cols: frame.cols, rows: frame.rows, bufferSize: 256 * 1024,
+        }) as unknown as TerminalLike;
+      }
       void pump(terminal);
       return;
     }
@@ -253,7 +277,7 @@ async function bridge(ws: WebSocket, env: Env, sid: string, expiresAt: number): 
     await terminal.write(encoder.encode(frame.d));
   };
 
-  const pump = async (t: Terminal) => {
+  const pump = async (t: TerminalLike) => {
     try {
       const stream = await t.output({ follow: true, replay: true });
       const reader = stream.getReader();
@@ -279,7 +303,7 @@ async function bridge(ws: WebSocket, env: Env, sid: string, expiresAt: number): 
   await done;
   clearTimeout(hello);
   clearTimeout(lifetime);
-  if (terminal) await (terminal as Terminal).terminate().catch(() => undefined);
+  if (terminal) await (terminal as TerminalLike).terminate().catch(() => undefined);
 }
 
 export default {

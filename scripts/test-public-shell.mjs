@@ -200,10 +200,11 @@ test("frames: oversized, binary, malformed and out-of-order frames are rejected;
   assert.equal(inputBudget(budget, 1, T0 + 1000), true);
 });
 
-test("wrangler config has no owner bindings or secrets and defaults the kill switch to off", () => {
+test("wrangler config has no owner bindings or secrets and the kill switch is an explicit string", () => {
   const raw = readFileSync(new URL("../workers/public-shell/wrangler.jsonc", import.meta.url), "utf8");
   const config = JSON.parse(raw.replace(/^\s*\/\/.*$/gm, ""));
-  assert.equal(config.vars.PUBLIC_SHELL_ENABLED, "false");
+  // The owner turned the guest shell on on 2026-10-15. What must always hold is that the switch is explicit and that shellEnabled() fails closed for anything but "true".
+  assert.ok(["true", "false"].includes(config.vars.PUBLIC_SHELL_ENABLED));
   assert.deepEqual(config.secrets.required.sort(), ["SESSION_SIGNING_KEY", "TURNSTILE_SECRET_KEY"]);
   assert.ok(!/supabase|vault|service_role|RABBIT_CLOUD|deploy/i.test(JSON.stringify({ ...config, name: undefined })));
   assert.deepEqual(config.durable_objects.bindings.map((b) => b.name).sort(), ["GATE", "SANDBOX"]);
