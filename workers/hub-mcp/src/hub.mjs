@@ -4,6 +4,7 @@
 
 import { ROLES } from './catalog.mjs'
 import { RESEARCH_TOOLS } from './research.mjs'
+import { HELP_TOPICS, helpFor } from './help.mjs'
 import { CODING_AGENTS, LANGUAGES, OTHER_AGENTS, PROMPTS, RULES, briefing, promptGet } from './guide.mjs'
 
 export const SERVER = { name: 'rabbitos-hub', version: '0.2.0' }
@@ -310,6 +311,16 @@ export const TOOLS = [
   },
 ]
 TOOLS.push(...RESEARCH_TOOLS({ asText, fail, getText, UNTRUSTED }))
+TOOLS.push({
+  name: 'hub_help', description: 'Help for finding your way around: the platform overview, every service and how to check it, basic tools, commands, shells, agents, the research web and troubleshooting. Start here if you are new.',
+  inputSchema: { type: 'object', properties: { topic: { type: 'string', enum: HELP_TOPICS }, role: { type: 'string', enum: ROLES } }, additionalProperties: false },
+  async run(args, ctx) {
+    const role = args.role ?? 'guest'
+    const denied = roleProblem(role, ctx); if (denied) return fail(denied)
+    const out = helpFor(args.topic, ctx.catalog, role)
+    return out ? asText(out) : fail(`topic must be one of: ${HELP_TOPICS.join(', ')}`)
+  },
+})
 const BY_NAME = new Map(TOOLS.map((t) => [t.name, t]))
 
 /** Owner-role requests need a hub key; the guest role is open. Returns a problem message or null. */

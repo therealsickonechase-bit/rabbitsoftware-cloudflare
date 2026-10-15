@@ -1,0 +1,99 @@
+// hub_help: how a worker (a person or an AI assistant) finds their way around the platform.
+// Static facts live here; the commands come from the catalog, and every command id named here must exist in it (tests check).
+
+import { GUEST_URL, OWNER_SHELL_URL } from './catalog.mjs'
+import { CODING_AGENTS, LANGUAGES, OTHER_AGENTS } from './guide.mjs'
+
+/** Each service: what it is, where, how to check it, and which catalog commands help. `check` ids are guest-readable; `fix` ids are owner commands. */
+export const SERVICES = Object.freeze([
+  { id: 'site', name: 'rabbitsoftware.io (public website)', where: 'Cloudflare Pages', url: 'https://rabbitsoftware.io', about: 'Static pages, the status page, the chain viewer.', check: ['hub-status'], fix: ['gcp-standby-preview', 'gcp-standby-run'], note: 'If Pages is down, the Cloud Run standby copy has the same pages.' },
+  { id: 'status', name: 'Live status page and feed', where: 'Cloud Run job rabbit-status, public bucket, Pages', url: 'https://rabbitsoftware.io/status.html', about: 'Every 5 minutes: which public services answer, whether the chain copies agree, the public data tree.', check: ['hub-status'], fix: ['gcp-status-preview', 'gcp-status-run'], note: 'An alert emails the owner if the recorder stops for 30 minutes.' },
+  { id: 'app', name: 'RabbitOS app (console)', where: 'Cloudflare Workers (vinext) with Supabase', url: 'https://app.rabbitsoftware.io', about: 'The console, the public chain and data APIs, the research pages.', check: ['hub-status', 'web-chain-head'], fix: [], note: 'App deploys are the owner\'s decision: npm run deploy:vinext.' },
+  { id: 'guest-shell', name: 'Guest shell (throwaway terminal)', where: 'Cloudflare Worker gate, then Cloud Run rabbit-visitor-shell behind an allowlist proxy VM', url: GUEST_URL, about: 'A terminal per visitor with claude, gemini, copilot and common languages. 10 idle minutes, 30 in total.', check: ['hub-status', 'hub-selftest'], fix: ['gcp-shell-preview', 'gcp-shell-run', 'gcp-switch-shell-cloudflare'], note: 'If it breaks on Google Cloud, switch back to the Cloudflare sandbox first, then investigate.' },
+  { id: 'owner-shell', name: 'Owner shell', where: 'Cloudflare Worker behind Cloudflare Access', url: OWNER_SHELL_URL, about: 'Runs approved commands for the signed-in owner. Sign-in is the owner\'s.', check: [], fix: [], note: 'Owner only.' },
+  { id: 'hub', name: 'Hub MCP', where: 'Cloud Run rabbitos-hub-mcp', url: 'https://rabbitos-hub-mcp-vxx5lz7c5a-wl.a.run.app/mcp', about: 'This server: links, status, public chain and data, research tools, the command catalog, safe command drafting.', check: ['hub-selftest', 'hub-help'], fix: ['gcp-hub-preview', 'gcp-hub-run', 'cf-test-hub', 'web-export-commands'], note: 'Owner role needs a hub key: hub-key-new.' },
+  { id: 'chain', name: 'Public chain and mirrors', where: 'App (Supabase), Google Cloud public bucket, local file', url: 'https://app.rabbitsoftware.io/chain', about: 'Hash-linked public ledger plus the Maxwell chain, copied to three places that must agree.', check: ['web-chain-head', 'hub-chain-consistency'], fix: ['gcp-daily-backups'], note: 'A chain entry proves existence and time, not truth.' },
+  { id: 'data', name: 'Data hub', where: 'App', url: 'https://app.rabbitsoftware.io/data', about: 'Public read-only datasets (research records, topics, runs, summaries, chain blocks).', check: ['hub-research-feed'], fix: [], note: 'Personal data is never in it.' },
+  { id: 'research', name: 'Research web', where: 'Public sources, the owner\'s research agents, chain, Supabase, data hub, hub', url: 'https://app.rabbitsoftware.io/research', about: 'PubMed, Europe PMC, ClinicalTrials.gov, openFDA (live through the hub), plus NIH RePORTER, ClinVar and St. Jude (through the agents).', check: ['hub-research-sources', 'hub-research-pubmed', 'hub-research-feed'], fix: [], note: 'Agents on the owner\'s computer decide what to ingest.' },
+  { id: 'audit', name: 'Weekly audit', where: 'Cloud Scheduler, Workflow rabbit-qa, Cloud Run job', url: 'https://console.cloud.google.com/storage/browser/rabbitsoftware-io-reports?project=rabbitsoftware-io', about: 'Mondays 09:00 Los Angeles: crawls both sites, scores them, draws the platform map, site map and Supabase tree.', check: [], fix: ['gcp-qa-preview', 'gcp-qa-run', 'gcp-qa-now-run', 'cf-qa-local', 'cf-test-qa'], note: 'The report is private; the owner reads latest.html in the reports bucket.' },
+  { id: 'monitoring', name: 'Logs, metrics, alerts, analytics', where: 'Google Cloud (Logging, Monitoring, BigQuery)', url: 'https://console.cloud.google.com/monitoring?project=rabbitsoftware-io', about: 'Five alert policies, six uptime checks, a dashboard, BigQuery analytics kept 90 days.', check: [], fix: ['gcp-observability-preview', 'gcp-observability-run', 'gcp-monitoring-run'], note: 'No visitor IP addresses are stored.' },
+  { id: 'standby', name: 'Standby website and app mirror', where: 'Cloud Run', url: 'https://rabbit-site-standby-vxx5lz7c5a-wl.a.run.app', about: 'Copies ready if Cloudflare is down.', check: ['hub-status'], fix: ['gcp-standby-run'], note: 'Re-run the standby script after the website changes.' },
+  { id: 'backups', name: 'Backups', where: 'Google Cloud Storage (private, versioned), run daily 3:00 AM', url: 'https://console.cloud.google.com/storage/browser/rabbitsoftware-io-backups?project=rabbitsoftware-io', about: 'Private backups, the public chain copy and the rabbit web miner.', check: [], fix: ['gcp-daily-backups'], note: 'Never reachable from the guest shell.' },
+  { id: 'kubernetes', name: 'Kubernetes (optional)', where: 'Not created', url: '', about: 'A script is ready if it is ever wanted. Cloud Run covers today\'s needs.', check: [], fix: ['gcp-gke-preview'], note: 'Billed while it exists.' },
+])
+
+export const BASIC_TOOLS = Object.freeze({
+  everywhere: ['ls, cd, cat, less, head, tail, grep, find, sed, awk', 'git, curl, jq, tar, unzip', 'node and npm, python3 and pip, pwsh (PowerShell 7)'],
+  guest_helpers: [
+    { tool: 'rabbit-save / rabbit-restore', use: 'keep files from ~/work across sessions (guest sandbox)' },
+    { tool: 'ledger', use: 'print the public ledger head and events' },
+    { tool: 'repos', use: 'list the public code under /workspace (read-only)' },
+    { tool: 'rabbit-net check', use: 'check the sandbox can reach the allowed hosts' },
+  ],
+  owner_scripts: ['pwsh -File scripts/powershell/Setup-Gcp*.ps1 -WhatIf  (preview any Google Cloud change)', 'npm run test:auth, npm run lint, npx tsc --noEmit  (rabbit-web checks)', 'cd workers/<name> && npm test  (a Worker\'s own tests)'],
+})
+
+const TOPICS = ['overview', 'services', 'tools', 'commands', 'shells', 'agents', 'research', 'troubleshooting']
+export const HELP_TOPICS = TOPICS
+
+const idsFor = (catalog, role, ids) => ids.map((id) => catalog.get(role, id)).filter(Boolean).map((e) => ({ id: e.id, label: e.label, command: e.command, risk: e.risk }))
+
+export function helpFor(topic, catalog, role = 'guest') {
+  const owner = role === 'owner'
+  switch (topic ?? 'overview') {
+    case 'overview': return {
+      topic: 'overview', role,
+      what: 'RabbitOS (app.rabbitsoftware.io) and rabbitsoftware.io on Cloudflare, with Supabase as the database and Google Cloud for the visitor shell, this hub, standby, backups, monitoring, the status feed and the weekly audit. The owner\'s computer holds the research agents, the Maxwell chain and personal data (which never leaves it).',
+      topics: TOPICS.map((t) => ({ topic: t, ask: `hub_help {"topic":"${t}"}` })),
+      first_steps: ['hub_briefing for the rules', 'hub_status to see what answers right now', 'hub_help services for who does what', 'commands_search with your role and a few words to find a command', 'command_draft to check any command before a person runs it'],
+      nothing_runs_itself: 'No hub tool runs a command or writes data. A person pastes and presses Enter.',
+    }
+    case 'services': return {
+      topic: 'services', role,
+      services: SERVICES.map((s) => ({
+        id: s.id, name: s.name, where: s.where, url: s.url || null, about: s.about, note: s.note,
+        check_with: idsFor(catalog, role, s.check),
+        ...(owner ? { fix_or_change_with: idsFor(catalog, role, s.fix) } : { owner_commands: s.fix.length ? 'ask the owner; these need their computer and credentials' : null }),
+      })),
+    }
+    case 'tools': return {
+      topic: 'tools', role, basic: BASIC_TOOLS,
+      languages: owner ? LANGUAGES.owner : LANGUAGES.guest, not_installed: owner ? undefined : LANGUAGES.guest_not_installed,
+      mcp_tools: 'tools/list on the hub lists every tool with its schema; all are read-only.',
+    }
+    case 'commands': return {
+      topic: 'commands', role, counts: catalog.counts(), groups: catalog.groups(role),
+      how: ['commands_search {"role":"' + role + '","q":"words"}', 'commands_list with a group', 'command_get with an id', 'command_draft to check your own line'],
+      where_they_run: owner ? 'Owner commands run on the owner\'s computer from the repo root (or the owner shell for non-deploy ones). Deploys, migrations and secrets are by hand.' : `Guest commands run in the sandbox at ${GUEST_URL}.`,
+    }
+    case 'shells': return {
+      topic: 'shells', role,
+      guest: { url: GUEST_URL, rules: 'Human check, one terminal per address, 10 idle minutes, 30 in total. Work in ~/work; /workspace is read-only. Network only to the allowlist and the hub.', agents: 'claude, gemini, copilot with your own key entered in the API keys drawer; they reach this hub through MCP.' },
+      owner: { url: OWNER_SHELL_URL, rules: 'Cloudflare Access sign-in. Non-deploy commands only; deploys are run by the owner on their computer.' },
+    }
+    case 'agents': return {
+      topic: 'agents', role, coding_agents: CODING_AGENTS, other_agents: OTHER_AGENTS,
+      how_they_use_the_hub: 'Each is configured with the MCP server rabbitos-hub. Start with hub_briefing, then hub_help.',
+    }
+    case 'research': return {
+      topic: 'research', role,
+      read_stored: ['research_feed', 'data_rows {"dataset":"research_records"}', 'concept_lookup', 'chain_events'],
+      search_live: 'research_search {"source":"pubmed|europepmc|clinicaltrials|openfda","query":"..."}',
+      explain: 'research_sources shows the whole flow from public sources to the shell.',
+      commands: idsFor(catalog, role, ['hub-research-sources', 'hub-research-pubmed', 'hub-research-feed']),
+    }
+    case 'troubleshooting': return {
+      topic: 'troubleshooting', role,
+      steps: [
+        'Open https://rabbitsoftware.io/status.html. If its report is old, the recorder stopped.',
+        'Run hub_status, then hub_selftest.',
+        'Chain copies disagree: chain_consistency; the owner re-runs the daily backup job.',
+        'Guest shell broken on Google Cloud: the owner switches it back to Cloudflare (gcp-switch-shell-cloudflare).',
+        'Hub key leaked: the owner revokes it (hub-key-revoke).',
+        'Anything else: read the weekly audit report, or ask the owner.',
+      ],
+      owner_commands: owner ? idsFor(catalog, role, ['gcp-switch-shell-cloudflare', 'hub-key-revoke', 'gcp-daily-backups']) : 'owner role only',
+    }
+    default: return null
+  }
+}

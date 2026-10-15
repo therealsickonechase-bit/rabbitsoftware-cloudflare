@@ -156,7 +156,8 @@
     {"id":"p-signups","title":"Open sign-ups","status":"paused","area":"RabbitOS","note":"Stays off in Supabase until the live checks pass."},
     {"id":"p-k8s","title":"Kubernetes cluster","status":"paused","area":"Google Cloud","note":"Optional. Cloud Run covers the needs today; Setup-GcpGke.ps1 is ready."},
     {"id":"d-research-tools","title":"Research tools in the hub: research_sources and research_search","status":"done","area":"Research","note":"Code and tests are done (PubMed, Europe PMC, ClinicalTrials.gov, openFDA). Live after the hub is redeployed."},
-    {"id":"w-hub-redeploy","title":"Redeploy the hub so research_search goes live","status":"waiting","area":"You","note":"Run Setup-GcpHub.ps1. The hub is on Google Cloud, so this needs your go-ahead."},
+    {"id":"d-help-catalog","title":"Every platform command recorded in the catalog, with hub_help for workers","status":"done","area":"Assistants","note":"190 commands (36 guest, 154 owner): Google Cloud setup with previews, hub keys, tests, read-only hub calls. hub_help explains services, tools, shells, agents and troubleshooting. Live after the hub is redeployed."},
+    {"id":"w-hub-redeploy","title":"Redeploy the hub so research_search goes live","status":"waiting","area":"You","note":"Run Setup-GcpHub.ps1 (publishes research_search, hub_help and the new command catalog). The hub is on Google Cloud, so this needs your go-ahead."},
     {"id":"n-live-more","title":"Live search for NIH RePORTER and ClinVar","status":"next","area":"Research","note":"RePORTER needs a POST; ClinVar needs its own response shape. Both are already used by the owner's agents."},
     {"id":"n-ingest-proposals","title":"Let a live search propose an ingest task","status":"next","area":"Research","note":"The tasks page already takes proposals; a person approves before the owner's agents fetch and store anything."}
   ]
