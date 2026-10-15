@@ -15,7 +15,8 @@ RUN node --version && npm --version \
 
 # Pinned CLIs. Versions checked on the npm registry on 2026-10-14 and each is more than two weeks old.
 # Bump deliberately: npm view <pkg>@<version> version
-ARG GEMINI_CLI_VERSION=0.62.0
+# 0.64.0 was published 2026-10-13 (2 days old at the time); bumped on the owner's explicit request, ahead of the two-week rule.
+ARG GEMINI_CLI_VERSION=0.64.0
 ARG CLAUDE_CODE_VERSION=2.1.285
 # @github/copilot 1.0.89 was published 2026-09-28 (16 days before 2026-10-14); 1.0.90 and later were under 14 days old.
 ARG COPILOT_CLI_VERSION=1.0.89
