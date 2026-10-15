@@ -11,5 +11,6 @@
   * Public, shared, rate-limited. Mining, scanning and abuse are blocked and logged by address hash.
 
   Try:  ledger        (public RabbitOS chain)     gemini      claude      copilot      repos
+  Save/restore your files: rabbit-save / rabbit-restore.   Agents know this box: see ~/AGENTS.md.
   Type  help-rabbit   for the full guide (first steps, keys, commands, limits).
 

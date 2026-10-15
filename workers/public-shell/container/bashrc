@@ -4,4 +4,5 @@ ulimit -f 2097152 2>/dev/null     # largest file: 1 GiB (512-byte blocks)
 ulimit -c 0 2>/dev/null
 umask 077
 export PS1='\[\e[32m\]visitor@rabbitos\[\e[0m\]:\w\$ '
-[ -z "$MOTD_SHOWN" ] && { cat /etc/rabbitos-motd; export MOTD_SHOWN=1; mkdir -p "$HOME/work"; }
+mkdir -p "$HOME/work"
+[ -z "$MOTD_SHOWN" ] && { cat /etc/rabbitos-motd; export MOTD_SHOWN=1; cd "$HOME/work"; }

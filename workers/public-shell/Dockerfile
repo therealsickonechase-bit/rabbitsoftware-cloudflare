@@ -4,7 +4,8 @@ FROM docker.io/cloudflare/sandbox:0.13.0-next.776.1
 USER root
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-      git ripgrep vim nano curl jq python3 python3-pip ca-certificates \
+      git ripgrep vim nano curl jq python3 python3-pip python3-venv ca-certificates \
+      build-essential make zip unzip tree sqlite3 tmux less \
  && rm -rf /var/lib/apt/lists/*
 
 # Node is already in the base image; verify rather than assume.
@@ -55,7 +56,18 @@ COPY container/repos /usr/local/bin/repos
 COPY container/help-rabbit /usr/local/bin/help-rabbit
 COPY container/rabbit-net /usr/local/bin/rabbit-net
 COPY container/bashrc /home/visitor/.bashrc
-RUN chmod 0755 /usr/local/bin/ledger /usr/local/bin/repos /usr/local/bin/help-rabbit /usr/local/bin/rabbit-net /usr/local/bin/pwsh \
+COPY container/rabbit-save /usr/local/bin/rabbit-save
+COPY container/rabbit-restore /usr/local/bin/rabbit-restore
+# Context every coding agent reads at start (user-level files, so they apply in any folder): where to work, what is reachable, the rules.
+COPY container/agent-context.md /tmp/agent-context.md
+RUN mkdir -p /home/visitor/.claude /home/visitor/.gemini /home/visitor/.copilot /home/visitor/work \
+ && cp /tmp/agent-context.md /home/visitor/.claude/CLAUDE.md \
+ && cp /tmp/agent-context.md /home/visitor/.gemini/GEMINI.md \
+ && cp /tmp/agent-context.md /home/visitor/.copilot/copilot-instructions.md \
+ && cp /tmp/agent-context.md /home/visitor/AGENTS.md \
+ && rm -f /tmp/agent-context.md \
+ && chown -R visitor:visitor /home/visitor
+RUN chmod 0755 /usr/local/bin/ledger /usr/local/bin/repos /usr/local/bin/help-rabbit /usr/local/bin/rabbit-net /usr/local/bin/pwsh /usr/local/bin/rabbit-save /usr/local/bin/rabbit-restore \
  && printf '[ -f ~/.bashrc ] && . ~/.bashrc\n' > /home/visitor/.bash_profile \
  && chown visitor:visitor /home/visitor/.bashrc /home/visitor/.bash_profile \
  && chmod 0444 /etc/rabbitos-motd

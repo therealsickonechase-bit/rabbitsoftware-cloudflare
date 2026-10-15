@@ -1,0 +1,20 @@
+#!/bin/bash
+# Print ~/work as one text block you can keep, and read back later with rabbit-restore. Nothing is sent anywhere: it only prints.
+# Limit: 192 KiB compressed, so the block can be pasted back through the terminal.
+set -u
+dir="$HOME/work"
+[ -d "$dir" ] || { echo "rabbit-save: $dir does not exist yet (mkdir ~/work and put your files there)" >&2; exit 1; }
+tmp="$(mktemp)"
+trap 'rm -f "$tmp"' EXIT
+tar -czf "$tmp" -C "$dir" --exclude=node_modules --exclude=.git --exclude='*.key' --exclude='.env*' . 2>/dev/null
+size="$(stat -c %s "$tmp")"
+if [ "$size" -gt 196608 ]; then
+  echo "rabbit-save: your files are $((size / 1024)) KiB compressed; the limit is 192 KiB. Remove big files (data, builds) and try again." >&2
+  exit 1
+fi
+echo "----- RABBIT-SAVE-BEGIN ($size bytes) -----"
+base64 -w0 "$tmp"
+echo
+echo "----- RABBIT-SAVE-END -----"
+echo "Copy everything between the BEGIN and END lines. In a new sandbox run  rabbit-restore  and paste it."
+echo "Do not save API keys or secrets in ~/work: anyone you share this block with can read it."

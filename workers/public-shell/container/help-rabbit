@@ -19,6 +19,12 @@ cat <<'EOF'
                fine-grained token with the "Copilot Requests" permission into the drawer
                (COPILOT_GITHUB_TOKEN). Use a low-limit or short-lived key; this box is shared.
     The page's "Start my default agent" button types the agent name; press Enter yourself.
+    Or use the "Ask the coding agent" box on the page: it types  claude 'your task'  (or gemini -i / copilot -i) for you; press Enter yourself.
+    The agents already know this sandbox (see ~/AGENTS.md): where to work, what is reachable, the rules.
+
+  Keeping your work
+    rabbit-save      print ~/work as one text block (max 192 KiB) that you copy and keep; nothing is stored on the server
+    rabbit-restore   in a new sandbox, run this and paste the block to get ~/work back
 
   PowerShell and the network
     pwsh             start PowerShell 7 (the login shell stays bash; type  exit  to leave). Invoke-WebRequest / Invoke-RestMethod work, but only

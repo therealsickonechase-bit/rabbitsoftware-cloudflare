@@ -1,0 +1,29 @@
+#!/bin/bash
+# Restore files saved by rabbit-save into ~/work. Paste the one-line block when asked (or pipe it in). Only plain files and folders are accepted.
+set -u
+dir="$HOME/work"
+mkdir -p "$dir"
+if [ -t 0 ]; then
+  echo "Paste the saved block (the long line between BEGIN and END), then press Enter:"
+  stty -icanon -echo 2>/dev/null
+  IFS= read -r line
+  stty sane 2>/dev/null
+  echo
+else
+  IFS= read -r line
+fi
+line="${line//[$'\r\n ']/}"
+case "$line" in -----*) echo "rabbit-restore: paste only the long line, not the BEGIN/END marker lines." >&2; exit 1;; esac
+if [ "${#line}" -lt 20 ] || [ "${#line}" -gt 280000 ]; then
+  echo "rabbit-restore: that does not look like a saved block (size ${#line})." >&2; exit 1
+fi
+tmp="$(mktemp)"
+trap 'rm -f "$tmp"' EXIT
+printf '%s' "$line" | base64 -d > "$tmp" 2>/dev/null || { echo "rabbit-restore: not valid base64." >&2; exit 1; }
+[ "$(stat -c %s "$tmp")" -le 196608 ] || { echo "rabbit-restore: block is too large." >&2; exit 1; }
+# Refuse links, device files and any path that is absolute or climbs out of the folder.
+if ! listing="$(tar -tvzf "$tmp" 2>/dev/null)"; then echo "rabbit-restore: not a tar.gz archive." >&2; exit 1; fi
+if printf '%s\n' "$listing" | grep -q -E '^[^-d]'; then echo "rabbit-restore: the archive contains links or special files; refused." >&2; exit 1; fi
+if tar -tzf "$tmp" | grep -q -E '(^/|(^|/)\.\.(/|$))'; then echo "rabbit-restore: the archive has unsafe paths; refused." >&2; exit 1; fi
+tar -xzf "$tmp" -C "$dir" --no-same-owner --no-same-permissions --no-overwrite-dir 2>&1 | head -n 5
+echo "Restored into $dir:"; ls -la "$dir" | head -n 30
