@@ -17,7 +17,7 @@ let used = false
 const finish = (code = 0) => setTimeout(() => process.exit(code), 200)   // Cloud Run restarts a clean container for the next visitor
 
 const server = http.createServer((req, res) => {
-  if (req.method === 'GET' && req.url === '/healthz') { res.writeHead(200, { 'Content-Type': 'text/plain' }); res.end('ok'); return }
+  if (req.method === 'GET' && (req.url === '/health' || req.url === '/healthz')) { res.writeHead(200, { 'Content-Type': 'text/plain' }); res.end('ok'); return }
   res.writeHead(404); res.end()
 })
 const wss = new WebSocketServer({ noServer: true, maxPayload: LIMITS.maxFrameBytes, handleProtocols: (protocols) => (protocols.has(PTY_PROTOCOL) ? PTY_PROTOCOL : false) })
