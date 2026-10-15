@@ -13,3 +13,4 @@ skills-lock.json
 tools/rf-nexus-preview/public/
 
 .coding-agent-reports/
+workers/rf-nexus-gcp/public/
