@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-15T18:43:13.536Z",
+ "generatedAt": "2026-10-15T19:03:50.281Z",
  "commandMaxBytes": 4000,
  "projects": [
   "rabbit-web",
@@ -825,6 +825,66 @@
    "runsIn": "computer"
   },
   {
+   "id": "gcp-miner-secrets-preview",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Cloud miner, step 1: ingest secret: preview",
+   "scope": "owner",
+   "risk": "network",
+   "command": "pwsh -File scripts/powershell/Setup-GcpMinerSecrets.ps1 -WhatIf",
+   "description": "Prints what Setup-GcpMinerSecrets.ps1 would do and changes nothing (it may read from Google Cloud). Copies the RabbitOS ingest secret into Secret Manager. The only miner script that handles a secret value; you run it yourself. The value is never printed.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-miner-secrets-run",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Cloud miner, step 1: ingest secret: run",
+   "scope": "owner",
+   "risk": "deploy",
+   "command": "pwsh -File scripts/powershell/Setup-GcpMinerSecrets.ps1",
+   "description": "Changes Google Cloud (project rabbitsoftware-io). Safe to run again. Copies the RabbitOS ingest secret into Secret Manager. The only miner script that handles a secret value; you run it yourself. The value is never printed.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-miner-job-preview",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Cloud miner, step 2: the job: preview",
+   "scope": "owner",
+   "risk": "network",
+   "command": "pwsh -File scripts/powershell/Setup-GcpMinerJob.ps1 -WhatIf",
+   "description": "Prints what Setup-GcpMinerJob.ps1 would do and changes nothing (it may read from Google Cloud). Needs step 1 first. Builds the miner image, deploys the Cloud Run job rabbit-miner and starts it nightly at 05:00 Los Angeles time. Holds no secret values.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-miner-job-run",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Cloud miner, step 2: the job: run",
+   "scope": "owner",
+   "risk": "deploy",
+   "command": "pwsh -File scripts/powershell/Setup-GcpMinerJob.ps1",
+   "description": "Changes Google Cloud (project rabbitsoftware-io). Safe to run again. Needs step 1 first. Builds the miner image, deploys the Cloud Run job rabbit-miner and starts it nightly at 05:00 Los Angeles time. Holds no secret values.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-miner-job-now-run",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Cloud miner, step 2 and run once now: run",
+   "scope": "owner",
+   "risk": "deploy",
+   "command": "pwsh -File scripts/powershell/Setup-GcpMinerJob.ps1 -RunNow",
+   "description": "Changes Google Cloud (project rabbitsoftware-io). Safe to run again. Same as step 2, then runs the miner once.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
    "id": "gcp-gke-preview",
    "group": "Google Cloud setup (run on your PC)",
    "label": "Optional Kubernetes cluster: preview",
@@ -880,6 +940,18 @@
    "risk": "network",
    "command": "pwsh -File scripts/powershell/Test-CloudBackup.ps1",
    "description": "Read-only. Checks the manifest of the cloud run, that the Supabase dump is valid and the right size, and the Cloudflare counts.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "miner-verify-cloud",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Cloud miner: check the chain across all copies",
+   "scope": "owner",
+   "risk": "network",
+   "command": "pwsh -File scripts/powershell/Test-CloudMiner.ps1",
+   "description": "Read-only. Newest job run, this PC against the public chain, the hub consistency check, and who signed the newest blocks.",
    "project": "rabbit-web",
    "source": "docs/gcp-platform.md",
    "runsIn": "computer"
@@ -2175,6 +2247,18 @@
    "runsIn": "computer"
   },
   {
+   "id": "ra-maxwell-adopt",
+   "group": "Maxwell mirror",
+   "label": "maxwell_adopt dry run (run on your PC)",
+   "scope": "owner",
+   "risk": "local",
+   "command": "python maxwell_adopt.py",
+   "description": "Run on your PC, from the research-agents folder. Reads the public Maxwell chain, verifies it, and says whether this PC is the same, ahead, or behind (cloud blocks to adopt). Writes nothing; add --apply to adopt.",
+   "project": "research-agents",
+   "source": "maxwell_chain_sync.py",
+   "runsIn": "computer"
+  },
+  {
    "id": "ra-maxwell-sync-dry",
    "group": "Maxwell mirror",
    "label": "maxwell_chain_sync dry run (run on your PC)",
@@ -2449,6 +2533,30 @@
    "risk": "local",
    "command": "python -m unittest test_neuro_variants",
    "description": "ClinVar calls are faked.",
+   "project": "research-agents",
+   "source": "test_*.py",
+   "runsIn": "computer"
+  },
+  {
+   "id": "ra-test-maxwell-cloud",
+   "group": "Tests",
+   "label": "Test: cloud miner and chain adopt",
+   "scope": "owner",
+   "risk": "local",
+   "command": "python -m unittest test_maxwell_cloud",
+   "description": "Mine, mirror to the app first, publish after; a 409 publishes nothing; forks and bad chains are refused.",
+   "project": "research-agents",
+   "source": "test_*.py",
+   "runsIn": "computer"
+  },
+  {
+   "id": "ra-test-maxwell-links",
+   "group": "Tests",
+   "label": "Test: extra Maxwell leaves",
+   "scope": "owner",
+   "risk": "local",
+   "command": "python -m unittest test_maxwell_links",
+   "description": "Code heads, platform map, command catalog, cloud backup and research leaves; the chain grows only when one changes.",
    "project": "research-agents",
    "source": "test_*.py",
    "runsIn": "computer"
