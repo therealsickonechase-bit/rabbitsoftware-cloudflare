@@ -13,7 +13,9 @@
     // Kill switch: anything other than the exact string "true" turns the service off (checked on every request and every sweep).
     "PUBLIC_SHELL_ENABLED": "true",
     // Browser origins allowed to create sessions and open the terminal (comma separated, exact match).
-    "ALLOWED_ORIGINS": "https://app.rabbitsoftware.io"
+    "ALLOWED_ORIGINS": "https://app.rabbitsoftware.io",
+    "TERMINAL_BACKEND": "gcp",
+    "GCP_SHELL_URL": "https://rabbit-visitor-shell-vxx5lz7c5a-wl.a.run.app"
   },
   "containers": [{
     "class_name": "PublicSandbox",
