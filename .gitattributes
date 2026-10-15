@@ -1,0 +1,2 @@
+workers/public-shell/container/* text eol=lf
+workers/public-shell/Dockerfile text eol=lf
