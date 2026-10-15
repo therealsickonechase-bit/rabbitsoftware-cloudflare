@@ -88,6 +88,7 @@ export function donatePage(w) {
     <p class="eyebrow">Support the work</p>
     <h1>Donate</h1>
     <p>RabbitSoftware is independent research tooling. Donations are voluntary gifts toward its running costs, such as hosting and development. They are not investments, they buy no goods or services, and they are not tax-deductible unless this page says so.</p>
+    <p>Learn what you would be supporting: <a href="story.html">why RabbitSoftware exists</a>, <a href="blockchain.html">how the chain works and how to check it</a>, and the <a href="press.html">press kit</a>.</p>
 
     <section aria-labelledby="addresses-title">
       <h2 id="addresses-title">Addresses</h2>
@@ -138,9 +139,16 @@ export function patchIndex(html, w) {
   return withScript(withStyles(out))
 }
 
+// Pages added to the sitemap once. Existing entries (and their dates) are never rewritten.
+const SITEMAP_PAGES = ['donate.html', 'story.html', 'blockchain.html', 'press.html']
 export function patchSitemap(xml) {
-  if (xml.includes('/donate.html')) return xml
-  return xml.replace('</urlset>', `  <url><loc>https://rabbitsoftware.io/donate.html</loc><lastmod>${new Date().toISOString().slice(0, 10)}</lastmod></url>\n</urlset>`)
+  const today = new Date().toISOString().slice(0, 10)
+  let out = xml
+  for (const page of SITEMAP_PAGES) {
+    if (out.includes(`/${page}<`)) continue
+    out = out.replace('</urlset>', `  <url><loc>https://rabbitsoftware.io/${page}</loc><lastmod>${today}</lastmod></url>\n</urlset>`)
+  }
+  return out
 }
 
 async function main() {

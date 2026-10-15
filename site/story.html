@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Chase Allen Ringquist">
+  <meta name="description" content="Why RabbitSoftware exists: research software that people can inspect, question and control, with sources, consent and a public record you can check.">
+  <title>The story | RabbitSoftware</title>
+  <link rel="icon" type="image/svg+xml" href="assets/rabbit-mark.svg">
+  <link rel="stylesheet" href="polish.css?v=bio-photo-1">
+  <style>
+    .principles { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); margin-block: 18px; }
+    .principles > div { border-top: 3px solid var(--green, #2f6f4f); padding-top: 8px; }
+    .principles h3 { margin: 0 0 6px; font: 700 18px/1.3 Georgia, serif; }
+    .built li { margin-block: 6px; }
+    .quote { border-left: 4px solid var(--green, #2f6f4f); padding-left: 16px; font: italic 20px/1.5 Georgia, serif; }
+  </style>
+</head>
+<body class="document-page">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="top wrap">
+    <a class="brand" href="index.html"><img src="assets/rabbit-mark.svg" width="34" height="34" alt="">RabbitSoftware</a>
+    <a class="back" href="index.html">Back to project overview</a>
+  </header>
+  <main class="document-main wrap" id="main">
+    <p class="eyebrow">The story / Why this exists</p>
+    <h1>Software for people who want to check the work</h1>
+    <p class="quote">Research software that people can inspect, question, and control &mdash; not simply trust blindly.</p>
+
+    <h2>The problem</h2>
+    <p>Research is hard to explore, and the tools that make it easier often ask for something in return: your files, your data, or your trust. AI answers arrive without sources. A scientific name, an AI answer or a blockchain record can sound authoritative without giving you any way to examine it.</p>
+
+    <h2>The idea</h2>
+    <p>RabbitSoftware exists to make research easier to explore without making privacy, transparency or access an afterthought. Start from public sources, keep every answer tied to where it came from, keep your own records on your own device, and make the system&rsquo;s memory of what changed something anyone can check.</p>
+    <div class="principles">
+      <div><h3>Evidence should be traceable</h3><p>Records keep their source identifiers. Answers cite them. A record, a remembered experience and a verified finding are different things, and the software treats them differently.</p></div>
+      <div><h3>Uncertainty should be visible</h3><p>AI summaries are labeled unverified. Experimental ideas are labeled experimental. Research prototypes are not presented as clinical capabilities.</p></div>
+      <div><h3>People choose what happens to their information</h3><p>Local tools stay local. Sharing waits for consent. Personal data never goes on the public chain.</p></div>
+    </div>
+
+    <h2>What exists today</h2>
+    <ul class="built">
+      <li><strong>RabbitOS</strong>, an account-free workspace at <a href="https://app.rabbitsoftware.io">app.rabbitsoftware.io</a>: public research records with their source links, a brain and body explorer, an open data hub, and AI chat where you approve what is sent.</li>
+      <li><strong>A research pipeline</strong> that retrieves public records (PubMed, Europe PMC, ClinicalTrials.gov, ClinVar, NIH RePORTER and others), keeps their identifiers, and proposes what to add. A person approves what is stored.</li>
+      <li><strong>A public, tamper-evident record</strong> of what changed, copied to several places, with a proof-of-work chain and Bitcoin timestamps. See <a href="blockchain.html">the chain, explained</a>.</li>
+      <li><strong>Local-first tools</strong> you can run on your own computer, including a read-only assistant and a local file viewer.</li>
+      <li><strong>A throwaway cloud terminal</strong> for trying AI coding assistants with your own key, inside a locked-down sandbox.</li>
+      <li><strong>Status you can watch</strong> at <a href="status.html">the status page</a>: what is answering, whether the chain copies agree, and when the research agents last reported.</li>
+    </ul>
+
+    <h2>Who is behind it</h2>
+    <p>RabbitSoftware is created and maintained by Chase Allen Ringquist. The work grew out of a long habit of asking how information relates to human experience: what can be measured, what the measurements mean, and what they cannot tell us. His own account of that path is on <a href="about.html">the author page</a>, written in his words and marked as a personal reflection rather than verified research.</p>
+
+    <h2>What we are careful about</h2>
+    <ul>
+      <li>This is research tooling, <strong>not clinical software</strong>. It does not diagnose, recommend treatment or edit DNA in a body.</li>
+      <li>Experimental blockchain and biomedical descriptions are research goals, not established capabilities. Not every experiment becomes a working capability, and the project says so.</li>
+      <li>A record on the chain is a record, not a verdict. A timestamp shows when something existed, not that it is true.</li>
+      <li>AI-assisted development helps build and test the system; it does not replace evidence, consent or scientific validation.</li>
+    </ul>
+
+    <h2>How you can help</h2>
+    <ul>
+      <li><strong>Use it and tell us what breaks.</strong> Open <a href="https://app.rabbitsoftware.io">RabbitOS</a>, or read <a href="recovery.html">the known gaps</a>.</li>
+      <li><strong>Check our work.</strong> <a href="blockchain.html">Verify the chain</a> yourself, or read the <a href="https://github.com/rabbitsoftware-io/rabbitsoftware-cloudflare">source</a>.</li>
+      <li><strong>Report a problem or ask a question.</strong> See <a href="reporting.html">reporting contacts</a> or write to <a href="mailto:contact@rabbitsoftware.io">contact@rabbitsoftware.io</a>.</li>
+      <li><strong>Support the running costs.</strong> Voluntary donations pay for hosting and development. See <a href="donate.html">how to give and how to verify the addresses</a>.</li>
+    </ul>
+    <p><a href="press.html">Press kit</a> &middot; <a href="about.html">Read the full author page and reflection</a></p>
+  </main>
+  <footer class="wrap"><p>By Chase Allen Ringquist &middot; <a href="index.html">RabbitSoftware home</a> &middot; <a href="license.html">Author and license</a> &middot; <a href="privacy.html">Privacy policy</a> &middot; Research tooling, not clinical software.</p></footer>
+</body>
+</html>

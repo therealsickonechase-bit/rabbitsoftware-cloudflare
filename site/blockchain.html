@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="What the RabbitSoftware chain is and is not: a public, tamper-evident record of research events, with Bitcoin timestamps and ways to check it yourself.">
+  <title>The chain, explained | RabbitSoftware</title>
+  <link rel="icon" type="image/svg+xml" href="assets/rabbit-mark.svg">
+  <link rel="stylesheet" href="polish.css?v=bio-photo-1">
+  <style>
+    .layer-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); margin-block: 18px; }
+    .layer { border: 1px solid var(--line, #d8d2c4); border-radius: 8px; padding: 16px; }
+    .layer h3 { margin-top: 0; font: 700 18px/1.3 Georgia, serif; }
+    .layer .tag { font: 700 12px/1.4 Consolas, monospace; text-transform: uppercase; color: var(--green, #2f6f4f); }
+    .two-col { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .two-col > div { border-top: 3px solid var(--green, #2f6f4f); padding-top: 8px; }
+    .facts { display: flex; flex-wrap: wrap; gap: 14px; margin-block: 14px; }
+    .facts div { flex: 1 1 150px; border: 1px solid var(--line, #d8d2c4); border-radius: 8px; padding: 12px 14px; }
+    .facts b { display: block; font: 700 26px/1.2 Georgia, serif; }
+    .facts span { color: var(--muted, #666); font-size: 14px; }
+    details { border-top: 1px solid var(--line, #d8d2c4); padding-block: 10px; }
+    summary { cursor: pointer; font-weight: 700; }
+  </style>
+</head>
+<body class="document-page">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="top wrap">
+    <a class="brand" href="index.html"><img src="assets/rabbit-mark.svg" width="34" height="34" alt="">RabbitSoftware</a>
+    <a class="back" href="index.html">Back to project overview</a>
+  </header>
+  <main class="document-main wrap" id="main">
+    <p class="eyebrow">The chain / A plain-language guide</p>
+    <h1>What the RabbitSoftware chain is, and what it is not</h1>
+    <p>RabbitSoftware keeps a public, hash-linked record of research events so that anyone can check that nothing was quietly changed afterwards. It is a <strong>tamper-evident log</strong>. It is not a cryptocurrency, and it does not claim that anything written in it is true.</p>
+
+    <div class="two-col">
+      <div>
+        <h3>What it can show</h3>
+        <p>That a record existed, in this order, and has not been altered since. That several independent copies agree. That a fingerprint of the record was witnessed by Bitcoin at a given time.</p>
+      </div>
+      <div>
+        <h3>What it cannot show</h3>
+        <p>That a paper is correct, that an AI summary is right, who a person is, or that an experiment works. A record on the chain is a record, not a verdict.</p>
+      </div>
+      <div>
+        <h3>What it is not</h3>
+        <p>There is no coin, token or price, and nothing to buy, sell or trade. Donations (if you choose to give) are voluntary gifts to running costs, not a stake in anything.</p>
+      </div>
+    </div>
+
+    <h2>Three layers, each easy to check</h2>
+    <div class="layer-grid">
+      <div class="layer">
+        <span class="tag">Layer 1</span>
+        <h3>The public ledger</h3>
+        <p>Every change to the open research tables becomes one event. Each event carries the hash of the one before it, so changing an old event breaks every later link. The ledger is readable at <a href="https://app.rabbitsoftware.io/ledger">app.rabbitsoftware.io/ledger</a>. Copies are kept in the database, in a second storage mirror, in a public Google Cloud bucket, and in a local file, and the status page checks that they agree.</p>
+      </div>
+      <div class="layer">
+        <span class="tag">Layer 2</span>
+        <h3>The Maxwell chain</h3>
+        <p>A small proof-of-work chain written by the project itself. Its blocks hold fingerprints (Merkle roots) of the public research records and of the state of the whole platform: which pages and services answered, how big the open datasets are, and whether the chain copies agreed. A block is added only when something actually changed. It is mirrored into the public ledger.</p>
+      </div>
+      <div class="layer">
+        <span class="tag">Layer 3</span>
+        <h3>Bitcoin timestamps</h3>
+        <p>Every few hours, if the ledger or Maxwell chain changed, a SHA-256 fingerprint of their latest heads is sent to the public OpenTimestamps calendars, which commit it into Bitcoin. Once Bitcoin confirms it, the proof shows the record existed by that block, witnessed by a network the project does not control. Proofs are public in the <a href="https://rabbitsoftware-io-ledger-public.storage.googleapis.com/anchors/index.json">anchor index</a>.</p>
+      </div>
+    </div>
+
+    <div class="facts" aria-label="Live numbers">
+      <div><b data-fact="ledger-events">&hellip;</b><span>events in the public ledger</span></div>
+      <div><b data-fact="services-up">&hellip;</b><span>public services answering</span></div>
+      <div><b data-fact="research-records">&hellip;</b><span>public research records</span></div>
+    </div>
+    <p class="donate-note" id="facts-when" style="color: var(--muted, #666); font-size: 14px;">Live numbers load from the <a href="status.html">status page</a> feed when your browser can reach it. Chain copies: <span data-fact="chain-agree">checked on the status page</span>.</p>
+
+    <h2>What goes on the chain, and what never does</h2>
+    <div class="two-col">
+      <div>
+        <h3>On the chain</h3>
+        <p>Hashes and counts. Merkle roots. Public record identifiers, titles and source links. Whether a public service answered. Release fingerprints of the project code.</p>
+      </div>
+      <div>
+        <h3>Never on the chain</h3>
+        <p>Names, emails, DNA or RNA sequences, EEG or other health values, keys, passwords, or anything that identifies a person. The chain is public and permanent, so personal data stays in the encrypted local vault. The checks reject events that contain personal data.</p>
+      </div>
+    </div>
+
+    <h2>Check it yourself</h2>
+    <ol>
+      <li>Read the newest ledger head: <a href="https://app.rabbitsoftware.io/api/chain/head">app.rabbitsoftware.io/api/chain/head</a> (its length and head hash).</li>
+      <li>Compare it with the independent copy in Google Cloud: <a href="https://rabbitsoftware-io-ledger-public.storage.googleapis.com/ledger/chain_head.json">chain_head.json</a>. The two should match.</li>
+      <li>Read the Maxwell chain and check that each block names the hash of the one before it: <a href="https://rabbitsoftware-io-ledger-public.storage.googleapis.com/maxwell/maxwell_chain.json">maxwell_chain.json</a>.</li>
+      <li>Open the <a href="https://rabbitsoftware-io-ledger-public.storage.googleapis.com/anchors/index.json">anchor index</a>. Download one entry&rsquo;s <code>anchor.json</code> and <code>anchor.json.ots</code>, then run the standard <code>ots verify anchor.json.ots</code> tool (with a Bitcoin node or a block explorer connection). It reports the Bitcoin block that contains the fingerprint. The files are named <code>anchors/&lt;id&gt;/anchor.json</code> and <code>anchors/&lt;id&gt;/anchor.json.ots</code> in the same bucket.</li>
+      <li>Or just open the <a href="status.html">status page</a>, which checks the copies every five minutes.</li>
+    </ol>
+
+    <h2>Honest limits</h2>
+    <ul>
+      <li><strong>It is not a decentralized public blockchain.</strong> There is no consensus among strangers. The Maxwell chain has one operator.</li>
+      <li><strong>Tampering is detectable, not impossible.</strong> Someone with database administrator rights could try to rewrite history. They could not do it without the copies and the Bitcoin timestamps contradicting them.</li>
+      <li><strong>A timestamp is not truth.</strong> Bitcoin shows when a fingerprint existed. It does not show that the underlying record is accurate.</li>
+      <li><strong>Public means permanent.</strong> Anything on the chain cannot be erased, which is why nothing personal goes there.</li>
+      <li><strong>Research prototype.</strong> RabbitSoftware is research tooling, not clinical software. AI summaries are labeled unverified.</li>
+    </ul>
+
+    <h2>Questions people ask</h2>
+    <details><summary>Is there a RabbitSoftware coin or token?</summary><p>No. There is no token, no sale and no price. The only Bitcoin and Ethereum addresses are on the <a href="donate.html">donate page</a> for voluntary gifts.</p></details>
+    <details><summary>Are donations an investment?</summary><p>No. They are voluntary gifts toward hosting and development. They buy no goods or services and are not tax-deductible unless the donate page says so.</p></details>
+    <details><summary>Why Bitcoin?</summary><p>It is a widely watched public network that none of us control, which makes it a good independent witness for a timestamp. Using it as a witness is not an endorsement of any asset.</p></details>
+    <details><summary>Can I put my own data on the chain?</summary><p>No. Personal data belongs in your own encrypted local vault. The public chain only holds fingerprints and public records.</p></details>
+    <details><summary>Who runs it?</summary><p>It is created and maintained by Chase Allen Ringquist. See <a href="about.html">the author page</a> and <a href="story.html">the story</a>.</p></details>
+    <details><summary>Is the code open?</summary><p>Project code is published under the UPL-1.0 license. See <a href="license.html">license and authorship</a> and the <a href="https://github.com/rabbitsoftware-io/rabbitsoftware-cloudflare">website source</a>.</p></details>
+    <details><summary>Where do the identifiers come from?</summary><p>The <a href="chain-identifiers.md">chain and block identifiers guide</a> explains what each id, hash and index means and which ones must not be mixed up.</p></details>
+
+    <p>Next: <a href="story.html">why RabbitSoftware exists</a> &middot; <a href="press.html">press kit</a> &middot; <a href="donate.html">support the work</a>.</p>
+  </main>
+  <footer class="wrap"><p>By Chase Allen Ringquist &middot; <a href="index.html">RabbitSoftware home</a> &middot; <a href="license.html">Author and license</a> &middot; <a href="privacy.html">Privacy policy</a> &middot; Research tooling, not clinical software.</p></footer>
+  <script src="live-facts.js" defer></script>
+</body>
+</html>

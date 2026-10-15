@@ -31,7 +31,7 @@
     "test:vault-mailbox-clients": "tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext --allowImportingTsExtensions tools/vault-agent/clients/VaultMailbox.mts tools/vault-agent/examples/complete-task.mts && node --test scripts/test-vault-mailbox-clients.mjs scripts/test-vault-mailbox-java.mjs",
     "preview:site": "wrangler pages deploy site --project-name rabbitsoftware-site --branch preview",
     "probe": "node scripts/probe.mjs",
-    "test:site": "node --test scripts/test-chain-viewer.mjs scripts/test-site-data.mjs",
+    "test:site": "node --test scripts/test-chain-viewer.mjs scripts/test-site-data.mjs scripts/test-marketing-pages.mjs",
     "check:csp": "node scripts/check-csp.mjs",
     "supabase:start": "npx supabase start",
     "supabase:stop": "npx supabase stop",
