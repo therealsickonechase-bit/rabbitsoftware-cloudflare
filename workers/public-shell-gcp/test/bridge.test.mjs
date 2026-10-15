@@ -70,3 +70,39 @@ test('terminating closes the service socket once and later writes are dropped', 
   assert.equal(socket.sent.length, before)
   await t.terminate()    // safe to call twice
 })
+
+test('Blob, ArrayBuffer and typed-array output all arrive with their bytes, in order (a Blob must never become an empty array)', async () => {
+  const socket = new FakeSocket()
+  const t = await openGcpTerminal({ connect: async () => socket, origin: GOOD.GCP_SHELL_URL, secret: SECRET, sid: 'sess12345678', expiresAt: Date.now() + 60_000, cols: 80, rows: 24 })
+  const reader = (await t.output()).getReader()
+  const bytes = (s) => new TextEncoder().encode(s)
+  socket.receive(new Blob([bytes('one ')]))                 // what the Workers runtime delivers by default
+  socket.receive(bytes('two ').buffer)                      // ArrayBuffer
+  socket.receive(bytes('three '))                           // Uint8Array
+  socket.receive(new Blob([bytes('four')]))
+  let text = ''
+  for (let i = 0; i < 4; i++) text += new TextDecoder().decode((await reader.read()).value.data)
+  assert.equal(text, 'one two three four')
+})
+
+test('output received just before the close is still delivered, then the stream ends', async () => {
+  const socket = new FakeSocket()
+  const t = await openGcpTerminal({ connect: async () => socket, origin: GOOD.GCP_SHELL_URL, secret: SECRET, sid: 'sess12345678', expiresAt: Date.now() + 60_000, cols: 80, rows: 24 })
+  const reader = (await t.output()).getReader()
+  socket.receive(new Blob([new TextEncoder().encode('last words')]))
+  socket.close(1000, 'exited')                              // arrives while the Blob is still being converted
+  const first = await reader.read()
+  assert.equal(new TextDecoder().decode(first.value.data), 'last words')
+  assert.equal((await reader.read()).value.type, 'terminal')
+  assert.equal((await reader.read()).done, true)
+})
+
+test('empty messages are dropped instead of being forwarded as empty frames', async () => {
+  const socket = new FakeSocket()
+  const t = await openGcpTerminal({ connect: async () => socket, origin: GOOD.GCP_SHELL_URL, secret: SECRET, sid: 'sess12345678', expiresAt: Date.now() + 60_000, cols: 80, rows: 24 })
+  const reader = (await t.output()).getReader()
+  socket.receive(new Blob([]))
+  socket.receive(new Uint8Array(0))
+  socket.receive(new TextEncoder().encode('x').buffer)
+  assert.equal(new TextDecoder().decode((await reader.read()).value.data), 'x')
+})

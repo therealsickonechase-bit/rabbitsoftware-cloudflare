@@ -15,6 +15,7 @@ export const LIMITS = Object.freeze({
   maxInputBytesPerSecond: 64 * 1024,
   maxHelloBytes: 8 * 1024,          // the first frame (carries optional API keys)
   helloTimeoutMs: 10_000,
+  attachGraceMs: 90_000,            // a session nobody connected to within this long is released, so an abandoned page cannot hold the address's only slot for 10 minutes
   minCols: 20, maxCols: 300, minRows: 5, maxRows: 120,
   maxTurnstileTokenBytes: 2048,
   maxSessionBodyBytes: 4096,

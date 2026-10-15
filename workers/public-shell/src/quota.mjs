@@ -44,6 +44,8 @@ export function admit(state, { now, ipKey, sid }, limits = LIMITS) {
 export function expiryReason(session, now, limits = LIMITS) {
   if (now - session.createdAt >= limits.maxLifetimeMs) return 'max_lifetime'
   if (now - session.lastSeen >= limits.idleMs) return 'idle'
+  // Never connected: release the slot quickly. (The page connects within seconds of creating a session.)
+  if (!session.wasAttached && !session.attached && now - session.createdAt >= (limits.attachGraceMs ?? Infinity)) return 'unattached'
   return null
 }
 
@@ -72,6 +74,7 @@ export function attach(state, sid, now, limits = LIMITS) {
   if (reason) return { ok: false, reason }
   if (session.attached) return { ok: false, reason: 'already_attached' }
   session.attached = true
+  session.wasAttached = true
   session.lastSeen = now
   return { ok: true, expiresAt: session.createdAt + limits.maxLifetimeMs }
 }
@@ -101,7 +104,8 @@ export function release(state, sid) {
 export function nextAlarm(state, now, limits = LIMITS) {
   let at = null
   for (const s of Object.values(state.sessions)) {
-    const due = Math.min(s.createdAt + limits.maxLifetimeMs, s.lastSeen + limits.idleMs)
+    let due = Math.min(s.createdAt + limits.maxLifetimeMs, s.lastSeen + limits.idleMs)
+    if (!s.wasAttached && !s.attached && limits.attachGraceMs) due = Math.min(due, s.createdAt + limits.attachGraceMs)
     if (at === null || due < at) at = due
   }
   return at === null ? null : Math.max(at, now + 1000)

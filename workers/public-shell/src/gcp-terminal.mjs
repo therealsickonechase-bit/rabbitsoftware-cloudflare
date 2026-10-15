@@ -13,6 +13,14 @@ export function gcpTarget(env) {
   } catch { return null }
 }
 
+/** Binary messages arrive as an ArrayBuffer, a typed array or (in current Workers runtimes, by default) a Blob. Never turn a Blob into bytes with `new Uint8Array(blob)`: that is empty. */
+export async function toBytes(data) {
+  if (data instanceof ArrayBuffer) return new Uint8Array(data)
+  if (ArrayBuffer.isView(data)) return new Uint8Array(data.buffer, data.byteOffset, data.byteLength)
+  if (data && typeof data.arrayBuffer === 'function') return new Uint8Array(await data.arrayBuffer())
+  return null
+}
+
 /**
  * @param {{connect: (url: string, protocols: string[]) => Promise<any>, origin: string, secret: string, sid: string, expiresAt: number, cols: number, rows: number, keys?: unknown}} options
  */
@@ -21,17 +29,27 @@ export async function openGcpTerminal({ connect, origin, secret, sid, expiresAt,
   const ws = await connect(`${origin}/pty`, [PTY_PROTOCOL, token])
   const decoder = new TextDecoder()
   let controller = null
-  let closed = false
+  let closed = false                       // no more input or output is accepted
   const stream = new ReadableStream({ start(c) { controller = c } })
-  const end = () => {
-    if (closed) return
-    closed = true
+  // Output is handled one message at a time so that converting a Blob can never reorder bytes or lose the last of them before the stream ends.
+  let chain = Promise.resolve()
+  const finish = () => {
     try { controller.enqueue({ type: 'terminal' }) } catch { /* already closed */ }
     try { controller.close() } catch { /* already closed */ }
   }
+  const end = () => {
+    if (closed) return
+    closed = true
+    chain = chain.then(finish)
+  }
+  try { ws.binaryType = 'arraybuffer' } catch { /* the runtime may not allow it; Blobs are handled below */ }
   ws.addEventListener('message', (event) => {
     if (typeof event.data === 'string' || closed) return          // the service only sends binary output
-    try { controller.enqueue({ type: 'data', data: new Uint8Array(event.data) }) } catch { /* stream closed */ }
+    const data = event.data
+    chain = chain.then(async () => {
+      const bytes = await toBytes(data)
+      if (bytes && bytes.length) { try { controller.enqueue({ type: 'data', data: bytes }) } catch { /* stream closed */ } }
+    })
   })
   ws.addEventListener('close', end)
   ws.addEventListener('error', end)

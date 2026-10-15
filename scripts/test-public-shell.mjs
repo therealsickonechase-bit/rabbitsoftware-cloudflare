@@ -49,6 +49,7 @@ test("sessions expire when idle (10 min) and at the hard maximum (30 min) even w
   const b = sid();
   q.admit(s, { now: T0, ipKey: "a", sid: a });
   q.admit(s, { now: T0, ipKey: "b", sid: b });
+  q.attach(s, a, T0); q.attach(s, b, T0);   // real sessions connect within seconds; never-connected ones are released sooner (see the attach grace test)
   assert.deepEqual(q.expired(s, T0 + 9 * 60_000), []);
   assert.deepEqual(q.expired(s, T0 + 10 * 60_000).map((e) => e.reason), ["idle", "idle"]);
   for (let t = 5; t <= 29; t += 5) assert.equal(q.touch(s, b, T0 + t * 60_000), true);   // b stays active
@@ -305,4 +306,23 @@ test("motd, help-rabbit and README mention pwsh, rabbit-net and why scanners are
   assert.match(help, /rabbit-net check/);
   assert.match(help, /Not installed on purpose/);
   assert.match(ps("README.md"), /ICMP/);
+});
+
+test("a session nobody connected to is released after the attach grace; a connected one is not", async () => {
+  const quota = await import("../workers/public-shell/src/quota.mjs");
+  const state = quota.emptyState();
+  const t0 = 1_000_000;
+  assert.equal(quota.admit(state, { now: t0, ipKey: "a", sid: "s1" }).ok, true);
+  assert.equal(quota.admit(state, { now: t0, ipKey: "a", sid: "s2" }).reason, "ip_cap");        // one live sandbox per address
+  assert.deepEqual(quota.expired(state, t0 + LIMITS.attachGraceMs - 1), []);
+  assert.deepEqual(quota.expired(state, t0 + LIMITS.attachGraceMs), [{ sid: "s1", reason: "unattached" }]);
+  quota.release(state, "s1");
+  assert.equal(quota.admit(state, { now: t0 + LIMITS.attachGraceMs, ipKey: "a", sid: "s3" }).ok, true);   // the slot is free again
+  assert.equal(quota.attach(state, "s3", t0 + LIMITS.attachGraceMs + 5000).ok, true);
+  quota.detach(state, "s3");
+  assert.deepEqual(quota.expired(state, t0 + LIMITS.attachGraceMs * 3), []);                      // connected once: only idle and lifetime apply
+  assert.equal(quota.nextAlarm(quota.emptyState(), t0), null);
+  const fresh = quota.emptyState();
+  quota.admit(fresh, { now: t0, ipKey: "b", sid: "s9" });
+  assert.equal(quota.nextAlarm(fresh, t0), t0 + LIMITS.attachGraceMs);
 });
