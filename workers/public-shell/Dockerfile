@@ -20,8 +20,11 @@ ARG GEMINI_CLI_VERSION=0.64.0
 ARG CLAUDE_CODE_VERSION=2.1.285
 # @github/copilot 1.0.89 was published 2026-09-28 (16 days before 2026-10-14); 1.0.90 and later were under 14 days old.
 ARG COPILOT_CLI_VERSION=1.0.89
-RUN npm install -g "@google/gemini-cli@${GEMINI_CLI_VERSION}" "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" "@github/copilot@${COPILOT_CLI_VERSION}" \
+# The CLIs ship their native binary as an OPTIONAL platform package; npm ignores a failed download of an optional package, which once produced
+# empty claude/copilot installs. So: retry the fetches, and fail the build unless all three CLIs really run.
+RUN npm install -g --fetch-retries=6 --fetch-retry-mintimeout=3000 --fetch-timeout=120000 "@google/gemini-cli@${GEMINI_CLI_VERSION}" "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" "@github/copilot@${COPILOT_CLI_VERSION}" \
  && npm cache clean --force
+RUN gemini --version && claude --version && copilot --version
 
 # PowerShell 7 (`pwsh`), installed from the official release tarball and checked against its SHA256 in the build.
 # v7.6.6 was published 2026-09-08 (36 days before 2026-10-14); v7.6.7 (2026-10-13) is too new. The digest below is the one GitHub shows for the asset

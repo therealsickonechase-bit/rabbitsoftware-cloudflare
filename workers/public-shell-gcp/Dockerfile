@@ -20,8 +20,11 @@ RUN apt-get update \
 ARG GEMINI_CLI_VERSION=0.64.0
 ARG CLAUDE_CODE_VERSION=2.1.285
 ARG COPILOT_CLI_VERSION=1.0.89
-RUN npm install -g "@google/gemini-cli@${GEMINI_CLI_VERSION}" "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" "@github/copilot@${COPILOT_CLI_VERSION}" \
+# The CLIs ship their native binary as an OPTIONAL platform package; npm ignores a failed download of an optional package, which once produced
+# empty claude/copilot installs. So: retry the fetches, and fail the build unless all three CLIs really run.
+RUN npm install -g --fetch-retries=6 --fetch-retry-mintimeout=3000 --fetch-timeout=120000 "@google/gemini-cli@${GEMINI_CLI_VERSION}" "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" "@github/copilot@${COPILOT_CLI_VERSION}" \
  && npm cache clean --force
+RUN gemini --version && claude --version && copilot --version
 
 # PowerShell 7 from the official tarball, checked against its SHA256.
 ARG POWERSHELL_VERSION=7.6.6

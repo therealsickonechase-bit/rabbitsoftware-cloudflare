@@ -55,6 +55,11 @@ try {
   out = await run('pwd; ls ~ ; command -v claude gemini copilot pwsh rabbit-save | wc -l', 'DONE5')
   check('work folder, agent notes and CLIs are present', /work/.test(out) && /AGENTS\.md/.test(out) && /\b5\b/.test(out), out.slice(-300))
 
+  // `command -v` only proves a file exists; a CLI whose native binary failed to download still passes that. Run them.
+  out = await run('echo CLI_CLAUDE=$(claude --version 2>&1 | head -n 1); echo CLI_GEMINI=$(gemini --version 2>&1 | head -n 1); echo CLI_COPILOT=$(copilot --version 2>&1 | head -n 1)')
+  const version = (name) => new RegExp(`CLI_${name}=[^\\r\\n]*\\d+\\.\\d+\\.\\d+`).test(out)
+  check('claude, gemini and copilot really run', version('CLAUDE') && version('GEMINI') && version('COPILOT'), out.slice(-300))
+
   if (process.env.EGRESS_CHECK) {
     // Only meaningful on Cloud Run behind the VPC firewall and the proxy. All four must hold.
     const code = (cmd, tag) => `echo ${tag}=$(${cmd} 2>/dev/null)`
