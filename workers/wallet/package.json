@@ -1,0 +1,11 @@
+{
+  "name": "rabbitweb-wallet",
+  "private": true,
+  "type": "module",
+  "description": "Receive addresses and proof-of-control for the RabbitOS wallet key in Cloud KMS. No private key ever exists here.",
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "derive": "node derive.mjs"
+  },
+  "engines": { "node": ">=22" }
+}

@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "purpose": "Donations and anchoring for RabbitOS / rabbitsoftware.io. Receive-only on the public pages.",
+  "key": {
+    "service": "Google Cloud KMS (HSM)",
+    "resource": "projects/rabbitsoftware-io/locations/us-west2/keyRings/rabbit-wallet/cryptoKeys/maxwell-donations/cryptoKeyVersions/1",
+    "algorithm": "EC_SIGN_SECP256K1_SHA256",
+    "publicKeyCompressed": "03db772bb7f8987bb8315c0d09eb23c30ba2ce33e760c9d74695903fb4061300f8"
+  },
+  "ethereum": {
+    "address": "0x724Dfe717565742b066465813773586df98d9372",
+    "network": "Ethereum mainnet (also valid on Ethereum-compatible networks, but send only on Ethereum mainnet)"
+  },
+  "bitcoin": {
+    "address": "bc1qxudt9x4hcftvwkfryln2qhn4e5g2qvt09mlp56",
+    "type": "native SegWit (P2WPKH, bc1q...)",
+    "network": "Bitcoin mainnet"
+  },
+  "proof": {
+    "message": "RabbitOS donation wallet proof of control, 2026-10-15",
+    "ethereum": {
+      "address": "0x724Dfe717565742b066465813773586df98d9372",
+      "signature": "0x93ad45bbd3ca37c4b540f86e85e5a9d6db350e274bc338a4fb0a83e58551e734096c58b61cdb10a48e8a284776337ac2c9a775680536aa4ab173ac9345c01ada1c",
+      "messageHash": "0x39da6e8830776a424f01b4f0224a0d9ead34402c2f689228143097d6236eb627"
+    },
+    "bitcoin": {
+      "address": "bc1qxudt9x4hcftvwkfryln2qhn4e5g2qvt09mlp56",
+      "messageHash": "01e435a514c74b572339ad2c3ca7dfa5d5f5ae5bc468ebf3e361a831042da1e2",
+      "signature": {
+        "r": "d44a67bb7f7480854c17dbe107e024c9e7b30b1d1b29baa5d0cbcb199076cbee",
+        "s": "7191024f0dd61a3dd1a0eef6eeabab906ad11b9815bc8dbdcbc0eab1c9ddd2c9"
+      }
+    },
+    "verifiedAt": "2026-10-15T21:36:57.640Z"
+  }
+}
