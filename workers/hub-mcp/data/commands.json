@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-15T19:03:50.281Z",
+ "generatedAt": "2026-10-15T20:56:29.801Z",
  "commandMaxBytes": 4000,
  "projects": [
   "rabbit-web",
@@ -885,6 +885,30 @@
    "runsIn": "computer"
   },
   {
+   "id": "gcp-vault-bucket-preview",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Vault bucket: preview",
+   "scope": "owner",
+   "risk": "network",
+   "command": "pwsh -File scripts/powershell/Setup-GcpVaultBucket.ps1 -WhatIf",
+   "description": "Prints what Setup-GcpVaultBucket.ps1 would do and changes nothing (it may read from Google Cloud). Creates the private, versioned bucket gs://rabbitsoftware-io-vault-private for the Obsidian vault. Public access is prevented.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-vault-bucket-run",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Vault bucket: run",
+   "scope": "owner",
+   "risk": "deploy",
+   "command": "pwsh -File scripts/powershell/Setup-GcpVaultBucket.ps1",
+   "description": "Changes Google Cloud (project rabbitsoftware-io). Safe to run again. Creates the private, versioned bucket gs://rabbitsoftware-io-vault-private for the Obsidian vault. Public access is prevented.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
    "id": "gcp-gke-preview",
    "group": "Google Cloud setup (run on your PC)",
    "label": "Optional Kubernetes cluster: preview",
@@ -952,6 +976,66 @@
    "risk": "network",
    "command": "pwsh -File scripts/powershell/Test-CloudMiner.ps1",
    "description": "Read-only. Newest job run, this PC against the public chain, the hub consistency check, and who signed the newest blocks.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "vault-gcs-preview",
+   "group": "Vault to Google Cloud",
+   "label": "Vault to Google Cloud: preview the upload (run on your PC)",
+   "scope": "owner",
+   "risk": "local",
+   "command": "pwsh -File scripts/powershell/Sync-VaultToGcs.ps1 -WhatIf",
+   "description": "Lists how many vault files and megabytes would be copied. Changes nothing.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "vault-gcs-sync",
+   "group": "Vault to Google Cloud",
+   "label": "Vault to Google Cloud: upload now (run on your PC)",
+   "scope": "owner",
+   "risk": "deploy",
+   "command": "pwsh -File scripts/powershell/Sync-VaultToGcs.ps1",
+   "description": "Copies the vault (what the private GitHub sync takes, minus Local/EEG and the ~/RabbitOS view) to gs://rabbitsoftware-io-vault-private/vault/. One way; the vault is never changed.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "vault-gcs-task",
+   "group": "Vault to Google Cloud",
+   "label": "Vault to Google Cloud: schedule it hourly (run on your PC)",
+   "scope": "owner",
+   "risk": "local",
+   "command": "pwsh -File scripts/powershell/Register-VaultTask.ps1",
+   "description": "Creates the Windows task \"RabbitOS Vault to Google Cloud\". Add -Remove to delete it, -WhatIf to preview.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "vault-gcs-list",
+   "group": "Vault to Google Cloud",
+   "label": "Vault in Google Cloud: list and size",
+   "scope": "owner",
+   "risk": "network",
+   "command": "gcloud storage du -s gs://rabbitsoftware-io-vault-private/vault --readable-sizes",
+   "description": "How much of the vault is in the bucket. Use gcloud storage ls -r gs://rabbitsoftware-io-vault-private/vault/ to list files.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "vault-gcs-restore",
+   "group": "Vault to Google Cloud",
+   "label": "Vault in Google Cloud: restore to a new folder",
+   "scope": "owner",
+   "risk": "network",
+   "command": "gcloud storage rsync --recursive gs://rabbitsoftware-io-vault-private/vault $HOME/vault-restore",
+   "description": "Copies the cloud copy into ~/vault-restore (a new folder; your real vault is not touched). Add --recursive on a single sub-path to restore only one folder.",
    "project": "rabbit-web",
    "source": "docs/gcp-platform.md",
    "runsIn": "computer"
