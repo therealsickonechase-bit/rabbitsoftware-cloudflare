@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-15T20:56:29.801Z",
+ "generatedAt": "2026-10-15T21:20:49.762Z",
  "commandMaxBytes": 4000,
  "projects": [
   "rabbit-web",
@@ -909,6 +909,30 @@
    "runsIn": "computer"
   },
   {
+   "id": "gcp-vault-search-preview",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Vault search (Vertex AI Search): preview",
+   "scope": "owner",
+   "risk": "network",
+   "command": "pwsh -File scripts/powershell/Setup-GcpVaultSearch.ps1 -WhatIf",
+   "description": "Prints what Setup-GcpVaultSearch.ps1 would do and changes nothing (it may read from Google Cloud). Makes the private vault copy searchable. Owner-only: not connected to the hub or any service. Run again with -ImportOnly to pick up new notes.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-vault-search-run",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Vault search (Vertex AI Search): run",
+   "scope": "owner",
+   "risk": "deploy",
+   "command": "pwsh -File scripts/powershell/Setup-GcpVaultSearch.ps1",
+   "description": "Changes Google Cloud (project rabbitsoftware-io). Safe to run again. Makes the private vault copy searchable. Owner-only: not connected to the hub or any service. Run again with -ImportOnly to pick up new notes.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
    "id": "gcp-gke-preview",
    "group": "Google Cloud setup (run on your PC)",
    "label": "Optional Kubernetes cluster: preview",
@@ -1012,6 +1036,18 @@
    "risk": "local",
    "command": "pwsh -File scripts/powershell/Register-VaultTask.ps1",
    "description": "Creates the Windows task \"RabbitOS Vault to Google Cloud\". Add -Remove to delete it, -WhatIf to preview.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "vault-search-query",
+   "group": "Vault to Google Cloud",
+   "label": "Vault in Google Cloud: search the notes (run on your PC)",
+   "scope": "owner",
+   "risk": "network",
+   "command": "pwsh -File scripts/powershell/Search-Vault.ps1 \"your words\" -Top 8",
+   "description": "Searches the vault copy with Vertex AI Search using your own gcloud sign-in. Replace \"your words\". Read-only.",
    "project": "rabbit-web",
    "source": "docs/gcp-platform.md",
    "runsIn": "computer"
