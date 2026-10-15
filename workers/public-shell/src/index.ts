@@ -233,7 +233,7 @@ async function bridge(ws: WebSocket, env: Env, sid: string, expiresAt: number): 
       clearTimeout(hello);
       const sandbox = getSandbox(env.SANDBOX, sid, { sleepAfter: "10m", keepAlive: false, containerTimeouts: { instanceGetTimeoutMS: 30000, portReadyTimeoutMS: 90000 } });
       terminal = await sandbox.createTerminal({
-        command: ["runuser", "-u", "visitor", "--", "/bin/bash", "-l"],
+        command: ["/usr/sbin/runuser", "-u", "visitor", "--", "/bin/bash", "-l"],
         cwd: "/workspace", env: terminalEnv(keys.env), cols: frame.cols, rows: frame.rows, bufferSize: 256 * 1024,
       });
       void pump(terminal);
@@ -266,12 +266,12 @@ async function bridge(ws: WebSocket, env: Env, sid: string, expiresAt: number): 
           ws.send(value.data);
         } else if (value.type === "terminal") { text(ws, "Shell exited."); safeClose(ws, 1000, "exited"); closed(); return; }
       }
-    } catch { safeClose(ws, 1011, "terminal error"); closed(); }
+    } catch (error) { console.log(logLine({ event: "pump_error", sid, reason: error instanceof Error ? `${error.name}: ${error.message}` : "error" })); safeClose(ws, 1011, "terminal error"); closed(); }
   };
 
   ws.addEventListener("message", (event) => {
     if (typeof event.data !== "string") { safeClose(ws, 1003, "text frames only"); closed(); return; }
-    chain = chain.then(() => handle(event.data as string)).catch(() => { safeClose(ws, 1011, "error"); closed(); });
+    chain = chain.then(() => handle(event.data as string)).catch((error) => { console.log(logLine({ event: "handle_error", sid, reason: error instanceof Error ? `${error.name}: ${error.message}` : "error" })); safeClose(ws, 1011, "error"); closed(); });
   });
   ws.addEventListener("close", () => closed());
   ws.addEventListener("error", () => closed());
