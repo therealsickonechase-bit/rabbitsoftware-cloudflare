@@ -46,6 +46,21 @@ try {
   out = await run('pwd; ls ~ ; command -v claude gemini copilot pwsh rabbit-save | wc -l', 'DONE5')
   check('work folder, agent notes and CLIs are present', /work/.test(out) && /AGENTS\.md/.test(out) && /\b5\b/.test(out), out.slice(-300))
 
+  if (process.env.EGRESS_CHECK) {
+    // Only meaningful on Cloud Run behind the VPC firewall and the proxy. All four must hold.
+    const code = (cmd, tag) => `echo ${tag}=$(${cmd} 2>/dev/null)`
+    out = await run(code('curl -s -m 15 -o /dev/null -w "%{http_code}" https://registry.npmjs.org/left-pad', 'X'), 'EDONE1')
+    check('egress: an allowed host works (npm registry)', /X=200/.test(out), out.slice(-200))
+    out = await run(code('curl -s -m 12 -o /dev/null -w "%{http_code}" https://example.com', 'X'), 'EDONE2')
+    check('egress: a host that is not allowed is refused', !/X=(200|301|302)/.test(out), out.slice(-200))
+    out = await run(code('curl -s -m 8 -o /dev/null -w "%{http_code}" --noproxy "*" https://registry.npmjs.org/left-pad', 'X'), 'EDONE3')
+    check('egress: going around the proxy fails', !/X=(200|301|302|404)/.test(out), out.slice(-200))
+    out = await run(code('curl -s -m 8 -o /dev/null -w "%{http_code}" --noproxy "*" http://1.1.1.1', 'X'), 'EDONE4')
+    check('egress: a raw IP is unreachable', !/X=(200|301|302)/.test(out), out.slice(-200))
+    out = await run(code('curl -s -m 5 -H "Metadata-Flavor: Google" -o /dev/null -w "%{http_code}" http://metadata.google.internal/computeMetadata/v1/instance/id', 'X'), 'EDONE5')
+    console.log('INFO  metadata server answer from the shell:', (out.match(/X=(\d*)/) ?? [])[1] || '(none)', '(the runner account has no roles, so a token from it is worthless)')
+  }
+
   send('exit\r')
   const closeEvent = await Promise.race([closed, new Promise((r) => setTimeout(() => r(null), 15_000))])
   check('the session ends when the shell exits', closeEvent !== null)
