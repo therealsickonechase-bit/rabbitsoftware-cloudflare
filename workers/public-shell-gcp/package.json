@@ -1,0 +1,15 @@
+{
+  "name": "rabbitsoftware-public-shell-gcp",
+  "private": true,
+  "type": "module",
+  "description": "Cloud Run visitor terminal: one WebSocket, one bash, then the process exits. See README.md.",
+  "scripts": {
+    "start": "node src/server.mjs",
+    "test": "node --test test/protocol.test.mjs"
+  },
+  "dependencies": {
+    "node-pty": "1.1.0",
+    "ws": "8.22.0"
+  },
+  "engines": { "node": ">=22" }
+}
