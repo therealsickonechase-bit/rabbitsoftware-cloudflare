@@ -1,0 +1,15 @@
+{
+  // Failover Worker for the static site: Pages first, GCP Cloud Run standby if Pages cannot answer.
+  // workers.dev only, NO routes: nothing live uses it until a route is added on purpose (see docs/gcp-standby.md).
+  "name": "rabbitsoftware-failover",
+  "account_id": "f78fa7ea6c63f95d9512053554416e32",
+  "main": "src/index.mjs",
+  "compatibility_date": "2026-10-12",
+  "workers_dev": true,
+  "vars": {
+    "PRIMARY": "https://rabbitsoftware-site.pages.dev",
+    "STANDBY": "https://rabbit-site-standby-vxx5lz7c5a-wl.a.run.app",
+    "TIMEOUT_MS": "5000"
+  },
+  "observability": { "enabled": true }
+}
