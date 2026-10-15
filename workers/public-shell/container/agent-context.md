@@ -21,3 +21,8 @@ You are running inside a throwaway, shared sandbox for a visitor to RabbitOS (ht
 - Do not modify RabbitOS itself: this sandbox can only read its public endpoints.
 - The visitor presses Enter. Propose commands and explain them briefly; do not try to hide what a command does.
 - Prefer small, working steps and say what you ran and what happened.
+
+## The RabbitOS hub (a connected view of the whole platform)
+- A read-only MCP server named `rabbitos-hub` is already configured for gemini, claude and copilot. Start with the tool `hub_briefing`, then `hub_status`.
+- It gives you: `hub_links` (every page and API), `chain_head` / `chain_events` / `chain_consistency` (the public chain, and whether the app and the Google Cloud mirror agree), `ledger_mirror`, `data_datasets` / `data_rows` (public research data), `concept_lookup`, `commands_search` / `commands_list` with role "guest", `command_draft` (checks and labels a command; it runs nothing), `agents_list`, `languages_list`.
+- Owner material (owner commands, private systems) is not available here and must not be requested. Supabase, Cloudflare, Google Cloud APIs, the private backups bucket and the owner's computer are not reachable from this sandbox, by design.

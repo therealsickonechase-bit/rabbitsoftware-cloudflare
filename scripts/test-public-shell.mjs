@@ -326,3 +326,19 @@ test("a session nobody connected to is released after the attach grace; a connec
   quota.admit(fresh, { now: t0, ipKey: "b", sid: "s9" });
   assert.equal(quota.nextAlarm(fresh, t0), t0 + LIMITS.attachGraceMs);
 });
+
+test("egress: the hub MCP and the public ledger bucket are reachable only for what they are for; sibling hosts stay closed", () => {
+  const hub = "https://rabbitos-hub-mcp-vxx5lz7c5a-wl.a.run.app";
+  const bucket = "https://rabbitsoftware-io-ledger-public.storage.googleapis.com";
+  assert.equal(egressDecision(`${hub}/mcp`, "POST").allow, true);
+  assert.equal(egressDecision(`${hub}/health`, "GET").allow, true);
+  for (const [url, method] of [[`${hub}/anything-else`, "GET"], [`${hub}/mcp`, "DELETE"], [`${hub}/mcp`, "PUT"], [`${hub}/health`, "POST"]]) assert.equal(egressDecision(url, method).allow, false, `${method} ${url}`);
+  for (const object of ["ledger/chain_head.json", "ledger/chain_ledger.jsonl", "maxwell/maxwell_chain.json"]) assert.equal(egressDecision(`${bucket}/${object}`, "GET").allow, true, object);
+  for (const [url, method] of [[`${bucket}/ledger/chain_head.json`, "PUT"], [`${bucket}/ledger/chain_head.json`, "POST"], [`${bucket}/`, "GET"], [`${bucket}/other.json`, "GET"], [`${bucket}/maxwell/../x`, "GET"]]) assert.equal(egressDecision(url, method).allow, false, `${method} ${url}`);
+  // never the whole of Google Cloud Storage, other buckets, other Cloud Run services, or the private backups bucket
+  for (const url of ["https://storage.googleapis.com/rabbitsoftware-io-ledger-public/ledger/chain_head.json", "https://storage.googleapis.com/rabbitsoftware-io-backups/x", "https://rabbitsoftware-io-backups.storage.googleapis.com/x",
+    "https://other-bucket.storage.googleapis.com/x", "https://rabbit-visitor-shell-vxx5lz7c5a-wl.a.run.app/health", "https://evil.run.app/mcp", "http://rabbitos-hub-mcp-vxx5lz7c5a-wl.a.run.app/mcp"]) {
+    assert.equal(egressDecision(url, "GET").allow, false, url);
+  }
+  assert.equal(EGRESS_HOSTS.length, 15);
+});

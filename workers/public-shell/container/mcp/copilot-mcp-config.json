@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "rabbitos-hub": {
+      "type": "http",
+      "url": "https://rabbitos-hub-mcp-vxx5lz7c5a-wl.a.run.app/mcp",
+      "tools": ["*"]
+    }
+  }
+}

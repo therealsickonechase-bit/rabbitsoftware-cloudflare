@@ -7,7 +7,7 @@ export const ROLES = ['guest', 'owner']
 export const GUEST_URL = 'https://app.rabbitsoftware.io/cloudshell-public'
 export const OWNER_SHELL_URL = 'https://rabbit-web-cloud-access.rabbitsoftware-gateway.workers.dev/cloudshell'
 export const HOSTS_GUEST_CAN_REACH = Object.freeze(['registry.npmjs.org', 'registry.yarnpkg.com', 'pypi.org', 'files.pythonhosted.org', 'github.com', 'raw.githubusercontent.com', 'codeload.github.com',
-  'objects.githubusercontent.com', 'api.anthropic.com', 'generativelanguage.googleapis.com', 'api.githubcopilot.com', 'api.github.com', 'app.rabbitsoftware.io'])
+  'objects.githubusercontent.com', 'api.anthropic.com', 'generativelanguage.googleapis.com', 'api.githubcopilot.com', 'api.github.com', 'app.rabbitsoftware.io', 'rabbitos-hub-mcp-vxx5lz7c5a-wl.a.run.app', 'rabbitsoftware-io-ledger-public.storage.googleapis.com'])
 
 const scopesFor = (role) => (role === 'owner' ? ['public', 'owner'] : ['public'])
 const brief = (e) => ({ id: e.id, project: e.project, group: e.group, label: e.label, scope: e.scope, risk: e.risk, runsIn: e.runsIn, needs: e.needs ?? [], command: e.command, description: e.description })

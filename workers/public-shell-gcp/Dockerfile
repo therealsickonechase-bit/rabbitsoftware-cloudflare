@@ -55,7 +55,13 @@ COPY public-shell/container/rabbit-save /usr/local/bin/rabbit-save
 COPY public-shell/container/rabbit-restore /usr/local/bin/rabbit-restore
 COPY public-shell/container/bashrc /home/visitor/.bashrc
 COPY public-shell/container/agent-context.md /tmp/agent-context.md
+# The read-only RabbitOS hub MCP, pre-configured for each agent (the hub host is on the egress allowlist).
+COPY public-shell/container/mcp/ /tmp/mcp/
 RUN mkdir -p /home/visitor/.claude /home/visitor/.gemini /home/visitor/.copilot /home/visitor/work \
+ && cp /tmp/mcp/gemini-settings.json /home/visitor/.gemini/settings.json \
+ && cp /tmp/mcp/claude.json /home/visitor/.claude.json \
+ && cp /tmp/mcp/copilot-mcp-config.json /home/visitor/.copilot/mcp-config.json \
+ && rm -rf /tmp/mcp \
  && cp /tmp/agent-context.md /home/visitor/.claude/CLAUDE.md && cp /tmp/agent-context.md /home/visitor/.gemini/GEMINI.md \
  && cp /tmp/agent-context.md /home/visitor/.copilot/copilot-instructions.md && cp /tmp/agent-context.md /home/visitor/AGENTS.md \
  && rm -f /tmp/agent-context.md \

@@ -64,7 +64,13 @@ COPY container/rabbit-save /usr/local/bin/rabbit-save
 COPY container/rabbit-restore /usr/local/bin/rabbit-restore
 # Context every coding agent reads at start (user-level files, so they apply in any folder): where to work, what is reachable, the rules.
 COPY container/agent-context.md /tmp/agent-context.md
+# The read-only RabbitOS hub MCP, pre-configured for each agent (the hub host is on the egress allowlist).
+COPY container/mcp/ /tmp/mcp/
 RUN mkdir -p /home/visitor/.claude /home/visitor/.gemini /home/visitor/.copilot /home/visitor/work \
+ && cp /tmp/mcp/gemini-settings.json /home/visitor/.gemini/settings.json \
+ && cp /tmp/mcp/claude.json /home/visitor/.claude.json \
+ && cp /tmp/mcp/copilot-mcp-config.json /home/visitor/.copilot/mcp-config.json \
+ && rm -rf /tmp/mcp \
  && cp /tmp/agent-context.md /home/visitor/.claude/CLAUDE.md \
  && cp /tmp/agent-context.md /home/visitor/.gemini/GEMINI.md \
  && cp /tmp/agent-context.md /home/visitor/.copilot/copilot-instructions.md \

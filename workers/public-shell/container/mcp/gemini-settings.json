@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "rabbitos-hub": {
+      "httpUrl": "https://rabbitos-hub-mcp-vxx5lz7c5a-wl.a.run.app/mcp",
+      "timeout": 30000,
+      "trust": false,
+      "description": "RabbitOS and rabbitsoftware.io hub: links, status, public chain and data, command catalog. Read-only; it never runs anything."
+    }
+  }
+}
