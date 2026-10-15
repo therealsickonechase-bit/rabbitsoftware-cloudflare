@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { accountId, client, exportD1, exportKv, exportR2 } from './cloudflare.mjs'
 import { accessToken, upload } from './gcs.mjs'
-import { MAX_OBJECT_BYTES, normalizeDbUrl, objectName, projectRef, scrub, today } from './plan.mjs'
+import { MAX_OBJECT_BYTES, normalizeDbUrl, objectName, projectRef, runId, scrub, today } from './plan.mjs'
 
 // One JSON line per event. A failed part or run carries severity ERROR so Cloud Logging and the existing alerts see it.
 const log = (event, fields = {}) => console.log(JSON.stringify({ severity: fields.ok === false || event === 'backup_failed' ? 'ERROR' : 'INFO', event, ...fields }))
@@ -26,11 +26,12 @@ export async function runBackup({ env = process.env, now = new Date(), fetchImpl
   const bucket = env.BACKUP_BUCKET
   if (!bucket) throw new Error('BACKUP_BUCKET is not set')
   const date = today(now)
+  const run = runId(now)
   const token = await accessToken(fetchImpl)
   const results = []
   const put = (part, file, body) => {
     if (body.length > MAX_OBJECT_BYTES) throw new Error(`${file} is larger than ${MAX_OBJECT_BYTES} bytes`)
-    return upload({ bucket, name: objectName(date, part, file), body, token, fetchImpl })
+    return upload({ bucket, name: objectName(date, run, part, file), body, token, fetchImpl })
   }
   const part = async (name, work) => {
     const t0 = Date.now()
@@ -51,7 +52,7 @@ export async function runBackup({ env = process.env, now = new Date(), fetchImpl
     } finally { await rm(dir, { recursive: true, force: true }) }
   })
 
-  if (!env.CLOUDFLARE_API_TOKEN) results.push({ part: 'cloudflare', ok: false, detail: 'skipped: CLOUDFLARE_API_TOKEN is not set', seconds: 0 })
+  if (!env.CLOUDFLARE_API_TOKEN) { results.push({ part: 'cloudflare', ok: true, skipped: true, detail: 'skipped: CLOUDFLARE_API_TOKEN is not set', seconds: 0 }); log('backup_part', results.at(-1)) }
   else {
     const cf = client({ token: env.CLOUDFLARE_API_TOKEN, fetchImpl })
     let account
@@ -63,9 +64,9 @@ export async function runBackup({ env = process.env, now = new Date(), fetchImpl
     }
   }
 
-  const manifest = { date, generatedAt: now.toISOString(), ok: results.every((r) => r.ok), parts: results }
+  const manifest = { date, run, generatedAt: now.toISOString(), ok: results.every((r) => r.ok), skipped: results.filter((r) => r.skipped).map((r) => r.part), parts: results }
   await put('manifest', 'manifest.json', Buffer.from(JSON.stringify(manifest, null, 1)))
-  log('backup_report', { date, ok: manifest.ok, parts: results.map((r) => `${r.part}:${r.ok ? 'ok' : 'FAIL'}`) })
+  log('backup_report', { date, run, ok: manifest.ok, parts: results.map((r) => `${r.part}:${r.skipped ? 'skipped' : r.ok ? 'ok' : 'FAIL'}`) })
   return manifest
 }
 

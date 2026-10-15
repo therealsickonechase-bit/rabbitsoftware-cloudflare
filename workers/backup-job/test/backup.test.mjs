@@ -8,10 +8,10 @@ import { runBackup } from '../src/run.mjs'
 const json = (b, status = 200) => new Response(JSON.stringify(b), { status })
 
 test('object names stay under platform-cloud/<date>/<part>/ and cannot climb out', () => {
-  assert.equal(objectName('2026-10-15', 'supabase', 'supabase-2026-10-15.dump'), 'platform-cloud/2026-10-15/supabase/supabase-2026-10-15.dump')
-  const sneaky = objectName('2026-10-15', 'cloudflare-kv', '../../etc/passwd')
-  assert.ok(sneaky.startsWith('platform-cloud/2026-10-15/cloudflare-kv/') && !sneaky.includes('/..') && !sneaky.slice(40).includes('/'))
-  for (const bad of [['x', 'a', 'b'], ['2026-10-15', 'A/B', 'f'], ['2026-10-15', '..', 'f'], ['2026-10-15', 'ok', '']]) assert.throws(() => objectName(...bad))
+  assert.equal(objectName('2026-10-15', '101500Z', 'supabase', 'supabase-2026-10-15.dump'), 'platform-cloud/2026-10-15/101500Z/supabase/supabase-2026-10-15.dump')
+  const sneaky = objectName('2026-10-15', '101500Z', 'cloudflare-kv', '../../etc/passwd')
+  assert.ok(sneaky.startsWith('platform-cloud/2026-10-15/101500Z/cloudflare-kv/') && !sneaky.includes('/..') && !sneaky.slice(52).includes('/'))
+  for (const bad of [['x', '101500Z', 'a', 'b'], ['2026-10-15', 'now', 'a', 'b'], ['2026-10-15', '101500Z', 'A/B', 'f'], ['2026-10-15', '101500Z', '..', 'f'], ['2026-10-15', '101500Z', 'ok', '']]) assert.throws(() => objectName(...bad))
   assert.equal(today(new Date('2026-10-15T23:59:59Z')), '2026-10-15')
 })
 
@@ -87,8 +87,8 @@ test('the job uploads each part, survives one failing part, and never logs a sec
     manifest = await runBackup({ env: { BACKUP_BUCKET: 'my-backups', SUPABASE_DB_URL: 'postgresql://postgres:SECRETPW@h.pooler.supabase.com:5432/postgres', NEXT_PUBLIC_SUPABASE_URL: 'https://abc.supabase.co', CLOUDFLARE_API_TOKEN: 'CFTOKEN' }, now: new Date('2026-10-15T10:00:00Z'), fetchImpl: f, dump })
   } finally { console.log = orig }
   assert.equal(manifest.ok, true)
-  assert.ok(uploaded.includes('platform-cloud/2026-10-15/supabase/supabase-2026-10-15.dump'))
-  assert.ok(uploaded.includes('platform-cloud/2026-10-15/manifest/manifest.json'))
+  assert.ok(uploaded.includes('platform-cloud/2026-10-15/100000Z/supabase/supabase-2026-10-15.dump'))
+  assert.ok(uploaded.includes('platform-cloud/2026-10-15/100000Z/manifest/manifest.json'))
   assert.ok(!logs.join('\n').includes('SECRETPW') && !logs.join('\n').includes('CFTOKEN'))
 
   console.log = () => {}
@@ -98,5 +98,9 @@ test('the job uploads each part, survives one failing part, and never logs a sec
   } finally { console.log = orig }
   assert.equal(broken.ok, false)
   assert.ok(!JSON.stringify(broken).includes('SECRETPW'))
-  assert.ok(broken.parts.some((p) => p.part === 'cloudflare' && /skipped/.test(p.detail)))
+  assert.ok(broken.parts.some((p) => p.part === 'cloudflare' && p.skipped))
+  // a part skipped on purpose (no token) is reported, but does not make the night a failure
+  const noToken = await runBackup({ env: { BACKUP_BUCKET: 'my-backups', SUPABASE_DB_URL: 'postgresql://postgres:pw@h/x' }, now: new Date('2026-10-15T10:00:00Z'), fetchImpl: f, dump })
+  assert.equal(noToken.ok, true)
+  assert.deepEqual(noToken.skipped, ['cloudflare'])
 })
