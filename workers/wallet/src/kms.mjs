@@ -19,9 +19,9 @@ async function call(path, body, { tokenFn = gcloudToken, fetchImpl = fetch } = {
   return res.json()
 }
 
-/** The public key as PEM, straight from KMS. */
+/** The public key as PEM, straight from KMS. `opts.keyVersion` selects another key (the anchoring key); the default is the donation wallet key. */
 export async function getPublicKeyPem(opts) {
-  const r = await call(`${KEY_VERSION}/publicKey`, null, opts)
+  const r = await call(`${opts?.keyVersion ?? KEY_VERSION}/publicKey`, null, opts)
   if (r.algorithm !== 'EC_SIGN_SECP256K1_SHA256') throw new Error(`unexpected key algorithm ${r.algorithm}`)
   return r.pem
 }
@@ -29,6 +29,6 @@ export async function getPublicKeyPem(opts) {
 /** Signs a 32-byte digest. Returns the DER signature bytes. */
 export async function signDigest(digest, opts) {
   if (!Buffer.isBuffer(digest) || digest.length !== 32) throw new Error('digest must be exactly 32 bytes')
-  const r = await call(`${KEY_VERSION}:asymmetricSign`, { digest: { sha256: digest.toString('base64') } }, opts)
+  const r = await call(`${opts?.keyVersion ?? KEY_VERSION}:asymmetricSign`, { digest: { sha256: digest.toString('base64') } }, opts)
   return Buffer.from(r.signature, 'base64')
 }

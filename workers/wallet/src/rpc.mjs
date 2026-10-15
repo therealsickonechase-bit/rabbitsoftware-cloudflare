@@ -45,3 +45,9 @@ export async function btcBroadcast(hex, fetchImpl = fetch) {
   const res = await getJson(fetchImpl, `${BTC_API}/tx`, { method: 'POST', body: hex, headers: { 'content-type': 'text/plain' } })
   return (await res.text()).trim()
 }
+
+/** null while the transaction is not in a block; otherwise { ok, block }. */
+export async function ethReceipt(hash, fetchImpl = fetch) {
+  const r = await rpc(fetchImpl, 'eth_getTransactionReceipt', [hash])
+  return r ? { ok: r.status === '0x1', block: Number(BigInt(r.blockNumber)) } : null
+}
