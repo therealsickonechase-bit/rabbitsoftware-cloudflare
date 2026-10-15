@@ -20,7 +20,16 @@ const until = async (pattern, ms = 20_000) => {
   return false
 }
 const send = (d) => ws.send(JSON.stringify({ t: 'i', d }))
-const run = async (cmd, marker) => { screen = ''; send(`${cmd}; echo ${marker}\r`); await until(new RegExp(`${marker}\\s*\\r?\\n[^]*$`), 25_000); return screen }
+// The end marker is computed by the shell (MK$((n*2)) prints MK<2n>), so it can only appear in the OUTPUT, never in the echoed command line.
+let seq = 0
+const run = async (cmd) => {
+  const n = 100 + (++seq)
+  screen = ''
+  send(`${cmd}; echo MK$((${n}*2))\r`)
+  await until(new RegExp(`MK${n * 2}`), 45_000)
+  await new Promise((r) => setTimeout(r, 400))   // let the prompt arrive before the next command
+  return screen
+}
 
 ws.onmessage = (e) => { if (typeof e.data !== 'string') screen += decoder.decode(e.data) }
 const opened = new Promise((resolve, reject) => { ws.onopen = resolve; ws.onerror = () => reject(new Error('connection failed')) })
