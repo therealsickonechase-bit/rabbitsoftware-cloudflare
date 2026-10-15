@@ -66,6 +66,14 @@ test('the limits are stated where people will read them', () => {
   assert.match(visible(read('donate.html')), /not investments/)
 })
 
+test('the pages do not claim open source or link to repositories visitors cannot open (checked 2026-10-15: none is public)', () => {
+  for (const f of PAGES) {
+    const html = read(f)
+    assert.ok(!/github\.com\/rabbitsoftware-io\//.test(html), `${f}: links to a private repository`)
+    assert.ok(!/open[- ]source|open and inspectable|code is published|source is public/i.test(visible(html).replace(/not (an? )?open[- ]source/gi, '')), `${f}: claims open source`)
+  }
+})
+
 test('every live-number slot is filled by live-facts.js', () => {
   const script = read('live-facts.js')
   for (const f of ['blockchain.html', 'press.html']) {
