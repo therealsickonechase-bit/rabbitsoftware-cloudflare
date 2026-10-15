@@ -21,6 +21,7 @@ export function buildFeed(platform, now = new Date()) {
     chain: { app: platform.chain.app ? { length: platform.chain.app.length, head: short(platform.chain.app.headHash) } : null,
       mirror: platform.chain.bucket ? { length: platform.chain.bucket.length, head: short(platform.chain.bucket.headHash) } : null, agree: platform.chain.agree },
     data: platform.data,
+    research: platform.research ?? null,
     tree: platform.tree ?? [],
   }
 }

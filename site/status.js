@@ -1,7 +1,7 @@
 // Live status page. Reads the public feed that the Google Cloud recorder writes every five minutes, draws it, and re-reads it every minute, so a change shows up without a reload.
 // The feed holds only public facts. If it cannot be read, the page says so and keeps the last picture it had.
 import { publicPlatformMap } from './status-map.mjs'
-import { ageText, freshness, overall, strip, uptimePercent } from './status-view.mjs'
+import { ageText, freshness, overall, researchLine, strip, uptimePercent } from './status-view.mjs'
 
 const BASE = 'https://rabbitsoftware-io-status-public.storage.googleapis.com/status'
 const REFRESH_MS = 60_000
@@ -47,6 +47,12 @@ function renderServices() {
   }
 }
 
+function renderResearch() {
+  const r = researchLine(feed.research)
+  $('research').textContent = r.text
+  $('research').className = r.state === 'quiet' ? 'warn' : ''
+}
+
 function renderChain() {
   const c = feed.chain
   $('chain').textContent = c.agree
@@ -77,6 +83,7 @@ function render() {
   $('map').innerHTML = publicPlatformMap(feed)    // built from escaped values only (see status-map.mjs)
   renderServices()
   renderChain()
+  renderResearch()
   renderTree()
 }
 

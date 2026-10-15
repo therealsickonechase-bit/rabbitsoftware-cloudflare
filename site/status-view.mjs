@@ -23,6 +23,21 @@ export function ageText(iso, now = Date.now()) {
   return h < 48 ? `${h} hour${h === 1 ? '' : 's'} ago` : `${Math.floor(h / 24)} days ago`
 }
 
+export const RESEARCH_STALE_AFTER_HOURS = 24
+
+/** What the research line says: when the owner's agents last reported to the app, and whether that is recent. Never an error: the agents run on a private computer. */
+export function researchLine(research, now = Date.now()) {
+  if (!research) return { state: 'unknown', text: 'The research feed could not be read in the last check.' }
+  const records = Number.isFinite(research.records) ? `${research.records} public records` : 'public records'
+  const topics = Number.isFinite(research.topicsExplored) ? `, ${research.topicsExplored} topics explored${Number.isFinite(research.topicsQueued) ? `, ${research.topicsQueued} queued` : ''}` : ''
+  if (!research.lastReportAt) return { state: 'unknown', text: `${records}${topics}. When the research agents last reported is not known yet.` }
+  const hours = ageMinutes(research.lastReportAt, now) / 60
+  const when = ageText(research.lastReportAt, now)
+  return hours > RESEARCH_STALE_AFTER_HOURS
+    ? { state: 'quiet', text: `The research agents last reported ${when}. ${records}${topics}. They run on a private computer, so a quiet day is not an outage.` }
+    : { state: 'ok', text: `The research agents last reported ${when}. ${records}${topics}.` }
+}
+
 /** The headline: everything answering, some services not answering, or the feed itself too old to trust. */
 export function overall(feed, now = Date.now()) {
   if (!feed) return { state: 'unknown', text: 'Status is not available right now.' }

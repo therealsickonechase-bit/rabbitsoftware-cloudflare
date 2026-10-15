@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-15T17:42:10.733Z",
+ "generatedAt": "2026-10-15T18:43:13.536Z",
  "commandMaxBytes": 4000,
  "projects": [
   "rabbit-web",
@@ -966,6 +966,62 @@
    "command": "node scripts/export-platform-graph-sql.mjs",
    "description": "Writes supabase/seed/platform_graph.seed.sql. Nothing is sent; you run the migration and the seed by hand in the Supabase SQL editor.",
    "project": "rabbit-web",
+   "runsIn": "computer"
+  },
+  {
+   "id": "research-tasks-preview",
+   "group": "Research web",
+   "label": "Research loop: preview the scheduled tasks (run on your PC)",
+   "scope": "owner",
+   "risk": "local",
+   "command": "pwsh -File scripts/powershell/Register-ResearchTasks.ps1 -WhatIf",
+   "description": "Shows the two Windows scheduled tasks (sync every 30 minutes, task worker every 5) and changes nothing.",
+   "project": "rabbit-web",
+   "source": "scripts/powershell/Register-ResearchTasks.ps1",
+   "runsIn": "computer"
+  },
+  {
+   "id": "research-tasks-register",
+   "group": "Research web",
+   "label": "Research loop: register the scheduled tasks (run on your PC)",
+   "scope": "owner",
+   "risk": "local",
+   "command": "pwsh -File scripts/powershell/Register-ResearchTasks.ps1",
+   "description": "Creates \"RabbitOS Research Sync\" and \"RabbitOS Task Worker\" for your Windows sign-in. Add -Remove to delete them.",
+   "project": "rabbit-web",
+   "source": "scripts/powershell/Register-ResearchTasks.ps1",
+   "runsIn": "computer"
+  },
+  {
+   "id": "research-sync-once",
+   "group": "Research web",
+   "label": "Research loop: one sync pass now (run on your PC)",
+   "scope": "owner",
+   "risk": "secret",
+   "command": "pwsh -File scripts/powershell/Run-ResearchSync.ps1 -Mode Sync",
+   "needs": [
+    "RABBIT_URL",
+    "RABBIT_INGEST_SECRET"
+   ],
+   "description": "Pushes the agents' public findings to RabbitOS and pulls the chain back. Reads the two variables from research-agents\\.env; nothing is printed. Log: ~\\RabbitOS\\logs.",
+   "project": "rabbit-web",
+   "source": "scripts/powershell/Register-ResearchTasks.ps1",
+   "runsIn": "computer"
+  },
+  {
+   "id": "research-tasks-once",
+   "group": "Research web",
+   "label": "Research loop: one task-worker pass now (run on your PC)",
+   "scope": "owner",
+   "risk": "secret",
+   "command": "pwsh -File scripts/powershell/Run-ResearchSync.ps1 -Mode Tasks",
+   "needs": [
+    "RABBIT_URL",
+    "RABBIT_INGEST_SECRET"
+   ],
+   "description": "Picks up queued task proposals from the app and runs them in the agents.",
+   "project": "rabbit-web",
+   "source": "scripts/powershell/Register-ResearchTasks.ps1",
    "runsIn": "computer"
   },
   {
