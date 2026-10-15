@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-15T21:48:34.807Z",
+ "generatedAt": "2026-10-15T23:08:21.365Z",
  "commandMaxBytes": 4000,
  "projects": [
   "rabbit-web",
@@ -2333,6 +2333,30 @@
    "risk": "local",
    "command": "cd workers/wallet && node build-donate.mjs",
    "description": "Re-checks both addresses and the signed proof, then rewrites site/donate.html, site/wallet.json, the front-page block and the app copy. Stops if anything fails. --check changes nothing.",
+   "project": "rabbitsoftware-cloudflare",
+   "runsIn": "computer"
+  },
+  {
+   "id": "cf-wallet-status",
+   "source": "workers/wallet/withdraw.mjs",
+   "group": "Wallet and anchoring",
+   "label": "Wallet: balances and coins (read-only)",
+   "scope": "owner",
+   "risk": "network",
+   "command": "cd workers/wallet && node withdraw.mjs status",
+   "description": "Reads the Ethereum and Bitcoin balances from public networks. Signs and sends nothing.",
+   "project": "rabbitsoftware-cloudflare",
+   "runsIn": "computer"
+  },
+  {
+   "id": "cf-wallet-withdraw-dry",
+   "source": "workers/wallet/withdraw.mjs",
+   "group": "Wallet and anchoring",
+   "label": "Wallet: withdrawal dry run (shows the plan, signs nothing)",
+   "scope": "owner",
+   "risk": "network",
+   "command": "cd workers/wallet && node withdraw.mjs eth --to <your-address> --amount 0.01",
+   "description": "Replace the placeholder. Add --sign to sign without sending, or --broadcast to send after you retype the destination. For Bitcoin use: btc --to <address> --amount 0.001 (or --sweep). Read docs/wallet.md first.",
    "project": "rabbitsoftware-cloudflare",
    "runsIn": "computer"
   },

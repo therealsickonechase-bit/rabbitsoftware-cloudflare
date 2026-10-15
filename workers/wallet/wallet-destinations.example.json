@@ -1,0 +1,15 @@
+{
+  "_note": "Copy this file to %USERPROFILE%\\RabbitOS\\wallet-destinations.json and put YOUR OWN addresses in it. Only public addresses belong here, never keys or seed phrases.",
+  "ethereum": [
+    { "address": "0xYourHardwareWalletEthereumAddress", "label": "my hardware wallet" }
+  ],
+  "bitcoin": [
+    { "address": "bc1qYourHardwareWalletBitcoinAddress", "label": "my hardware wallet" }
+  ],
+  "limits": {
+    "maxEth": "0.1",
+    "maxBtc": "0.01",
+    "maxFeeGwei": 200,
+    "maxFeeRateSatPerVb": 200
+  }
+}

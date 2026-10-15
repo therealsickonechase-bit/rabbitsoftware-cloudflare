@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-15T14:15:50.063Z",
+ "generatedAt": "2026-10-15T22:18:39.444Z",
  "source": "supabase/migrations (what the migrations create; not a reading of the live database)",
  "migrations": [
   {
@@ -76,6 +76,10 @@
   },
   {
    "name": "20261014010000_chain_ledger_maxwell.sql",
+   "manual": true
+  },
+  {
+   "name": "20261015000000_platform_graph.sql",
    "manual": true
   }
  ],
@@ -1512,6 +1516,193 @@
    "closed": true
   },
   {
+   "name": "platform_edges",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint",
+     "primaryKey": true,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "from_id",
+     "type": "text",
+     "primaryKey": false,
+     "references": "platform_nodes",
+     "notNull": true
+    },
+    {
+     "name": "to_id",
+     "type": "text",
+     "primaryKey": false,
+     "references": "platform_nodes",
+     "notNull": true
+    },
+    {
+     "name": "label",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "kind",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    }
+   ],
+   "rls": true,
+   "policies": [
+    {
+     "name": "platform_edges_read",
+     "command": "select",
+     "roles": "public"
+    }
+   ],
+   "triggers": [],
+   "indexes": 2,
+   "appendOnly": false,
+   "publicRead": true,
+   "closed": false
+  },
+  {
+   "name": "platform_nodes",
+   "columns": [
+    {
+     "name": "id",
+     "type": "text",
+     "primaryKey": true,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "label",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "provider",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "lane",
+     "type": "smallint",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "sort_order",
+     "type": "smallint",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "kind",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "status",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "about",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    }
+   ],
+   "rls": true,
+   "policies": [
+    {
+     "name": "platform_nodes_read",
+     "command": "select",
+     "roles": "public"
+    }
+   ],
+   "triggers": [],
+   "indexes": 0,
+   "appendOnly": false,
+   "publicRead": true,
+   "closed": false
+  },
+  {
+   "name": "platform_roadmap",
+   "columns": [
+    {
+     "name": "id",
+     "type": "text",
+     "primaryKey": true,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "title",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "status",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "area",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "note",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "sort_order",
+     "type": "smallint",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    }
+   ],
+   "rls": true,
+   "policies": [
+    {
+     "name": "platform_roadmap_read",
+     "command": "select",
+     "roles": "public"
+    }
+   ],
+   "triggers": [],
+   "indexes": 0,
+   "appendOnly": false,
+   "publicRead": true,
+   "closed": false
+  },
+  {
    "name": "public_packages",
    "columns": [
     {
@@ -2078,7 +2269,7 @@
   }
  ],
  "liveCheck": {
-  "at": "2026-10-15T14:15:53.823Z",
+  "at": "2026-10-15T22:18:43.981Z",
   "method": "anonymous reader, public anon key, one row per table",
   "tables": {
    "agent_tasks": "rows",
@@ -2102,6 +2293,9 @@
    "node_scores": "rows",
    "notes": "empty",
    "owners": "refused",
+   "platform_edges": "error",
+   "platform_nodes": "error",
+   "platform_roadmap": "error",
    "public_packages": "empty",
    "record_embeddings": "refused",
    "research_records": "rows",
