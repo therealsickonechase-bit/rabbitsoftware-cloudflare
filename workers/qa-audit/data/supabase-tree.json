@@ -1,0 +1,2116 @@
+{
+ "generatedAt": "2026-10-15T14:15:50.063Z",
+ "source": "supabase/migrations (what the migrations create; not a reading of the live database)",
+ "migrations": [
+  {
+   "name": "20261009000000_enable_rls.sql",
+   "manual": false
+  },
+  {
+   "name": "20261009010000_research_agents.sql",
+   "manual": false
+  },
+  {
+   "name": "20261009020000_ingest_fixes.sql",
+   "manual": false
+  },
+  {
+   "name": "20261009030000_more_research.sql",
+   "manual": false
+  },
+  {
+   "name": "20261009040000_user_settings.sql",
+   "manual": false
+  },
+  {
+   "name": "20261009050000_owner_member_roles.sql",
+   "manual": false
+  },
+  {
+   "name": "20261009060000_contact_records.sql",
+   "manual": false
+  },
+  {
+   "name": "20261009070000_chat_collections_notes.sql",
+   "manual": false
+  },
+  {
+   "name": "20261009080000_eeg_band_samples.sql",
+   "manual": false
+  },
+  {
+   "name": "20261009090000_agent_tasks.sql",
+   "manual": false
+  },
+  {
+   "name": "20261009100000_api_keys.sql",
+   "manual": false
+  },
+  {
+   "name": "20261009110000_merkle_batches.sql",
+   "manual": false
+  },
+  {
+   "name": "20261009120000_semantic_memory.sql",
+   "manual": false
+  },
+  {
+   "name": "20261009130000_guest_passes.sql",
+   "manual": false
+  },
+  {
+   "name": "20261010000000_self_daily.sql",
+   "manual": false
+  },
+  {
+   "name": "20261010010000_public_packages.sql",
+   "manual": false
+  },
+  {
+   "name": "20261010020000_open_access.sql",
+   "manual": true
+  },
+  {
+   "name": "20261014000000_chain_ledger.sql",
+   "manual": true
+  },
+  {
+   "name": "20261014010000_chain_ledger_maxwell.sql",
+   "manual": true
+  }
+ ],
+ "tables": [
+  {
+   "name": "agent_tasks",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "primaryKey": true,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "created_by",
+     "type": "uuid",
+     "primaryKey": false,
+     "references": "auth.users",
+     "notNull": true
+    },
+    {
+     "name": "kind",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "params",
+     "type": "jsonb",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "status",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "claimed_by",
+     "type": "text",
+     "primaryKey": false,
+     "references": "agents",
+     "notNull": false
+    },
+    {
+     "name": "claimed_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    },
+    {
+     "name": "lease_until",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    },
+    {
+     "name": "result",
+     "type": "jsonb",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    },
+    {
+     "name": "error",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    },
+    {
+     "name": "reviewed_by",
+     "type": "uuid",
+     "primaryKey": false,
+     "references": "auth.users",
+     "notNull": false
+    },
+    {
+     "name": "reviewed_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    },
+    {
+     "name": "review_note",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "updated_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    }
+   ],
+   "rls": true,
+   "policies": [
+    {
+     "name": "public read",
+     "command": "select",
+     "roles": "anon, authenticated"
+    }
+   ],
+   "triggers": [],
+   "indexes": 2,
+   "appendOnly": false,
+   "publicRead": true,
+   "closed": false
+  },
+  {
+   "name": "agents",
+   "columns": [
+    {
+     "name": "node_id",
+     "type": "text",
+     "primaryKey": true,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "kind",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "twin_id",
+     "type": "uuid",
+     "primaryKey": false,
+     "references": "twin_identity",
+     "notNull": false
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "last_seen_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    }
+   ],
+   "rls": true,
+   "policies": [
+    {
+     "name": "public read",
+     "command": "select",
+     "roles": "anon, authenticated"
+    }
+   ],
+   "triggers": [],
+   "indexes": 1,
+   "appendOnly": false,
+   "publicRead": true,
+   "closed": false
+  },
+  {
+   "name": "api_key_calls",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint",
+     "primaryKey": true,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "key_id",
+     "type": "uuid",
+     "primaryKey": false,
+     "references": "api_keys",
+     "notNull": true
+    },
+    {
+     "name": "tool",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "ok",
+     "type": "boolean",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "called_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    }
+   ],
+   "rls": true,
+   "policies": [
+    {
+     "name": "own key calls read",
+     "command": "select",
+     "roles": "authenticated"
+    }
+   ],
+   "triggers": [],
+   "indexes": 1,
+   "appendOnly": false,
+   "publicRead": false,
+   "closed": true
+  },
+  {
+   "name": "api_keys",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "primaryKey": true,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "user_id",
+     "type": "uuid",
+     "primaryKey": false,
+     "references": "auth.users",
+     "notNull": true
+    },
+    {
+     "name": "name",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "prefix",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "key_hash",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "scopes",
+     "type": "text[]",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "expires_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "last_used_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    },
+    {
+     "name": "revoked_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    }
+   ],
+   "rls": true,
+   "policies": [
+    {
+     "name": "own keys read",
+     "command": "select",
+     "roles": "authenticated"
+    }
+   ],
+   "triggers": [],
+   "indexes": 1,
+   "appendOnly": false,
+   "publicRead": false,
+   "closed": true
+  },
+  {
+   "name": "assets",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint",
+     "primaryKey": true,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "kind",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "r2_key",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "sha256",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "run_id",
+     "type": "bigint",
+     "primaryKey": false,
+     "references": "research_runs",
+     "notNull": false
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    }
+   ],
+   "rls": true,
+   "policies": [
+    {
+     "name": "public read",
+     "command": "select",
+     "roles": "anon, authenticated"
+    }
+   ],
+   "triggers": [],
+   "indexes": 1,
+   "appendOnly": false,
+   "publicRead": true,
+   "closed": false
+  },
+  {
+   "name": "audit_entries",
+   "columns": [
+    {
+     "name": "seq",
+     "type": "bigint",
+     "primaryKey": true,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "module",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "action",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "details",
+     "type": "jsonb",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "node_id",
+     "type": "text",
+     "primaryKey": false,
+     "references": "agents",
+     "notNull": false
+    },
+    {
+     "name": "prev_hash",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    },
+    {
+     "name": "hash",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "ts",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    }
+   ],
+   "rls": true,
+   "policies": [
+    {
+     "name": "public read",
+     "command": "select",
+     "roles": "anon, authenticated"
+    }
+   ],
+   "triggers": [
+    "audit_entries_no_change"
+   ],
+   "indexes": 1,
+   "appendOnly": true,
+   "publicRead": true,
+   "closed": false
+  },
+  {
+   "name": "chain_blocks",
+   "columns": [
+    {
+     "name": "block_id",
+     "type": "text",
+     "primaryKey": true,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "node_id",
+     "type": "text",
+     "primaryKey": false,
+     "references": "agents",
+     "notNull": true
+    },
+    {
+     "name": "source",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "das_score",
+     "type": "numeric",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "hash",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "prev_hash",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    },
+    {
+     "name": "mined_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "chain",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "height",
+     "type": "integer",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    }
+   ],
+   "rls": true,
+   "policies": [
+    {
+     "name": "public read",
+     "command": "select",
+     "roles": "anon, authenticated"
+    }
+   ],
+   "triggers": [],
+   "indexes": 2,
+   "appendOnly": false,
+   "publicRead": true,
+   "closed": false
+  },
+  {
+   "name": "chain_ledger",
+   "columns": [
+    {
+     "name": "seq",
+     "type": "bigint",
+     "primaryKey": true,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "tbl",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "op",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "row_id",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "payload",
+     "type": "jsonb",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "prev_hash",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "hash",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    }
+   ],
+   "rls": true,
+   "policies": [
+    {
+     "name": "public read",
+     "command": "select",
+     "roles": "anon, authenticated"
+    }
+   ],
+   "triggers": [
+    "chain_ledger_no_change",
+    "chain_ledger_no_truncate"
+   ],
+   "indexes": 2,
+   "appendOnly": true,
+   "publicRead": true,
+   "closed": false
+  },
+  {
+   "name": "chat_messages",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "primaryKey": true,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "thread_id",
+     "type": "uuid",
+     "primaryKey": false,
+     "references": "chat_threads",
+     "notNull": true
+    },
+    {
+     "name": "user_id",
+     "type": "uuid",
+     "primaryKey": false,
+     "references": "auth.users",
+     "notNull": true
+    },
+    {
+     "name": "role",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "content",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "cited",
+     "type": "text[]",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "model",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    }
+   ],
+   "rls": true,
+   "policies": [
+    {
+     "name": "public read",
+     "command": "select",
+     "roles": "anon, authenticated"
+    }
+   ],
+   "triggers": [],
+   "indexes": 2,
+   "appendOnly": false,
+   "publicRead": true,
+   "closed": false
+  },
+  {
+   "name": "chat_threads",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "primaryKey": true,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "user_id",
+     "type": "uuid",
+     "primaryKey": false,
+     "references": "auth.users",
+     "notNull": true
+    },
+    {
+     "name": "title",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    }
+   ],
+   "rls": true,
+   "policies": [
+    {
+     "name": "public read",
+     "command": "select",
+     "roles": "anon, authenticated"
+    }
+   ],
+   "triggers": [],
+   "indexes": 1,
+   "appendOnly": false,
+   "publicRead": true,
+   "closed": false
+  },
+  {
+   "name": "collection_items",
+   "columns": [
+    {
+     "name": "collection_id",
+     "type": "uuid",
+     "primaryKey": false,
+     "references": "collections",
+     "notNull": true
+    },
+    {
+     "name": "record_id",
+     "type": "text",
+     "primaryKey": false,
+     "references": "research_records",
+     "notNull": true
+    },
+    {
+     "name": "user_id",
+     "type": "uuid",
+     "primaryKey": false,
+     "references": "auth.users",
+     "notNull": true
+    },
+    {
+     "name": "added_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    }
+   ],
+   "rls": true,
+   "policies": [
+    {
+     "name": "public read",
+     "command": "select",
+     "roles": "anon, authenticated"
+    }
+   ],
+   "triggers": [],
+   "indexes": 1,
+   "appendOnly": false,
+   "publicRead": true,
+   "closed": false
+  },
+  {
+   "name": "collections",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "primaryKey": true,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "user_id",
+     "type": "uuid",
+     "primaryKey": false,
+     "references": "auth.users",
+     "notNull": true
+    },
+    {
+     "name": "name",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    }
+   ],
+   "rls": true,
+   "policies": [
+    {
+     "name": "public read",
+     "command": "select",
+     "roles": "anon, authenticated"
+    }
+   ],
+   "triggers": [],
+   "indexes": 0,
+   "appendOnly": false,
+   "publicRead": true,
+   "closed": false
+  },
+  {
+   "name": "contact_access_log",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint",
+     "primaryKey": true,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "accessed_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "record_id",
+     "type": "uuid",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    },
+    {
+     "name": "reason",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "legal_reference",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "accessed_by",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    }
+   ],
+   "rls": true,
+   "policies": [],
+   "triggers": [
+    "contact_access_log_no_change"
+   ],
+   "indexes": 0,
+   "appendOnly": true,
+   "publicRead": false,
+   "closed": true
+  },
+  {
+   "name": "contact_records",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "primaryKey": true,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "user_id",
+     "type": "uuid",
+     "primaryKey": false,
+     "references": "auth.users",
+     "notNull": false
+    },
+    {
+     "name": "email_hash",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "email_enc",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "key_version",
+     "type": "integer",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "consented_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "account_closed_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    },
+    {
+     "name": "delete_after",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    }
+   ],
+   "rls": true,
+   "policies": [],
+   "triggers": [],
+   "indexes": 2,
+   "appendOnly": false,
+   "publicRead": false,
+   "closed": true
+  },
+  {
+   "name": "eeg_band_samples",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint",
+     "primaryKey": true,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "agent_id",
+     "type": "text",
+     "primaryKey": false,
+     "references": "agents",
+     "notNull": true
+    },
+    {
+     "name": "session",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "ts",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "channel",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "band",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "power",
+     "type": "real",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "rel_power",
+     "type": "real",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    },
+    {
+     "name": "board",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    }
+   ],
+   "rls": true,
+   "policies": [
+    {
+     "name": "public read",
+     "command": "select",
+     "roles": "anon, authenticated"
+    }
+   ],
+   "triggers": [],
+   "indexes": 1,
+   "appendOnly": false,
+   "publicRead": true,
+   "closed": false
+  },
+  {
+   "name": "guest_passes",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "primaryKey": true,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "label",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "issued_to",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    },
+    {
+     "name": "user_id",
+     "type": "uuid",
+     "primaryKey": false,
+     "references": "auth.users",
+     "notNull": false
+    },
+    {
+     "name": "token_hash",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "created_by",
+     "type": "uuid",
+     "primaryKey": false,
+     "references": "auth.users",
+     "notNull": false
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "link_expires_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "first_used_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    },
+    {
+     "name": "access_until",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    },
+    {
+     "name": "uses",
+     "type": "integer",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "max_uses",
+     "type": "integer",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "revoked_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    }
+   ],
+   "rls": true,
+   "policies": [
+    {
+     "name": "owner read",
+     "command": "select",
+     "roles": "authenticated"
+    }
+   ],
+   "triggers": [],
+   "indexes": 1,
+   "appendOnly": false,
+   "publicRead": false,
+   "closed": true
+  },
+  {
+   "name": "kg_edges",
+   "columns": [
+    {
+     "name": "a_kind",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "a_name",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "b_kind",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "b_name",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "record_id",
+     "type": "text",
+     "primaryKey": false,
+     "references": "research_records",
+     "notNull": true
+    },
+    {
+     "name": "built_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    }
+   ],
+   "rls": true,
+   "policies": [
+    {
+     "name": "public read",
+     "command": "select",
+     "roles": "anon, authenticated"
+    }
+   ],
+   "triggers": [],
+   "indexes": 1,
+   "appendOnly": false,
+   "publicRead": true,
+   "closed": false
+  },
+  {
+   "name": "merkle_batches",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint",
+     "primaryKey": true,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "from_seq",
+     "type": "bigint",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "to_seq",
+     "type": "bigint",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "leaf_count",
+     "type": "integer",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "root",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "sealed_by",
+     "type": "uuid",
+     "primaryKey": false,
+     "references": "auth.users",
+     "notNull": false
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "anchor_tx",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    },
+    {
+     "name": "anchor_ledger",
+     "type": "bigint",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    }
+   ],
+   "rls": true,
+   "policies": [
+    {
+     "name": "public read",
+     "command": "select",
+     "roles": "anon, authenticated"
+    }
+   ],
+   "triggers": [],
+   "indexes": 0,
+   "appendOnly": false,
+   "publicRead": true,
+   "closed": false
+  },
+  {
+   "name": "node_scores",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint",
+     "primaryKey": true,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "node_id",
+     "type": "text",
+     "primaryKey": false,
+     "references": "agents",
+     "notNull": true
+    },
+    {
+     "name": "mos",
+     "type": "numeric",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    },
+    {
+     "name": "balance",
+     "type": "numeric",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    },
+    {
+     "name": "ts",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    }
+   ],
+   "rls": true,
+   "policies": [
+    {
+     "name": "public read",
+     "command": "select",
+     "roles": "anon, authenticated"
+    }
+   ],
+   "triggers": [],
+   "indexes": 1,
+   "appendOnly": false,
+   "publicRead": true,
+   "closed": false
+  },
+  {
+   "name": "notes",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "primaryKey": true,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "user_id",
+     "type": "uuid",
+     "primaryKey": false,
+     "references": "auth.users",
+     "notNull": true
+    },
+    {
+     "name": "record_id",
+     "type": "text",
+     "primaryKey": false,
+     "references": "research_records",
+     "notNull": false
+    },
+    {
+     "name": "collection_id",
+     "type": "uuid",
+     "primaryKey": false,
+     "references": "collections",
+     "notNull": false
+    },
+    {
+     "name": "body",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    }
+   ],
+   "rls": true,
+   "policies": [
+    {
+     "name": "public read",
+     "command": "select",
+     "roles": "anon, authenticated"
+    }
+   ],
+   "triggers": [],
+   "indexes": 1,
+   "appendOnly": false,
+   "publicRead": true,
+   "closed": false
+  },
+  {
+   "name": "owners",
+   "columns": [
+    {
+     "name": "user_id",
+     "type": "uuid",
+     "primaryKey": true,
+     "references": "auth.users",
+     "notNull": true
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    }
+   ],
+   "rls": true,
+   "policies": [],
+   "triggers": [],
+   "indexes": 0,
+   "appendOnly": false,
+   "publicRead": false,
+   "closed": true
+  },
+  {
+   "name": "public_packages",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "primaryKey": true,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "title",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "description",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "licence",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "file_name",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "path",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "size_bytes",
+     "type": "bigint",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "sha256",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "uploaded_by",
+     "type": "uuid",
+     "primaryKey": false,
+     "references": "auth.users",
+     "notNull": true
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    }
+   ],
+   "rls": true,
+   "policies": [
+    {
+     "name": "anyone reads packages",
+     "command": "select",
+     "roles": "anon, authenticated"
+    },
+    {
+     "name": "owner adds packages",
+     "command": "insert",
+     "roles": "authenticated"
+    },
+    {
+     "name": "owner removes packages",
+     "command": "delete",
+     "roles": "authenticated"
+    }
+   ],
+   "triggers": [],
+   "indexes": 0,
+   "appendOnly": false,
+   "publicRead": true,
+   "closed": false
+  },
+  {
+   "name": "record_embeddings",
+   "columns": [
+    {
+     "name": "record_id",
+     "type": "text",
+     "primaryKey": true,
+     "references": "research_records",
+     "notNull": true
+    },
+    {
+     "name": "embedding",
+     "type": "extensions.vector(768)",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "model",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "embedded_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    }
+   ],
+   "rls": true,
+   "policies": [],
+   "triggers": [],
+   "indexes": 1,
+   "appendOnly": false,
+   "publicRead": false,
+   "closed": true
+  },
+  {
+   "name": "research_records",
+   "columns": [
+    {
+     "name": "id",
+     "type": "text",
+     "primaryKey": true,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "source",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "title",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "url",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    },
+    {
+     "name": "topic_id",
+     "type": "bigint",
+     "primaryKey": false,
+     "references": "research_topics",
+     "notNull": false
+    },
+    {
+     "name": "run_id",
+     "type": "bigint",
+     "primaryKey": false,
+     "references": "research_runs",
+     "notNull": false
+    },
+    {
+     "name": "first_seen_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "meta",
+     "type": "jsonb",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    }
+   ],
+   "rls": true,
+   "policies": [
+    {
+     "name": "public read",
+     "command": "select",
+     "roles": "anon, authenticated"
+    }
+   ],
+   "triggers": [],
+   "indexes": 3,
+   "appendOnly": false,
+   "publicRead": true,
+   "closed": false
+  },
+  {
+   "name": "research_runs",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint",
+     "primaryKey": true,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "agent_id",
+     "type": "text",
+     "primaryKey": false,
+     "references": "agents",
+     "notNull": true
+    },
+    {
+     "name": "twin_id",
+     "type": "uuid",
+     "primaryKey": false,
+     "references": "twin_identity",
+     "notNull": false
+    },
+    {
+     "name": "topic_id",
+     "type": "bigint",
+     "primaryKey": false,
+     "references": "research_topics",
+     "notNull": false
+    },
+    {
+     "name": "cycle",
+     "type": "integer",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "new_ids_found",
+     "type": "integer",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "summary",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    },
+    {
+     "name": "started_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    }
+   ],
+   "rls": true,
+   "policies": [
+    {
+     "name": "public read",
+     "command": "select",
+     "roles": "anon, authenticated"
+    }
+   ],
+   "triggers": [],
+   "indexes": 2,
+   "appendOnly": false,
+   "publicRead": true,
+   "closed": false
+  },
+  {
+   "name": "research_summaries",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint",
+     "primaryKey": true,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "agent_id",
+     "type": "text",
+     "primaryKey": false,
+     "references": "agents",
+     "notNull": true
+    },
+    {
+     "name": "topic_id",
+     "type": "bigint",
+     "primaryKey": false,
+     "references": "research_topics",
+     "notNull": false
+    },
+    {
+     "name": "model",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "ai_interpretation",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "disclaimer",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "source_counts",
+     "type": "jsonb",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "input_hash",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "created_by",
+     "type": "uuid",
+     "primaryKey": false,
+     "references": "auth.users",
+     "notNull": false
+    }
+   ],
+   "rls": true,
+   "policies": [
+    {
+     "name": "public read",
+     "command": "select",
+     "roles": "anon, authenticated"
+    }
+   ],
+   "triggers": [],
+   "indexes": 2,
+   "appendOnly": false,
+   "publicRead": true,
+   "closed": false
+  },
+  {
+   "name": "research_topics",
+   "columns": [
+    {
+     "name": "id",
+     "type": "bigint",
+     "primaryKey": true,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "topic",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "biomarker",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    },
+    {
+     "name": "parent_topic_id",
+     "type": "bigint",
+     "primaryKey": false,
+     "references": "research_topics",
+     "notNull": false
+    },
+    {
+     "name": "status",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "discovered_by",
+     "type": "text",
+     "primaryKey": false,
+     "references": "agents",
+     "notNull": false
+    },
+    {
+     "name": "created_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "explored_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    }
+   ],
+   "rls": true,
+   "policies": [
+    {
+     "name": "public read",
+     "command": "select",
+     "roles": "anon, authenticated"
+    }
+   ],
+   "triggers": [],
+   "indexes": 2,
+   "appendOnly": false,
+   "publicRead": true,
+   "closed": false
+  },
+  {
+   "name": "self_daily",
+   "columns": [
+    {
+     "name": "user_id",
+     "type": "uuid",
+     "primaryKey": false,
+     "references": "auth.users",
+     "notNull": true
+    },
+    {
+     "name": "day",
+     "type": "date",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "dims",
+     "type": "jsonb",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "lab_flags",
+     "type": "jsonb",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "synthetic",
+     "type": "boolean",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    },
+    {
+     "name": "updated_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    }
+   ],
+   "rls": true,
+   "policies": [
+    {
+     "name": "public read",
+     "command": "select",
+     "roles": "anon, authenticated"
+    }
+   ],
+   "triggers": [],
+   "indexes": 0,
+   "appendOnly": false,
+   "publicRead": true,
+   "closed": false
+  },
+  {
+   "name": "user_settings",
+   "columns": [
+    {
+     "name": "user_id",
+     "type": "uuid",
+     "primaryKey": true,
+     "references": "auth.users",
+     "notNull": true
+    },
+    {
+     "name": "anthropic_key_enc",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    },
+    {
+     "name": "anthropic_key_last4",
+     "type": "text",
+     "primaryKey": false,
+     "references": null,
+     "notNull": false
+    },
+    {
+     "name": "updated_at",
+     "type": "timestamptz",
+     "primaryKey": false,
+     "references": null,
+     "notNull": true
+    }
+   ],
+   "rls": true,
+   "policies": [],
+   "triggers": [],
+   "indexes": 0,
+   "appendOnly": false,
+   "publicRead": false,
+   "closed": true
+  }
+ ],
+ "functions": [
+  "audit_entries_immutable",
+  "chain_ledger_immutable",
+  "chain_ledger_link",
+  "claim_agent_task",
+  "contact_access_log_immutable",
+  "contact_records_on_account_delete",
+  "is_owner",
+  "match_records",
+  "purge_old_eeg_samples"
+ ],
+ "storageBuckets": [
+  {
+   "id": "packages",
+   "public": true
+  }
+ ],
+ "liveCheck": {
+  "at": "2026-10-15T14:15:53.823Z",
+  "method": "anonymous reader, public anon key, one row per table",
+  "tables": {
+   "agent_tasks": "rows",
+   "agents": "rows",
+   "api_key_calls": "refused",
+   "api_keys": "refused",
+   "assets": "empty",
+   "audit_entries": "rows",
+   "chain_blocks": "rows",
+   "chain_ledger": "rows",
+   "chat_messages": "empty",
+   "chat_threads": "rows",
+   "collection_items": "empty",
+   "collections": "empty",
+   "contact_access_log": "refused",
+   "contact_records": "refused",
+   "eeg_band_samples": "rows",
+   "guest_passes": "refused",
+   "kg_edges": "empty",
+   "merkle_batches": "empty",
+   "node_scores": "rows",
+   "notes": "empty",
+   "owners": "refused",
+   "public_packages": "empty",
+   "record_embeddings": "refused",
+   "research_records": "rows",
+   "research_runs": "rows",
+   "research_summaries": "rows",
+   "research_topics": "rows",
+   "self_daily": "empty",
+   "user_settings": "refused"
+  },
+  "mismatches": []
+ }
+}

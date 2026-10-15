@@ -3,54 +3,97 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Live status of the RabbitSoftware website and the RabbitOS console.">
+  <meta name="description" content="Live status of the RabbitSoftware website, the RabbitOS console and the services around them, with a map and a 24-hour history.">
   <title>Status | RabbitSoftware</title>
   <link rel="icon" type="image/png" href="assets/rabbitsoftware.png">
   <style>
-    :root { color-scheme: light dark; --paper:#f2f4ee; --ink:#172421; --muted:#53625c; --line:#bdc8bf; --green:#155c49; --bad:#b3402a; --night:#10241f; }
-    @media (prefers-color-scheme: dark) { :root { --paper:#17211e; --ink:#f0f3ec; --muted:#bac7c0; --line:#52645a; --green:#9dd7b4; --bad:#f0907a; } }
+    :root { color-scheme: light dark; --paper:#f2f4ee; --ink:#172421; --muted:#53625c; --line:#bdc8bf; --green:#155c49; --bad:#b3402a; --warn:#8a5a00; --night:#10241f; --card:#fbfcf8; --unk:#8a978f; --tick-none:#d9e0d9; }
+    @media (prefers-color-scheme: dark) { :root { --paper:#17211e; --ink:#f0f3ec; --muted:#bac7c0; --line:#52645a; --green:#9dd7b4; --bad:#f0907a; --warn:#e8c070; --card:#1d2a26; --unk:#7e8c85; --tick-none:#2d3a35; } }
     * { box-sizing: border-box; }
-    body { margin:0; background:var(--paper); color:var(--ink); font:18px/1.6 "Aptos","Segoe UI",sans-serif; }
+    body { margin:0; background:var(--paper); color:var(--ink); font:17px/1.6 "Aptos","Segoe UI",sans-serif; }
     a { color:inherit; }
-    main { width:min(720px, calc(100% - 48px)); margin:0 auto; padding:56px 0; }
+    main { width:min(960px, calc(100% - 32px)); margin:0 auto; padding:48px 0 64px; display:grid; gap:34px; }
     h1 { margin:0 0 6px; font-size:2rem; line-height:1.2; }
-    p { color:var(--muted); margin:0 0 24px; }
-    ul { list-style:none; margin:0; padding:0; border-top:1px solid var(--line); }
-    li { display:flex; justify-content:space-between; gap:16px; padding:14px 0; border-bottom:1px solid var(--line); }
-    .state { font-weight:700; }
-    .ok { color:var(--green); } .down { color:var(--bad); }
-    small { color:var(--muted); display:block; margin-top:20px; }
+    h2 { margin:0 0 10px; font-size:1.25rem; }
+    p { color:var(--muted); margin:0; }
+    .small { font-size:.88rem; } .warn { color:var(--warn); }
+    .headline { display:flex; align-items:center; gap:14px; padding:18px 20px; border:1px solid var(--line); border-radius:8px; background:var(--card); }
+    .headline::before { content:""; flex:none; width:14px; height:14px; border-radius:50%; background:var(--unk); }
+    .headline.ok::before { background:var(--green); } .headline.degraded::before, .headline.stale::before { background:var(--warn); } .headline.down::before { background:var(--bad); }
+    .headline p { color:var(--ink); font-weight:600; }
+    .error { padding:12px 16px; border:1px solid var(--warn); border-radius:8px; color:var(--warn); }
+    ul.services { list-style:none; margin:0; padding:0; border-top:1px solid var(--line); }
+    ul.services li { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(120px,1fr) minmax(0,1fr); gap:6px 16px; align-items:center; padding:12px 0; border-bottom:1px solid var(--line); }
+    .name { display:flex; align-items:center; gap:10px; min-width:0; overflow-wrap:anywhere; }
+    .dot { flex:none; width:10px; height:10px; border-radius:50%; background:var(--unk); } .dot.ok { background:var(--green); } .dot.bad { background:var(--bad); }
+    .strip { display:flex; gap:2px; height:22px; align-items:stretch; }
+    .tick { flex:1; min-width:2px; border-radius:1px; background:var(--tick-none); } .tick.up { background:var(--green); } .tick.down { background:var(--bad); }
+    .meta { color:var(--muted); font-size:.88rem; }
+    .mapwrap { overflow-x:auto; border:1px solid var(--line); border-radius:8px; background:var(--card); }
+    .map { display:block; min-width:640px; width:100%; height:auto; }
+    .m-group { fill:none; stroke:var(--line); stroke-dasharray:5 5; }
+    .m-group-label { fill:var(--muted); font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; }
+    .m-node rect { fill:var(--paper); stroke:var(--line); } .m-node.m-bad rect { stroke:var(--bad); stroke-width:2; }
+    .m-dot { fill:var(--unk); } .m-ok .m-dot { fill:var(--green); } .m-bad .m-dot { fill:var(--bad); } .m-neutral .m-dot { display:none; }
+    .m-label { fill:var(--ink); font-size:13px; font-weight:600; } .m-sub { fill:var(--muted); font-size:11px; }
+    .m-edge { stroke:var(--line); stroke-width:1.5; } .m-arrow { fill:var(--line); }
+    .tree details { border-bottom:1px solid var(--line); padding:8px 0; }
+    .tree summary { cursor:pointer; display:flex; justify-content:space-between; gap:16px; }
+    .tree .count { color:var(--muted); font-variant-numeric:tabular-nums; }
+    ul.cols { list-style:none; margin:8px 0 2px; padding:0 0 0 18px; display:flex; flex-wrap:wrap; gap:4px 14px; color:var(--muted); font:.86rem ui-monospace,Consolas,monospace; }
+    button { font:inherit; padding:8px 14px; border:1px solid var(--line); border-radius:6px; background:var(--card); color:var(--ink); cursor:pointer; }
+    button:disabled { opacity:.6; cursor:default; }
+    .legend { display:flex; flex-wrap:wrap; gap:6px 18px; font-size:.86rem; color:var(--muted); margin-top:8px; }
+    .legend i { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; }
+    @media (max-width:640px) { ul.services li { grid-template-columns:1fr; } }
+    noscript p { color:var(--bad); }
   </style>
 </head>
 <body>
   <main>
-    <h1>Status</h1>
-    <p>This page is served locally or by the website host. Hosted RabbitOS checks require internet and start only when you press the button.</p>
-    <button id="check" type="button">Check hosted RabbitOS</button>
-    <ul id="rows" aria-live="polite">
-      <li><span>This website</span><span class="state ok">Up</span></li>
-      <li><span>Hosted RabbitOS console</span><span class="state" id="os">Not checked</span></li>
-      <li><span>Hosted RabbitOS database</span><span class="state" id="db">Not checked</span></li>
-    </ul>
-    <small id="when"></small>
-    <small><a href="/">Back to rabbitsoftware.io</a> &middot; <a href="https://app.rabbitsoftware.io/">Open RabbitOS</a> &middot; <a href="https://run.rabbitsoftware.io/">Cloud Run mirror</a></small>
+    <header>
+      <h1>Status</h1>
+      <p>Whether the website, the RabbitOS console and the services around them are answering, checked from Google Cloud every five minutes.</p>
+    </header>
+
+    <div id="headline" class="headline" aria-live="polite"><p id="headline-text">Loading the latest report…</p></div>
+    <p id="when" class="small"></p>
+    <p id="error" class="error" hidden role="status"></p>
+    <noscript><p>This page needs JavaScript to read the live report. The direct check and the links below do not.</p></noscript>
+
+    <section>
+      <h2>Services</h2>
+      <ul id="services" class="services"></ul>
+      <div class="legend"><span><i style="background:var(--green)"></i>answering</span><span><i style="background:var(--bad)"></i>not answering</span><span><i style="background:var(--tick-none)"></i>no report in that half hour</span></div>
+      <p class="small" style="margin-top:8px">Each strip is the last 24 hours in half-hour slots, oldest on the left.</p>
+    </section>
+
+    <section>
+      <h2>Map</h2>
+      <p class="small" style="margin-bottom:10px">What talks to what. The dot on each box shows whether it is answering now.</p>
+      <div id="map" class="mapwrap"></div>
+    </section>
+
+    <section>
+      <h2>Public chain</h2>
+      <p id="chain">Loading…</p>
+    </section>
+
+    <section>
+      <h2>Public data</h2>
+      <p class="small" style="margin-bottom:10px">What the open data hub publishes. Open a dataset to see its columns.</p>
+      <div id="tree" class="tree"></div>
+    </section>
+
+    <section>
+      <h2>Check it yourself</h2>
+      <p class="small" style="margin-bottom:10px">Ask the hosted console right now, from your own browser.</p>
+      <button id="check" type="button">Check hosted RabbitOS</button>
+      <p id="direct" class="small" style="margin-top:10px" aria-live="polite"></p>
+    </section>
+
+    <p class="small"><a href="/">Back to rabbitsoftware.io</a> &middot; <a href="https://app.rabbitsoftware.io/">Open RabbitOS</a> &middot; <a href="https://run.rabbitsoftware.io/">Cloud Run mirror</a></p>
   </main>
-  <script>
-    const set = (id, up, text) => { const e = document.getElementById(id); e.textContent = text; e.className = 'state ' + (up ? 'ok' : 'down') }
-    document.getElementById('check').addEventListener('click', () => {
-    document.getElementById('check').disabled = true
-    set('os', false, 'Checking...')
-    set('db', false, 'Checking...')
-    fetch('https://app.rabbitsoftware.io/api/health', { cache: 'no-store', signal: AbortSignal.timeout(15000) })
-      .then((r) => r.json().then((d) => ({ http: r.status, d })))
-      .then(({ http, d }) => {
-        set('os', http === 200, http === 200 ? 'Up' : 'Degraded / HTTP ' + http)
-        set('db', http === 200 && d.checks && d.checks.database === 'ok', d.checks && d.checks.database === 'ok' ? 'Up (' + d.database_ms + ' ms)' : 'Down / unknown')
-        document.getElementById('when').textContent = 'Last checked ' + new Date().toLocaleTimeString()
-      })
-      .catch((error) => { console.error('Hosted health check failed', error); set('os', false, 'Unreachable from this browser'); set('db', false, 'Unknown') })
-      .finally(() => { document.getElementById('check').disabled = false })
-    })
-  </script>
+  <script type="module" src="status.js"></script>
 </body>
 </html>

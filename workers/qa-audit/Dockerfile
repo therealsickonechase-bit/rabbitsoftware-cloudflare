@@ -4,6 +4,7 @@ FROM node:22-bookworm-slim
 WORKDIR /app
 COPY package.json ./
 COPY src ./src
+COPY data ./data
 USER node
 ENV NODE_ENV=production
 CMD ["node", "src/run.mjs", "--out", "/tmp/out"]

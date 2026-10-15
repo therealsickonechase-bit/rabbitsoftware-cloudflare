@@ -55,6 +55,12 @@ details ul{margin:8px 0 0;padding-left:18px;display:grid;gap:3px;overflow-wrap:a
 .m-edge{stroke:var(--line-strong);stroke-width:1.4} .m-edge-label{fill:var(--muted);font-size:10px} .m-arrow{fill:var(--line-strong)}
 .m-page{stroke:var(--surface);stroke-width:2;fill:var(--ok)} .m-low .m-page{fill:var(--low)} .m-warn .m-page{fill:var(--warn)} .m-bad .m-page{fill:var(--bad)}
 .m-page-label{fill:var(--ink);font-family:var(--font-mono);font-size:10px} .m-x{fill:#fff;font-size:13px;font-weight:700}
+.dbtable{border-bottom:1px solid var(--line);padding:9px 0}
+.dbtable summary{cursor:pointer;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,2fr) auto;gap:6px 14px;align-items:center}
+.dbtable ul{margin:8px 0 2px;padding:0 0 0 14px;list-style:none;display:flex;flex-wrap:wrap;gap:3px 16px;font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+.dbtable ul b{color:var(--ink);font-weight:500}
+.dbtable .pol{margin:6px 0 2px;font-size:13px;color:var(--muted)}
+@media (max-width:640px){.dbtable summary{grid-template-columns:1fr}}
 .legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--muted)}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
 table{border-collapse:collapse;width:100%;font-size:14px}
@@ -105,6 +111,34 @@ function securityTable(data) {
     + rows.map(([key, label]) => `<tr><td>${esc(label)}</td>${origins.map((o) => `<td>${cell(key, sec(o))}</td>`).join('')}</tr>`).join('') + '</tbody></table></div>'
 }
 
+/** The Supabase tree: every table with its columns and security state, from the migrations, with the live anonymous-reader check beside it when there is one. */
+function databaseSection(tree) {
+  if (!tree || !Array.isArray(tree.tables)) return ''
+  const live = tree.liveCheck?.tables
+  const liveChip = (name, t) => {
+    if (!live) return ''
+    const r = live[name]
+    const declaredOpen = t.publicRead, declaredClosed = t.closed && !t.publicRead
+    if ((declaredOpen && r === 'refused') || (declaredClosed && r !== 'refused')) return chip('bad', 'differs from migrations')
+    return r === 'refused' ? chip('ok', 'refused anonymous') : r === 'rows' ? chip('warn', 'anyone can read') : r === 'empty' ? chip('unk', 'open, empty') : chip('unk', 'not checked')
+  }
+  const open = tree.tables.filter((t) => t.publicRead).length, closed = tree.tables.filter((t) => t.closed && !t.publicRead).length
+  const cols = tree.tables.reduce((n, t) => n + t.columns.length, 0)
+  const manual = (tree.migrations ?? []).filter((m) => m.manual).map((m) => m.name)
+  const lc = tree.liveCheck
+  const liveText = lc
+    ? `Checked on ${esc(when(lc.at))} as an anonymous reader with the project's public key, one row per table: ${Object.values(lc.tables).filter((v) => v === 'refused').length} tables refused, ${Object.values(lc.tables).filter((v) => v === 'rows' || v === 'empty').length} answered, ${lc.mismatches.length} differ from what the migrations declare${lc.mismatches.length ? ` (${esc(lc.mismatches.join(', '))})` : ''}.`
+    : 'Not checked against the live database.'
+  const block = (t) => `<details class="dbtable"><summary><span class="mono">${esc(t.name)}</span><span class="chips">${t.rls ? chip('ok', 'RLS on') : chip('bad', 'no RLS')}${t.publicRead ? chip('warn', 'public read') : t.closed ? chip('ok', 'closed') : chip('low', 'private')}${t.appendOnly ? chip('low', 'append-only') : ''}${liveChip(t.name, t)}</span><span class="muted">${t.columns.length} columns</span></summary>`
+    + `<ul>${t.columns.map((c) => `<li><b>${esc(c.name)}</b> ${esc(c.type)}${c.primaryKey ? ' · key' : ''}${c.references ? ` → ${esc(c.references)}` : ''}</li>`).join('')}</ul>`
+    + (t.policies.length ? `<p class="pol">Policies: ${t.policies.map((p) => `${esc(p.name)} (${esc(p.command)} for ${esc(p.roles)})`).join('; ')}</p>` : '<p class="pol">No policy for ordinary users: only the server can read or write.</p>') + '</details>'
+  return `<section id="database"><div><h2>Database tree</h2><p class="muted">${tree.tables.length} tables, ${cols} columns · ${open} readable by anyone · ${closed} closed · ${tree.tables.filter((t) => t.appendOnly).length} append-only · ${(tree.functions ?? []).length} functions · ${(tree.storageBuckets ?? []).length} storage bucket${(tree.storageBuckets ?? []).length === 1 ? '' : 's'}.</p></div>`
+    + `<p class="note">${esc('Built from the SQL migrations in the repository: this is what they declare.')} ${liveText}${manual.length ? ` ${manual.length} migration${manual.length === 1 ? ' says it is' : 's say they are'} applied by hand (${esc(manual.join(', '))}); ${lc ? 'the live check above is the evidence that they were run.' : 'confirm in the SQL editor that they were run.'}` : ''}</p>`
+    + `<div class="tablewrap" style="padding:0 16px">${tree.tables.map(block).join('')}</div>`
+    + `<div class="cols"><div class="tablewrap"><table><thead><tr><th>Functions</th></tr></thead><tbody>${(tree.functions ?? []).map((f) => `<tr><td class="mono">${esc(f)}</td></tr>`).join('') || '<tr><td class="muted">none</td></tr>'}</tbody></table></div>`
+    + `<div class="tablewrap"><table><thead><tr><th>Storage buckets</th><th>Access</th></tr></thead><tbody>${(tree.storageBuckets ?? []).map((b) => `<tr><td class="mono">${esc(b.id)}</td><td>${b.public ? chip('warn', 'public') : chip('ok', 'private')}</td></tr>`).join('') || '<tr><td colspan="2" class="muted">none</td></tr>'}</tbody></table></div></div></section>`
+}
+
 export function renderReport(data, { standalone = true } = {}) {
   const severity = pageSeverity(data.findings)
   const perPage = (u) => { const c = { high: 0, medium: 0, low: 0 }; for (const f of data.findings) if (f.pages.includes(u)) c[f.severity]++; return c }
@@ -153,6 +187,8 @@ export function renderReport(data, { standalone = true } = {}) {
     <div class="legend"><span><i style="background:var(--ok)"></i>no issues</span><span><i style="background:var(--low)"></i>low</span><span><i style="background:var(--warn)"></i>medium</span><span><i style="background:var(--bad)"></i>high or broken</span></div>
     <div class="cols"><div class="tablewrap"><table><thead><tr><th>Most linked-to</th><th class="num">links in</th></tr></thead><tbody>${mostLinked(data.linkTargets).map((m) => `<tr><td class="mono">${esc(host(m.url) + path(m.url))}</td><td class="num">${m.count}</td></tr>`).join('') || '<tr><td colspan="2" class="muted">none</td></tr>'}</tbody></table></div></div>
   </section>
+
+  ${databaseSection(data.supabaseTree)}
 
   <section id="pages">
     <div><h2>Pages</h2><p class="muted">Worst first.</p></div>

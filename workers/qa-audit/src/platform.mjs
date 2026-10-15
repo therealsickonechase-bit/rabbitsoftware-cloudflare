@@ -45,6 +45,8 @@ export async function checkPlatform({ fetchImpl = fetch, timeoutMs = 12_000 } = 
   return {
     nodes, chain,
     data: { datasets: datasets.length, researchRows: datasets.find((d) => d.id === 'research_records')?.rows ?? null, rows: datasets.reduce((n, d) => n + (Number(d.rows) || 0), 0) },
+    // The public data tree: what the data hub itself publishes (names, sizes and column names), nothing more.
+    tree: datasets.map((d) => ({ id: String(d.id), title: String(d.title ?? d.id), rows: Number(d.rows) || 0, columns: Array.isArray(d.columns) ? d.columns.map(String) : [] })),
     up: results.filter((r) => r.ok).length, total: results.length,
   }
 }

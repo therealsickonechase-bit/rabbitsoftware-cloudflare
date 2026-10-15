@@ -2,14 +2,19 @@
 //   node src/run.mjs --out ./out                 write report.html and report.json here
 //   node src/run.mjs --fragment page.html        also write the report as page content (for publishing as an Artifact)
 //   REPORT_BUCKET=my-bucket node src/run.mjs     also upload to Cloud Storage (uses the Cloud Run job's own identity)
-import { mkdir, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { analyze, crawl, siteChecks } from './audit.mjs'
 import { checkPlatform } from './platform.mjs'
 import { renderReport } from './report.mjs'
 import { uploadObject } from './gcs.mjs'
 
-export async function buildReport({ fetchImpl = fetch, maxPages = 60, now = () => new Date() } = {}) {
+/** The Supabase tree exported from the repository's migrations (scripts/export-supabase-tree.mjs in rabbit-web). Optional: the report simply leaves the section out without it. */
+export async function loadSupabaseTree(url = new URL('../data/supabase-tree.json', import.meta.url)) {
+  try { const tree = JSON.parse(await readFile(url, 'utf8')); return Array.isArray(tree.tables) ? tree : null } catch { return null }
+}
+
+export async function buildReport({ fetchImpl = fetch, maxPages = 60, now = () => new Date(), supabaseTree = null } = {}) {
   const started = Date.now()
   const [crawlResult, platform] = await Promise.all([crawl({ fetchImpl, maxPages }), checkPlatform({ fetchImpl })])
   const checks = await siteChecks({ crawlResult, fetchImpl })
@@ -17,7 +22,7 @@ export async function buildReport({ fetchImpl = fetch, maxPages = 60, now = () =
   return {
     generatedAt: now().toISOString(), durationMs: Date.now() - started, maxPages,
     summary: { score: analysis.score, counts: analysis.counts, pagesAudited: analysis.pagesAudited, pagesTotal: analysis.pagesTotal },
-    findings: analysis.findings, pages: crawlResult.pages, linkTargets: crawlResult.linkTargets, platform,
+    findings: analysis.findings, pages: crawlResult.pages, linkTargets: crawlResult.linkTargets, platform, supabaseTree,
   }
 }
 
@@ -33,7 +38,7 @@ export function summaryOf(data) {
 async function main(argv) {
   const arg = (name) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined }
   const out = arg('--out') ?? './out'
-  const data = await buildReport({ maxPages: Number(arg('--max-pages')) || 60 })
+  const data = await buildReport({ maxPages: Number(arg('--max-pages')) || 60, supabaseTree: await loadSupabaseTree() })
   if (data.summary.pagesAudited === 0) { console.error(JSON.stringify({ event: 'qa_failed', reason: 'no pages could be read' })); process.exit(1) }
   const html = renderReport(data, { standalone: true })
   const summary = summaryOf(data)

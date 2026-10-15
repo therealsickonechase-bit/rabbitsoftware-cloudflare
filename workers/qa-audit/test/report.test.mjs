@@ -106,3 +106,23 @@ test('uploads accept only sane bucket and object names and use the job identity 
   await assert.rejects(() => uploadObject({ bucket: 'my-reports', name: '../x', body: '', contentType: 'a', fetchImpl }))
   await assert.rejects(() => uploadObject({ bucket: 'my-reports', name: 'x.json', body: '', contentType: 'a', token: 't', fetchImpl: async () => new Response('', { status: 403 }) }), /HTTP 403/)
 })
+
+test('the database tree section shows tables, columns, policies and the live check, and escapes everything', async () => {
+  const { loadSupabaseTree } = await import('../src/run.mjs')
+  const real = await loadSupabaseTree()
+  assert.ok(real && real.tables.length >= 25, 'the exported tree is present')
+  const tree = { ...real, tables: [{ name: '<img src=x onerror=alert(1)>', columns: [{ name: 'a"b', type: 'text', primaryKey: true, references: null, notNull: true }], rls: true, policies: [{ name: 'p<1>', command: 'select', roles: 'anon' }], triggers: [], indexes: 0, appendOnly: true, publicRead: true, closed: false },
+    { name: 'secrets', columns: [], rls: true, policies: [], triggers: [], indexes: 0, appendOnly: false, publicRead: false, closed: true }],
+    liveCheck: { at: '2026-10-15T14:00:00Z', tables: { '<img src=x onerror=alert(1)>': 'rows', secrets: 'rows' }, mismatches: ['secrets'] } }
+  const data = await buildReport({ fetchImpl: web(), supabaseTree: tree })
+  const page = renderReport(data, { standalone: true })
+  assert.ok(page.includes('id="database"') && page.includes('Database tree'))
+  assert.ok(!page.includes('<img src=x onerror') && page.includes('&lt;img src=x onerror=alert(1)&gt;'))
+  assert.ok(page.includes('differs from migrations'), 'a closed table that answers an anonymous reader is flagged')
+  assert.ok(page.includes('anyone can read') && page.includes('append-only') && page.includes('1 differ from what the migrations declare'))
+  assert.ok(page.includes('applied by hand'))
+  const without = renderReport(await buildReport({ fetchImpl: web() }), { standalone: true })
+  assert.ok(!without.includes('id="database"'), 'no tree, no section')
+  const real2 = renderReport(await buildReport({ fetchImpl: web(), supabaseTree: real }), { standalone: true })
+  assert.ok(real2.includes('research_records') && real2.includes('contact_records') && /0 differ from what the migrations declare/.test(real2))
+})
