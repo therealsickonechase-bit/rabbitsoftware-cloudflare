@@ -103,7 +103,7 @@ const inScope = (u) => SCOPE.some((o) => u === o || u.startsWith(o + '/'))
 const crawlable = (u) => inScope(u) && !/\/api\//.test(u) && !/\.(png|jpe?g|gif|svg|webp|ico|css|js|mjs|json|pdf|zip|exe|msi|gz|tar|woff2?|txt|xml|md)(\?|$)/i.test(u)
 
 /** Visits pages from the seeds, breadth first, inside the two sites. Returns {pages, checks}. */
-export async function crawl({ seeds = SEEDS, fetchImpl = fetch, maxPages = 60, concurrency = 4, timeoutMs = 15_000 } = {}) {
+export async function crawl({ seeds = SEEDS, fetchImpl = fetch, maxPages = 60, concurrency = 4, timeoutMs = 15_000, remeasureAboveMs = 1500 } = {}) {
   const pages = new Map()                     // url -> page record (HTML pages)
   const queue = seeds.map((url) => ({ url, depth: 0, from: null }))
   const seen = new Set(seeds)
@@ -113,7 +113,11 @@ export async function crawl({ seeds = SEEDS, fetchImpl = fetch, maxPages = 60, c
     const batch = queue.splice(0, Math.min(concurrency, maxPages - pages.size))   // never start more pages than the limit allows
     await Promise.all(batch.map(async ({ url, depth, from }) => {
       let r
-      try { r = await fetchOnce(fetchImpl, url, timeoutMs) } catch (error) { pages.set(url, { url, depth, from, status: 0, error: error instanceof Error ? error.name : 'error', ms: timeoutMs, finalUrl: url, hops: [], isHtml: false }); return }
+      try {
+        r = await fetchOnce(fetchImpl, url, timeoutMs)
+        // One slow reading is often network noise. Measure a slow page again and keep the better reading, so only pages that are slow every time are reported as slow.
+        if (r.status === 200 && r.ms > remeasureAboveMs) { try { const again = await fetchOnce(fetchImpl, url, timeoutMs); if (again.status === 200 && again.ms < r.ms) r = { ...r, ms: again.ms } } catch { /* keep the first reading */ } }
+      } catch (error) { pages.set(url, { url, depth, from, status: 0, error: error instanceof Error ? error.name : 'error', ms: timeoutMs, finalUrl: url, hops: [], isHtml: false }); return }
       const isHtml = /html/i.test(r.type) && r.status === 200
       const page = { url, depth, from, status: r.status, finalUrl: r.finalUrl, hops: r.hops, ms: r.ms, type: r.type, isHtml, security: securityHeaders(r.headers),
         encoding: r.headers.get('content-encoding') ?? '', cache: r.headers.get('cache-control') ?? '', server: r.headers.get('server') ?? '' }

@@ -76,6 +76,21 @@ test('the crawl stays inside the two sites, follows links, and records redirects
   assert.equal(c.pages.find((p) => p.url === 'https://rabbitsoftware.io/chain').depth, 1)
 })
 
+test('a slow page is measured again and the better reading is kept; fast pages are fetched once', async () => {
+  const calls = {}
+  const slowFirst = async (url) => {
+    calls[url] = (calls[url] ?? 0) + 1
+    if (url === 'https://rabbitsoftware.io/' && calls[url] === 1) await new Promise((r) => setTimeout(r, 60))      // the first reading is slow
+    return fakeWeb()(url)
+  }
+  const c = await crawl({ seeds: ['https://rabbitsoftware.io/'], fetchImpl: slowFirst, maxPages: 1, remeasureAboveMs: 30 })
+  assert.equal(calls['https://rabbitsoftware.io/'], 2)
+  assert.ok(c.pages[0].ms < 60, `kept the faster reading, got ${c.pages[0].ms}`)
+  const once = {}
+  await crawl({ seeds: ['https://rabbitsoftware.io/'], fetchImpl: async (u) => { once[u] = (once[u] ?? 0) + 1; return fakeWeb()(u) }, maxPages: 1 })
+  assert.equal(once['https://rabbitsoftware.io/'], 1)
+})
+
 test('the crawl honours the page limit and survives a failing fetch', async () => {
   let n = 0
   const fetchImpl = async (url) => { n++; if (url.endsWith('/chain')) throw new Error('boom'); return fakeWeb()(url) }
