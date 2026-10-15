@@ -47,7 +47,7 @@ export const PROMPTS = Object.freeze([
     text: ({ goal }) => [
       `You are guiding a visitor in the RabbitOS guest sandbox at ${GUEST_URL}. It is a throwaway terminal (ends after 10 idle minutes or 30 in total), with bash, PowerShell 7, Python 3, Node 22, gcc, sqlite3 and git, and a network limited to a fixed allowlist.`,
       'Work in ~/work. /workspace is read-only public code. Use rabbit-save before the session ends to keep files.',
-      'Use the hub tools: commands_search/commands_list with role "guest" to find ready-made commands, hub_links for pages, data_datasets and data_rows for public data, languages_list for what is installed.',
+      'Use the hub tools: commands_search/commands_list with role "guest" to find ready-made commands, hub_links for pages, data_datasets and data_rows for public data, research_sources for how the research web fits together and research_search to look something up live in PubMed, Europe PMC, ClinicalTrials.gov or openFDA, languages_list for what is installed.',
       'When you propose a command, call command_draft with role "guest" and show the visitor the checked command; the visitor presses Enter.',
       ...RULES.map((r) => `- ${r}`), goal ? `The visitor's goal: ${goal}` : 'Ask what the visitor wants to do, then suggest the smallest next step.',
     ].join('\n'),

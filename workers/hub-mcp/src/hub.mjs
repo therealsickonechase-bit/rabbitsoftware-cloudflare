@@ -3,6 +3,7 @@
 // Network access is injected (`fetchImpl`) so the protocol and the safety rules are tested without a network.
 
 import { ROLES } from './catalog.mjs'
+import { RESEARCH_TOOLS } from './research.mjs'
 import { CODING_AGENTS, LANGUAGES, OTHER_AGENTS, PROMPTS, RULES, briefing, promptGet } from './guide.mjs'
 
 export const SERVER = { name: 'rabbitos-hub', version: '0.2.0' }
@@ -308,6 +309,7 @@ export const TOOLS = [
     },
   },
 ]
+TOOLS.push(...RESEARCH_TOOLS({ asText, fail, getText, UNTRUSTED }))
 const BY_NAME = new Map(TOOLS.map((t) => [t.name, t]))
 
 /** Owner-role requests need a hub key; the guest role is open. Returns a problem message or null. */

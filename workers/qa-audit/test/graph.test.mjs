@@ -54,3 +54,21 @@ test('report section includes the map, the board and the table', () => {
   const html = graphSection(g)
   assert.ok(html.includes('class="pgraph"') && html.includes('rm-waiting') && html.includes('<table>'))
 })
+
+test('the research flow names real nodes, starts at the sources and ends at the hub', () => {
+  assert.ok(g.researchFlow.length >= 6)
+  const ids = new Set(g.nodes.map((n) => n.id))
+  for (const s of g.researchFlow) for (const n of s.nodes) assert.ok(ids.has(n), n)
+  assert.ok(g.researchFlow[0].nodes.includes('pubmed'))
+  assert.ok(g.researchFlow.at(-1).nodes.includes('gcp_hub'))
+  const bad = structuredClone(g); bad.researchFlow[0].nodes.push('ghost')
+  assert.ok(validateGraph(bad).some((p) => p.includes('ghost')))
+  assert.ok(graphSection(g).includes('How research flows'))
+})
+
+test('research sources are reachable from the assistants and the hub in the graph', () => {
+  const reach = new Set(['gcp_hub']); 
+  for (const e of g.edges) if (e.from === 'gcp_hub' && e.to === 'pubmed') reach.add('pubmed')
+  assert.ok(reach.has('pubmed'))
+  assert.ok(g.edges.some((e) => e.from === 'corpus_store' && e.to === 'app'))
+})

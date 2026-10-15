@@ -40,6 +40,7 @@ export function validateGraph(g) {
     rids.add(r.id);
     if (!ROADMAP.includes(r.status)) problems.push(`roadmap ${r.id}: unknown status ${r.status}`);
   }
+  for (const s of g.researchFlow || []) for (const id of s.nodes) if (!ids.has(id)) problems.push(`research flow step ${s.step}: unknown node ${id}`);
   for (const n of g.nodes || []) {
     const linked = (g.edges || []).some((e) => e.from === n.id || e.to === n.id);
     if (!linked) problems.push(`node ${n.id} has no connections`);
@@ -139,6 +140,7 @@ export function graphSvg(g) {
 
 export function graphCss() {
   const colors = {
+    research: '#0e9aa7',
     people: '#8b6fd0',
     cloudflare: '#e8832a',
     gcp: '#3b82d6',
@@ -170,6 +172,11 @@ export function graphCss() {
     '.pgraph .dim{opacity:.15}' +
     fills
   );
+}
+
+export function researchFlowHtml(g) {
+  const label = Object.fromEntries(g.nodes.map((n) => [n.id, n.label]));
+  return `<ol class="rflow">` + (g.researchFlow || []).map((s) => `<li><strong>${esc(s.title)}</strong><p>${esc(s.what)}</p><p class="rm-note">${s.nodes.map((n) => esc(label[n] ?? n)).join(' · ')} — <em>${esc(s.read_with)}</em></p></li>`).join('') + `</ol>`;
 }
 
 export function roadmapGroups(g) {
@@ -208,6 +215,7 @@ export function graphSection(g) {
     `<section id="platform-graph"><h2>Workflow and roadmap, with all connections</h2>` +
     `<style>${graphCss()}.rm ul{list-style:none;padding:0}.rm li{margin:.4rem 0}.rm em{margin-left:.5rem;color:var(--muted,#667);font-size:.85em}.rm p{margin:.1rem 0;color:var(--muted,#667)}</style>` +
     graphSvg(g) +
+    (g.researchFlow ? `<h3>How research flows</h3>${researchFlowHtml(g)}` : '') +
     roadmapHtml(g) +
     `<details><summary>All ${g.edges.length} connections</summary><table><thead><tr><th>From</th><th>To</th><th>What</th><th>Kind</th></tr></thead><tbody>${rows}</tbody></table></details></section>`
   );

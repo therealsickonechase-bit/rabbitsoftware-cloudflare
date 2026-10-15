@@ -5,7 +5,7 @@
   "description": "RabbitOS hub MCP server: links, status, public chain and data, website pages, shell proposals. Read-only.",
   "scripts": {
     "start": "node src/server.mjs",
-    "test": "node --test test/hub.test.mjs"
+    "test": "node --test test/*.test.mjs"
   },
   "engines": { "node": ">=22" }
 }
