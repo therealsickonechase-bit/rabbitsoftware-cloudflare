@@ -30,7 +30,9 @@ test('ledger_mirror reads only the three named objects of the public bucket', as
   const f = async (url) => { seen.push(url); return reply('{"ok":1}') }
   await call('ledger_mirror', { object: 'chain_head' }, f)
   await call('ledger_mirror', { object: 'maxwell_chain' }, f)
-  assert.deepEqual(seen, ['https://rabbitsoftware-io-ledger-public.storage.googleapis.com/ledger/chain_head.json', 'https://rabbitsoftware-io-ledger-public.storage.googleapis.com/maxwell/maxwell_chain.json'])
+  // every read of the public bucket carries a minute-sized cache-buster, because the bucket caches its objects for an hour
+  assert.deepEqual(seen.map((u) => u.replace(/\?cb=\d+$/, '')), ['https://rabbitsoftware-io-ledger-public.storage.googleapis.com/ledger/chain_head.json', 'https://rabbitsoftware-io-ledger-public.storage.googleapis.com/maxwell/maxwell_chain.json'])
+  assert.ok(seen.every((u) => /\?cb=\d+$/.test(u)))
   for (const bad of ['../backups', 'maxwell/../x', 'chain_head.json', '', 'private']) assert.equal((await call('ledger_mirror', { object: bad }, f)).isError, true, bad)
   assert.equal(seen.length, 2)
 })

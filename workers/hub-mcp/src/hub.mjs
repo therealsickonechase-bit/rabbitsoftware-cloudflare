@@ -67,7 +67,9 @@ export function buildUrl(origin, path) {
 }
 
 async function getText(fetchImpl, origin, path, timeoutMs = 15_000) {
-  const response = await fetchImpl(buildUrl(origin, path), { headers: { Accept: 'application/json, text/html;q=0.8, */*;q=0.5', 'User-Agent': 'rabbitos-hub-mcp/0.1' }, redirect: 'follow', signal: AbortSignal.timeout(timeoutMs) })
+  // The public bucket serves its objects with a one-hour cache; a minute-sized query value means a check never reads a copy older than about a minute.
+  const fresh = origin === ORIGINS.ledgerBucket ? `${path}${path.includes('?') ? '&' : '?'}cb=${Math.floor(Date.now() / 60_000)}` : path
+  const response = await fetchImpl(buildUrl(origin, fresh), { headers: { Accept: 'application/json, text/html;q=0.8, */*;q=0.5', 'User-Agent': 'rabbitos-hub-mcp/0.1' }, redirect: 'follow', signal: AbortSignal.timeout(timeoutMs) })
   const text = await response.text()
   return { status: response.status, text: text.length > MAX_TEXT ? text.slice(0, MAX_TEXT) + '\n[truncated]' : text }
 }
