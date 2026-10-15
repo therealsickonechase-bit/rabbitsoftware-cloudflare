@@ -1,0 +1,10 @@
+{
+  "name": "rabbitweb-backup-job",
+  "private": true,
+  "type": "module",
+  "description": "Cloud copy of the platform backup (Supabase, Cloudflare D1, KV, R2) as a Cloud Run job.",
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "engines": { "node": ">=22" }
+}

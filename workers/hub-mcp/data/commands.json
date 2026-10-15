@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-15T17:19:48.918Z",
+ "generatedAt": "2026-10-15T17:36:47.188Z",
  "commandMaxBytes": 4000,
  "projects": [
   "rabbit-web",
@@ -772,6 +772,30 @@
    "risk": "deploy",
    "command": "pwsh -File scripts/powershell/Setup-GcpStatusFeed.ps1",
    "description": "Changes Google Cloud (project rabbitsoftware-io). Safe to run again. Rebuilds the status recorder (every 5 minutes), the public bucket and the watchdog alert.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-backup-job-preview",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Cloud backup job (Supabase and Cloudflare): preview",
+   "scope": "owner",
+   "risk": "network",
+   "command": "pwsh -File scripts/powershell/Setup-GcpBackupJob.ps1 -WhatIf",
+   "description": "Prints what Setup-GcpBackupJob.ps1 would do and changes nothing (it may read from Google Cloud). Runs the heavy part of the nightly backup on Google Cloud instead of this PC. Copies two secrets into Secret Manager (values never printed). Add -RunNow to run it once.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-backup-job-run",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Cloud backup job (Supabase and Cloudflare): run",
+   "scope": "owner",
+   "risk": "deploy",
+   "command": "pwsh -File scripts/powershell/Setup-GcpBackupJob.ps1",
+   "description": "Changes Google Cloud (project rabbitsoftware-io). Safe to run again. Runs the heavy part of the nightly backup on Google Cloud instead of this PC. Copies two secrets into Secret Manager (values never printed). Add -RunNow to run it once.",
    "project": "rabbit-web",
    "source": "docs/gcp-platform.md",
    "runsIn": "computer"
@@ -1941,6 +1965,18 @@
    "risk": "network",
    "command": "cd workers/qa-audit && node src/run.mjs --out ./out",
    "description": "Crawls both sites (reads only) and writes out/report.html and out/report.json. Nothing is uploaded unless REPORT_BUCKET is set.",
+   "project": "rabbitsoftware-cloudflare",
+   "runsIn": "computer"
+  },
+  {
+   "id": "cf-test-backup-job",
+   "source": "workers/backup-job/package.json",
+   "group": "Platform tests",
+   "label": "Test: cloud backup job",
+   "scope": "owner",
+   "risk": "local",
+   "command": "cd workers/backup-job && npm test",
+   "description": "Offline. Object names, the Supabase connection fix, Cloudflare export paging, and that no secret reaches a log.",
    "project": "rabbitsoftware-cloudflare",
    "runsIn": "computer"
   },
