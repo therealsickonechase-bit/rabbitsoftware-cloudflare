@@ -195,7 +195,7 @@ async function connectTerminal(request: Request, env: Env): Promise<Response> {
   server.accept();
   void bridge(server, env, claims.sid, attached.expiresAt ?? Date.now() + LIMITS.maxLifetimeMs)
     .catch((error) => { console.log(logLine({ event: "bridge_error", sid: claims.sid, reason: error instanceof Error ? error.name : "error" })); safeClose(server, 1011, "bridge error"); })
-    .finally(() => gate.detach(claims.sid).catch(() => undefined));
+    .finally(() => gate.end(claims.sid).catch(() => undefined));   // free the slot and destroy the container as soon as the terminal closes
   return new Response(null, { status: 101, webSocket: client, headers: { "Sec-WebSocket-Protocol": WS_PROTOCOL } });
 }
 
