@@ -3,6 +3,12 @@
 import http from 'node:http'
 import { ALLOWED_ORIGINS_FOR_BROWSERS, checkKey, handleRpc } from './hub.mjs'
 import { RATE, classify, clientIp, hubKeyName, makeLimiter, parseKeyHashes, sha256 } from './access.mjs'
+import { makeCatalog } from './catalog.mjs'
+import { readFileSync } from 'node:fs'
+
+// The command catalog is exported from rabbit-web (scripts/export-command-catalog.mjs) and baked into the image. If it is missing, the command tools say so.
+let catalog = null
+try { catalog = makeCatalog(JSON.parse(readFileSync(new URL('../data/commands.json', import.meta.url), 'utf8'))) } catch { console.log(JSON.stringify({ event: 'catalog_missing' })) }
 
 const PORT = Number(process.env.PORT) || 8080
 const MAX_BODY = 32 * 1024
@@ -62,7 +68,7 @@ const server = http.createServer(async (req, res) => {
     let body
     try { body = JSON.parse(text) } catch { return json(res, 400, { jsonrpc: '2.0', id: null, error: { code: -32700, message: 'Parse error' } }) }
     if (Array.isArray(body)) return json(res, 400, { jsonrpc: '2.0', id: null, error: { code: -32600, message: 'Batch requests are not supported' } })
-    const out = await handleRpc(body, { fetchImpl: fetch, now: () => Date.now(), tier: who.tier })
+    const out = await handleRpc(body, { fetchImpl: fetch, now: () => Date.now(), tier: who.tier, catalog })
     if (out === null) { res.writeHead(202, { 'Cache-Control': 'no-store' }); return res.end() }
     return json(res, 200, out)
   } catch (error) {

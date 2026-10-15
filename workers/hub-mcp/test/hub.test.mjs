@@ -10,7 +10,7 @@ const reply = (status, body) => new Response(typeof body === 'string' ? body : J
 test('initialize negotiates a supported protocol and advertises tools only', async () => {
   const out = await handleRpc({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-06-18' } }, {})
   assert.equal(out.result.protocolVersion, '2025-06-18')
-  assert.deepEqual(Object.keys(out.result.capabilities), ['tools'])
+  assert.deepEqual(Object.keys(out.result.capabilities), ['tools', 'prompts', 'resources'])
   const old = await handleRpc({ jsonrpc: '2.0', id: 2, method: 'initialize', params: { protocolVersion: '1999-01-01' } }, {})
   assert.equal(old.result.protocolVersion, '2025-06-18')
 })
@@ -92,7 +92,7 @@ test('hub_status reports each part and survives failures', async () => {
     return reply(200, '<html>RabbitSoftware</html>')
   }
   const status = JSON.parse(textOf(await call('hub_status', {}, f)))
-  assert.equal(status.rows.length, 7)
+  assert.equal(status.rows.length, 8)
   assert.equal(status.allOk, false)
   assert.equal(status.rows.find((r) => r.name === 'Cloud Run mirror').ok, false)
   assert.equal(status.rows.find((r) => r.name === 'Website').ok, true)
@@ -123,5 +123,5 @@ test('tool failures do not leak details', async () => {
   const out = await call('chain_head', {}, async () => { throw new TypeError('secret path /etc/x') })
   assert.equal(out.result.isError, true)
   assert.ok(!textOf(out).includes('/etc/x'))
-  assert.equal(TOOLS.length, 10)
+  assert.equal(TOOLS.length, 18)
 })
