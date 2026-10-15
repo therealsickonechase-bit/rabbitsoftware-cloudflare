@@ -5,7 +5,7 @@
   "description": "Outside-in audit of rabbitsoftware.io and the RabbitOS app, with a report and maps. See README.md.",
   "scripts": {
     "audit": "node src/run.mjs --out ./out",
-    "test": "node --test test/audit.test.mjs test/report.test.mjs"
+    "test": "node --test test/audit.test.mjs test/report.test.mjs test/graph.test.mjs"
   },
   "engines": { "node": ">=22" }
 }

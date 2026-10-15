@@ -14,7 +14,12 @@ export async function loadSupabaseTree(url = new URL('../data/supabase-tree.json
   try { const tree = JSON.parse(await readFile(url, 'utf8')); return Array.isArray(tree.tables) ? tree : null } catch { return null }
 }
 
-export async function buildReport({ fetchImpl = fetch, maxPages = 60, now = () => new Date(), supabaseTree = null } = {}) {
+/** The workflow and roadmap with all connections (data/platform-graph.json). Optional, like the tree. */
+export async function loadPlatformGraph(url = new URL('../data/platform-graph.json', import.meta.url)) {
+  try { const g = JSON.parse(await readFile(url, 'utf8')); return Array.isArray(g.nodes) ? g : null } catch { return null }
+}
+
+export async function buildReport({ fetchImpl = fetch, maxPages = 60, now = () => new Date(), supabaseTree = null, platformGraph = null } = {}) {
   const started = Date.now()
   const [crawlResult, platform] = await Promise.all([crawl({ fetchImpl, maxPages }), checkPlatform({ fetchImpl })])
   const checks = await siteChecks({ crawlResult, fetchImpl })
@@ -22,7 +27,7 @@ export async function buildReport({ fetchImpl = fetch, maxPages = 60, now = () =
   return {
     generatedAt: now().toISOString(), durationMs: Date.now() - started, maxPages,
     summary: { score: analysis.score, counts: analysis.counts, pagesAudited: analysis.pagesAudited, pagesTotal: analysis.pagesTotal },
-    findings: analysis.findings, pages: crawlResult.pages, linkTargets: crawlResult.linkTargets, platform, supabaseTree,
+    findings: analysis.findings, pages: crawlResult.pages, linkTargets: crawlResult.linkTargets, platform, supabaseTree, platformGraph,
   }
 }
 
@@ -38,7 +43,7 @@ export function summaryOf(data) {
 async function main(argv) {
   const arg = (name) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined }
   const out = arg('--out') ?? './out'
-  const data = await buildReport({ maxPages: Number(arg('--max-pages')) || 60, supabaseTree: await loadSupabaseTree() })
+  const data = await buildReport({ maxPages: Number(arg('--max-pages')) || 60, supabaseTree: await loadSupabaseTree(), platformGraph: await loadPlatformGraph() })
   if (data.summary.pagesAudited === 0) { console.error(JSON.stringify({ event: 'qa_failed', reason: 'no pages could be read' })); process.exit(1) }
   const html = renderReport(data, { standalone: true })
   const summary = summaryOf(data)

@@ -2,6 +2,7 @@
 // Everything dynamic goes through esc(). Colors are tokens; the maps use the same tokens, so both themes work.
 import { esc, mostLinked, platformMap, siteMap } from './maps.mjs'
 import { pageSeverity } from './audit.mjs'
+import { graphSection } from './graph.mjs'
 
 const CSS = `
 /* Layout: one reading column; the score first, then what to fix, then the two maps, then the evidence. */
@@ -189,6 +190,8 @@ export function renderReport(data, { standalone = true } = {}) {
   </section>
 
   ${databaseSection(data.supabaseTree)}
+
+  ${data.platformGraph ? graphSection(data.platformGraph) : ''}
 
   <section id="pages">
     <div><h2>Pages</h2><p class="muted">Worst first.</p></div>
