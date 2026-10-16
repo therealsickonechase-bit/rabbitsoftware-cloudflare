@@ -167,7 +167,7 @@
     {"id":"w-browser-test","title":"Try the guest shell in a browser","status":"waiting","area":"You","note":"Needs the human check, which only a person can pass."},
     {"id":"w-sql","title":"Apply the platform-graph SQL in the Supabase SQL editor","status":"waiting","area":"You","note":"Two files: the tables, then the data. Nothing is written until you run them."},
     {"id":"w-push","title":"Push the local commits to GitHub","status":"waiting","area":"You","note":"All three repositories have commits that exist only on this computer."},
-    {"id":"w-app-deploy","title":"Deploy the RabbitOS app","status":"waiting","area":"You","note":"Adds the prompt box, key toggle and save/restore buttons to the guest shell page."},
+    {"id":"d-app-deploy","title":"RabbitOS app deployed (2026-10-15)","status":"done","area":"RabbitOS","note":"Ships the guest shell prompt box and key toggle, the command catalog page, enforced content-security-policy on 17 more pages, and hides the paused Donate card, link and page."},
     {"id":"w-owner-key","title":"Create a hub key and test the owner role","status":"waiting","area":"You","note":"Run New-HubKey.ps1; the key goes to the clipboard and is never printed."},
     {"id":"w-credits","title":"Check the Google Cloud credit balance and its terms","status":"waiting","area":"You","note":"It cannot be read from here."},
     {"id":"w-relink","title":"Relink the local audit chain","status":"waiting","area":"You","note":"From the 2026-10-09 notes: python .\\relink_audit_once.py, then python .\\rabbit_sync.py. May already be done."},
