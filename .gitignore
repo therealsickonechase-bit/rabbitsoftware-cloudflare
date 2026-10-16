@@ -15,3 +15,4 @@ tools/rf-nexus-preview/public/
 .coding-agent-reports/
 workers/rf-nexus-gcp/public/
 workers/anchor-chains-job/app/
+workers/wallet-watch-job/app/

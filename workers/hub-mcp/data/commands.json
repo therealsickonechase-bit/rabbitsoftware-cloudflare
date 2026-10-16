@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-16T00:24:48.477Z",
+ "generatedAt": "2026-10-16T01:20:02.970Z",
  "commandMaxBytes": 4000,
  "projects": [
   "rabbit-web",
@@ -976,6 +976,54 @@
    "risk": "deploy",
    "command": "pwsh -File scripts/powershell/Setup-GcpAnchor.ps1",
    "description": "Changes Google Cloud (project rabbitsoftware-io). Safe to run again. Cloud Run job rabbit-anchor: stamps the public ledger and Maxwell chain heads, stores proofs under anchors/ in the public ledger bucket, upgrades them once Bitcoin confirms. No keys, no fees.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-wallet-watch-preview",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Wallet receiving record and alert: preview",
+   "scope": "owner",
+   "risk": "network",
+   "command": "pwsh -File scripts/powershell/Setup-GcpWalletWatch.ps1 -WhatIf",
+   "description": "Prints what Setup-GcpWalletWatch.ps1 would do and changes nothing (it may read from Google Cloud). Cloud Run job rabbit-wallet-watch every 30 minutes: reads the donation and anchoring addresses from public networks, writes a private record to the reports bucket (wallet/state.json) and emails you when money arrives. No signing permission.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-wallet-watch-run",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Wallet receiving record and alert: run",
+   "scope": "owner",
+   "risk": "deploy",
+   "command": "pwsh -File scripts/powershell/Setup-GcpWalletWatch.ps1",
+   "description": "Changes Google Cloud (project rabbitsoftware-io). Safe to run again. Cloud Run job rabbit-wallet-watch every 30 minutes: reads the donation and anchoring addresses from public networks, writes a private record to the reports bucket (wallet/state.json) and emails you when money arrives. No signing permission.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-wallet-recovery-preview",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Wallet recovery protections: preview",
+   "scope": "owner",
+   "risk": "network",
+   "command": "pwsh -File scripts/powershell/Setup-GcpWalletRecovery.ps1 -WhatIf",
+   "description": "Prints what Setup-GcpWalletRecovery.ps1 would do and changes nothing (it may read from Google Cloud). Project lien that blocks deleting the project that holds the wallet key, an email alert on any change to the wallet key ring, and a status report (key state, destroy delay, owners, signers). Safe to re-run.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-wallet-recovery-run",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Wallet recovery protections: run",
+   "scope": "owner",
+   "risk": "deploy",
+   "command": "pwsh -File scripts/powershell/Setup-GcpWalletRecovery.ps1",
+   "description": "Changes Google Cloud (project rabbitsoftware-io). Safe to run again. Project lien that blocks deleting the project that holds the wallet key, an email alert on any change to the wallet key ring, and a status report (key state, destroy delay, owners, signers). Safe to re-run.",
    "project": "rabbit-web",
    "source": "docs/gcp-platform.md",
    "runsIn": "computer"
@@ -2417,6 +2465,30 @@
    "risk": "local",
    "command": "cd workers/wallet && npm test",
    "description": "Published keccak, Ethereum and Bitcoin address vectors, signature recovery, and that the public pages show only the two signed addresses.",
+   "project": "rabbitsoftware-cloudflare",
+   "runsIn": "computer"
+  },
+  {
+   "id": "cf-test-wallet-watch",
+   "source": "workers/wallet/wallet-watch.mjs",
+   "group": "Platform tests",
+   "label": "Test: wallet watcher",
+   "scope": "owner",
+   "risk": "local",
+   "command": "cd workers/wallet && node --test test/wallet-watch.test.mjs",
+   "description": "First run is a baseline; receipts are reported once; spending is never a receipt; a network being down keeps the last reading.",
+   "project": "rabbitsoftware-cloudflare",
+   "runsIn": "computer"
+  },
+  {
+   "id": "cf-wallet-state",
+   "source": "Google Cloud Storage",
+   "group": "Wallet and anchoring",
+   "label": "Wallet: read the private receiving record",
+   "scope": "owner",
+   "risk": "network",
+   "command": "gcloud storage cat gs://rabbitsoftware-io-reports/wallet/state.json",
+   "description": "Balances, total ever received on Bitcoin and the last 50 receipts, written every 30 minutes by rabbit-wallet-watch. Private.",
    "project": "rabbitsoftware-cloudflare",
    "runsIn": "computer"
   },
