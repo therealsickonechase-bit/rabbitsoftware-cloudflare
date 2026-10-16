@@ -251,3 +251,16 @@ each command, one command at a time through the same durable gate.
 - Work longer than 150 seconds: start it in the background inside the session (`nohup npm run build > build.log 2>&1 &`) and read it with later commands (`tail build.log`).
 - The app overall wait is still 210 seconds per request, so a cold start plus a long command can exceed it: open the session first.
 - Tests: `npm run test:cloudshell` (`scripts/test-cloudshell-session.mjs`). Deploy with `npx wrangler deploy --containers-rollout=none` when only Worker code changed.
+
+## Gemini in the owner shell (2026-10-16)
+
+The image carries the Gemini CLI (`@google/gemini-cli` 0.64.0, the same version as the guest sandbox) with `container/gemini-settings.json` (no telemetry, no self-update, the read-only
+RabbitOS hub tools) and `container/GEMINI.md` (working rules). The sandbox is the `basic` instance size (1 GiB), because `lite` is too small to run it.
+
+- It needs `GEMINI_API_KEY`, stored as the Cloudflare secret of the same name by the owner-run script `rabbit-web/scripts/powershell/Setup-CloudshellGeminiKey.ps1` (hidden prompt or `-FromClipboard`;
+  the key is checked with Google before it is saved; `-Remove` deletes it). No key is in the image, the repo or the config.
+- Only **working-session** commands get the key, as that one command's environment (`src/session.mts`). The one-command shell never sees it (a test pins this), and if a command prints the key
+  (stdout or stderr) the Worker replaces it with `[redacted]` before the reply leaves.
+- `GET /session` reports `tools.gemini.{installed,keyConfigured}`; the owner page shows whether Gemini is ready. The console is not an interactive terminal, so use it non-interactively:
+  `gemini -p "explain this error"`; it works in `/workspace`.
+- Deploying an image change: `npx wrangler deploy --containers-rollout=immediate` (this builds and pushes the image with Docker and cuts off any open session).

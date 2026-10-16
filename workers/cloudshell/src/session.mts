@@ -14,6 +14,21 @@ type Runner = Pick<ReturnType<typeof getSandbox>, "exec" | "destroy">;
 export type Alarm = { set(at: number): Promise<void>; clear(): Promise<void> };
 export type SessionRecord = { startedAt: number; lastUsed: number; idleExpiresAt: number; hardExpiresAt: number };
 
+/** Secrets handed to session commands (as environment variables of that one command only, never stored in the sandbox) and hidden if a command prints them. */
+export type Secrets = Record<string, string | undefined>;
+const MIN_SECRET_LENGTH = 8;
+const usable = (secrets: Secrets) => Object.entries(secrets).filter((e): e is [string, string] => typeof e[1] === "string" && e[1].length >= MIN_SECRET_LENGTH);
+/** Replaces every occurrence of every secret value in a text. The owner and the coding assistant read command output, so a printed key must not travel. */
+export function redact(text: string, secrets: Secrets): string {
+  let out = text;
+  for (const [, value] of usable(secrets)) out = out.split(value).join("[redacted]");
+  return out;
+}
+/** What the session sandbox offers, for the status line: the tools baked into the image and whether the key they need is configured (never the key). */
+export function toolsStatus(secrets: Secrets) {
+  return { gemini: { installed: true, keyConfigured: usable({ GEMINI_API_KEY: secrets.GEMINI_API_KEY }).length === 1 } };
+}
+
 export const SESSION = Object.freeze({ idleMs: 20 * 60_000, maxMs: 2 * 60 * 60_000, defaultTimeoutS: 90, maxTimeoutS: 150, outputBytes: 131_072, startTimeoutS: 90 });
 
 const publicRecord = (r: SessionRecord) => ({ active: true, startedAt: r.startedAt, lastUsed: r.lastUsed, idleExpiresAt: r.idleExpiresAt, hardExpiresAt: r.hardExpiresAt });
@@ -34,15 +49,15 @@ async function release(storage: Storage, id: string) {
 }
 const busy: Result = { status: 409, body: { error: "A command is already running (or needs operator recovery). Wait for it; do not automatically retry." } };
 
-export async function sessionStatus(storage: Storage, now: () => number = Date.now): Promise<Result> {
+export async function sessionStatus(storage: Storage, now: () => number = Date.now, secrets: Secrets = {}): Promise<Result> {
   const rec = await storage.transaction(tx => tx.get<SessionRecord>("session"));
   const t = now();
   const live = rec && t < rec.idleExpiresAt && t < rec.hardExpiresAt;
-  return { status: 200, body: { session: live ? publicRecord(rec) : { active: false }, limits: limits() } };
+  return { status: 200, body: { session: live ? publicRecord(rec) : { active: false }, limits: limits(), tools: toolsStatus(secrets) } };
 }
 
 /** Runs one approved command in the persistent sandbox, starting (or restarting an expired) session if needed. */
-export async function runSessionCommand(storage: Storage, createRunner: () => Runner, command: string, timeoutSeconds: number | undefined, alarm: Alarm, now: () => number = Date.now): Promise<Result> {
+export async function runSessionCommand(storage: Storage, createRunner: () => Runner, command: string, timeoutSeconds: number | undefined, alarm: Alarm, now: () => number = Date.now, secrets: Secrets = {}): Promise<Result> {
   const seconds = Math.min(SESSION.maxTimeoutS, Math.max(1, Math.floor(timeoutSeconds ?? SESSION.defaultTimeoutS)));
   const lease = await acquire(storage);
   if (!lease) return busy;
@@ -61,10 +76,11 @@ export async function runSessionCommand(storage: Storage, createRunner: () => Ru
     await alarm.set(rec.idleExpiresAt);                      // scheduled BEFORE the command runs, so a crash can never leave a container without a scheduled teardown
     const sandbox = createRunner();
     let result: Result;
-    const process = await sandbox.exec(["/bin/bash", "-lc", command], { cwd: "/workspace", timeout: seconds * 1000 });
+    const env = Object.fromEntries(usable(secrets));
+    const process = await sandbox.exec(["/bin/bash", "-lc", command], { cwd: "/workspace", timeout: seconds * 1000, ...(Object.keys(env).length ? { env } : {}) });
     try {
       const output = await process.output({ encoding: "utf8", maxBytes: SESSION.outputBytes, timeout: seconds * 1000 + 10_000 });
-      result = { status: 200, body: { stdout: output.stdout, stderr: output.stderr, exitCode: output.exitCode, timedOut: output.timedOut, truncated: output.truncated,
+      result = { status: 200, body: { stdout: redact(output.stdout, secrets), stderr: redact(output.stderr, secrets), exitCode: output.exitCode, timedOut: output.timedOut, truncated: output.truncated,
         limits: { commandTimeoutMs: seconds * 1000, outputBytes: SESSION.outputBytes } } };
     } catch (error) {
       await process.kill(9);

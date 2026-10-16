@@ -37,10 +37,12 @@ export class CommandGate extends DurableObject<Env> {
   }
 
   async execute(command: string, options?: { session?: boolean; timeoutSeconds?: number }): Promise<Result> {
-    if (options?.session === true) return runSessionCommand(this.ctx.storage, () => this.persistent(), command, options.timeoutSeconds, this.alarmApi());
+    if (options?.session === true) return runSessionCommand(this.ctx.storage, () => this.persistent(), command, options.timeoutSeconds, this.alarmApi(), Date.now, this.sessionSecrets());
     return runCommand(this.ctx.storage, () => this.ephemeral(), command);
   }
-  sessionStatus(): Promise<Result> { return sessionStatus(this.ctx.storage); }
+  /** Only session commands get these, and only as that command's environment. The one-command shell never sees them. */
+  private sessionSecrets() { return { GEMINI_API_KEY: this.env.GEMINI_API_KEY }; }
+  sessionStatus(): Promise<Result> { return sessionStatus(this.ctx.storage, Date.now, this.sessionSecrets()); }
   sessionStart(): Promise<Result> { return startSession(this.ctx.storage, () => this.persistent(), this.alarmApi()); }
   sessionEnd(): Promise<Result> { return endSession(this.ctx.storage, () => this.persistent(), this.alarmApi()); }
   async alarm(): Promise<void> { await expireSession(this.ctx.storage, () => this.persistent(), this.alarmApi()); }

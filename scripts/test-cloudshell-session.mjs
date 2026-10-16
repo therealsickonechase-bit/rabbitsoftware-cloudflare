@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { handleShell } from "../workers/cloudshell/src/http.mjs";
-import { SESSION, endSession, expireSession, runSessionCommand, sessionStatus, startSession } from "../workers/cloudshell/src/session.mts";
+import { SESSION, endSession, expireSession, redact, runSessionCommand, sessionStatus, startSession, toolsStatus } from "../workers/cloudshell/src/session.mts";
 
 const token = "public-synthetic-test-token-32-characters";
 const post = (path, body, headers = {}) => new Request(`https://shell${path}`, {
@@ -197,4 +197,65 @@ test("the status shows the session only while it is live and always states the l
   assert.deepEqual(live.body.limits.timeoutSeconds, { default: 90, max: 150 });
   assert.deepEqual((await sessionStatus(storage, () => t + SESSION.idleMs + 1)).body.session, { active: false });   // expired but not yet swept
   assert.ok(!JSON.stringify(live.body).match(/token|secret|command/i));
+});
+
+const KEY = "AIzaSyTESTKEY-synthetic-0123456789abcdef";
+
+test("a configured key goes to the session command as its environment only; without one the options are exactly as before", async () => {
+  const storage = memoryStorage(), alarm = fakeAlarm(), log = [];
+  await runSessionCommand(storage, () => runnerWith(log), "gemini -p hi", 60, alarm, () => 1000, { GEMINI_API_KEY: KEY });
+  assert.deepEqual(log[0].options, { cwd: "/workspace", timeout: 60000, env: { GEMINI_API_KEY: KEY } });
+  const plain = [];
+  await runSessionCommand(memoryStorage(), () => runnerWith(plain), "ls", 60, fakeAlarm(), () => 1000, {});
+  assert.deepEqual(plain[0].options, { cwd: "/workspace", timeout: 60000 });                    // no env key at all
+  const empty = [];
+  await runSessionCommand(memoryStorage(), () => runnerWith(empty), "ls", 60, fakeAlarm(), () => 1000, { GEMINI_API_KEY: undefined });
+  assert.deepEqual(empty[0].options, { cwd: "/workspace", timeout: 60000 });
+  const tiny = [];
+  await runSessionCommand(memoryStorage(), () => runnerWith(tiny), "ls", 60, fakeAlarm(), () => 1000, { GEMINI_API_KEY: "short" });
+  assert.deepEqual(tiny[0].options, { cwd: "/workspace", timeout: 60000 });                     // a value too short to be a key is never passed
+});
+
+test("a command that prints the key does not return it, in stdout or stderr", async () => {
+  const storage = memoryStorage(), alarm = fakeAlarm();
+  const noisy = { output: { stdout: `GEMINI_API_KEY=${KEY}\nok`, stderr: `warning ${KEY} twice ${KEY}`, exitCode: 0, timedOut: false, truncated: false } };
+  const r = await runSessionCommand(storage, () => runnerWith([], noisy), "env", 60, alarm, () => 1000, { GEMINI_API_KEY: KEY });
+  assert.equal(r.body.stdout, "GEMINI_API_KEY=[redacted]\nok");
+  assert.equal(r.body.stderr, "warning [redacted] twice [redacted]");
+  assert.ok(!JSON.stringify(r).includes(KEY));
+  assert.equal(redact("nothing here", { GEMINI_API_KEY: KEY }), "nothing here");
+  assert.equal(redact(`a${KEY}b`, { A: undefined, B: "short" }), `a${KEY}b`);                    // only real secrets are removed
+});
+
+test("the one-command shell never receives the key: its module has no secrets path", async () => {
+  const fs = await import("node:fs");
+  const command = fs.readFileSync(new URL("../workers/cloudshell/src/command.mts", import.meta.url), "utf8");
+  assert.ok(!/GEMINI|secrets|env:/i.test(command));
+  const index = fs.readFileSync(new URL("../workers/cloudshell/src/index.ts", import.meta.url), "utf8");
+  assert.equal((index.match(/sessionSecrets\(\)/g) ?? []).length, 3);                           // its definition, the session path and the status: nothing else
+  assert.match(index, /return runCommand\(this\.ctx\.storage, \(\) => this\.ephemeral\(\), command\)/);
+});
+
+test("the status says whether Gemini is ready without ever including the key", async () => {
+  assert.deepEqual(toolsStatus({}), { gemini: { installed: true, keyConfigured: false } });
+  assert.deepEqual(toolsStatus({ GEMINI_API_KEY: "short" }), { gemini: { installed: true, keyConfigured: false } });
+  assert.deepEqual(toolsStatus({ GEMINI_API_KEY: KEY }), { gemini: { installed: true, keyConfigured: true } });
+  const r = await sessionStatus(memoryStorage(), () => 5, { GEMINI_API_KEY: KEY });
+  assert.equal(r.body.tools.gemini.keyConfigured, true);
+  assert.ok(!JSON.stringify(r.body).includes(KEY));
+});
+
+test("the image installs the pinned Gemini CLI with settings that hold no key, and the sandbox is big enough to run it", async () => {
+  const fs = await import("node:fs");
+  const docker = fs.readFileSync(new URL("../workers/cloudshell/Dockerfile", import.meta.url), "utf8");
+  assert.match(docker, /ARG GEMINI_CLI_VERSION=0\.64\.0/);
+  assert.match(docker, /gemini --version/);
+  assert.ok(!/GEMINI_API_KEY\s*=|AIza/.test(docker));
+  const settings = JSON.parse(fs.readFileSync(new URL("../workers/cloudshell/container/gemini-settings.json", import.meta.url), "utf8"));
+  assert.equal(settings.privacy.usageStatisticsEnabled, false);
+  assert.equal(settings.general.disableAutoUpdate, true);
+  assert.equal(settings.mcpServers["rabbitos-hub"].trust, false);
+  assert.ok(!JSON.stringify(settings).match(/key|token|secret/i));
+  assert.match(fs.readFileSync(new URL("../workers/cloudshell/wrangler.jsonc", import.meta.url), "utf8"), /"instance_type": "basic"/);
+  assert.ok(!/GEMINI_API_KEY/.test(fs.readFileSync(new URL("../workers/cloudshell/wrangler.jsonc", import.meta.url), "utf8")), "the key is a Cloudflare secret, never in the config");
 });
