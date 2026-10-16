@@ -121,3 +121,14 @@ test('donations are open: the front page shows both addresses with open-in-walle
   assert.match(visible(read('donate.html')), /not investments/)
   assert.match(visible(read('donate.html')), /cannot be reversed/)
 })
+
+test('the community links (Reddit, GitHub profile) are on the front page and the press kit, open safely, and the profile is not a repository link', () => {
+  for (const f of ['index.html', 'press.html']) {
+    const html = read(f)
+    for (const url of ['https://www.reddit.com/r/Rabbtisoftware/', 'https://github.com/therealsickonechase-bit']) {
+      const m = html.match(new RegExp('<a href="' + url.replace(/[.*+?^${}()|[]\]/g, '\$&') + '"[^>]*>'))
+      assert.ok(m, `${f}: ${url}`)
+      assert.match(m[0], /target="_blank" rel="noopener noreferrer"/, `${f}: ${url} opens safely`)
+    }
+  }
+})
