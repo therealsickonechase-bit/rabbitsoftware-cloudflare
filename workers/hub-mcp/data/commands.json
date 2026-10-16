@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-16T13:06:12.506Z",
+ "generatedAt": "2026-10-16T13:33:08.129Z",
  "commandMaxBytes": 4000,
  "projects": [
   "rabbit-web",
@@ -1132,6 +1132,54 @@
    "risk": "deploy",
    "command": "pwsh -File scripts/powershell/Setup-GcpTaskWorker.ps1 -RunNow",
    "description": "Changes Google Cloud (project rabbitsoftware-io). Safe to run again. Cloud Run job rabbit-task-worker every 5 minutes: claims one approved task from the RabbitOS queue, runs it against public sources only (PubMed, Europe PMC, ClinicalTrials.gov, NCBI RefSeq) and sends back a proposal the owner approves on the website. No personal data; reads only the ingest secret.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-research-explorer-preview",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Research explorer in Google Cloud (stateless): preview",
+   "scope": "owner",
+   "risk": "network",
+   "command": "pwsh -File scripts/powershell/Setup-GcpResearchExplorer.ps1 -RunNow -WhatIf",
+   "description": "Prints what Setup-GcpResearchExplorer.ps1 would do and changes nothing (it may read from Google Cloud). Cloud Run job rabbit-research-explorer every hour at :20: reads the topic queue from the RabbitOS app, explores up to two queued topics on public sources (PubMed, Europe PMC, ClinicalTrials.gov) and ingests the results (topic explored, run, records) through the signed ingest. Keeps no files; reads only the ingest secret.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-research-explorer-run",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Research explorer in Google Cloud (stateless): run",
+   "scope": "owner",
+   "risk": "deploy",
+   "command": "pwsh -File scripts/powershell/Setup-GcpResearchExplorer.ps1 -RunNow",
+   "description": "Changes Google Cloud (project rabbitsoftware-io). Safe to run again. Cloud Run job rabbit-research-explorer every hour at :20: reads the topic queue from the RabbitOS app, explores up to two queued topics on public sources (PubMed, Europe PMC, ClinicalTrials.gov) and ingests the results (topic explored, run, records) through the signed ingest. Keeps no files; reads only the ingest secret.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-eeg-analysis-preview",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Private EEG sample analysis in Google Cloud: preview",
+   "scope": "owner",
+   "risk": "network",
+   "command": "pwsh -File scripts/powershell/Setup-GcpEegAnalysis.ps1 -RunNow -WhatIf",
+   "description": "Prints what Setup-GcpEegAnalysis.ps1 would do and changes nothing (it may read from Google Cloud). Cloud Run job rabbit-eeg-analysis (no URL, weekly): band-power summaries of the PhysioNet EEG sample recordings in the private backups bucket, written to analysis/eeg/. IAM conditions let it read only the eeg_data and eeg_runs backups and write only analysis/eeg/. The owner EEG notes in the vault are not touched.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-eeg-analysis-run",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Private EEG sample analysis in Google Cloud: run",
+   "scope": "owner",
+   "risk": "deploy",
+   "command": "pwsh -File scripts/powershell/Setup-GcpEegAnalysis.ps1 -RunNow",
+   "description": "Changes Google Cloud (project rabbitsoftware-io). Safe to run again. Cloud Run job rabbit-eeg-analysis (no URL, weekly): band-power summaries of the PhysioNet EEG sample recordings in the private backups bucket, written to analysis/eeg/. IAM conditions let it read only the eeg_data and eeg_runs backups and write only analysis/eeg/. The owner EEG notes in the vault are not touched.",
    "project": "rabbit-web",
    "source": "docs/gcp-platform.md",
    "runsIn": "computer"
