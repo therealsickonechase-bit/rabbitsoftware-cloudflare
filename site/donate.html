@@ -15,6 +15,11 @@
     .donate-row .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
     .donate-row button, .donate-row a.uri { font: inherit; padding: 6px 12px; border: 1px solid var(--line, #bbb); border-radius: 6px; background: transparent; color: inherit; cursor: pointer; text-decoration: none; }
     .donate-note { color: var(--muted, #666); font-size: 14px; }
+    .pay-eth { display: grid; gap: 8px; padding: 14px 0; border-top: 1px solid var(--line, #d8d2c4); }
+    .pay-eth .label { font: 700 12px/1.4 Consolas, monospace; text-transform: uppercase; color: var(--green, #2f6f4f); }
+    .pay-eth .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .pay-eth input { font: inherit; padding: 6px 10px; border: 1px solid var(--line, #bbb); border-radius: 6px; background: transparent; color: inherit; max-width: 100%; }
+    .pay-eth button { font: inherit; padding: 6px 12px; border: 1px solid var(--line, #bbb); border-radius: 6px; background: transparent; color: inherit; cursor: pointer; }
   </style>
 </head>
 <body class="document-page">
@@ -41,6 +46,11 @@
         <code id="eth-address">0x724Dfe717565742b066465813773586df98d9372</code>
         <div class="actions"><button type="button" data-copy="0x724Dfe717565742b066465813773586df98d9372">Copy address</button><a class="uri" href="ethereum:0x724Dfe717565742b066465813773586df98d9372">Open in wallet</a></div>
       </div>
+      <div class="pay-eth" data-pay-eth="0x724Dfe717565742b066465813773586df98d9372">
+        <span class="label">Or pay with a browser wallet (Ethereum mainnet)</span>
+        <div class="actions"><input type="text" inputmode="decimal" placeholder="Amount in ETH, e.g. 0.01" aria-label="Amount in ETH" size="24"><button type="button">Send from my wallet</button></div>
+        <p class="donate-note pay-msg" role="status"></p>
+      </div>
       <p class="donate-note">Send Bitcoin only to the Bitcoin address, and ETH only on Ethereum mainnet to the Ethereum address. Tokens or coins sent on other networks, or to the wrong address, can be lost for good. Blockchain transactions cannot be reversed. For a first donation, send a small test amount, and check the first and last six characters of the address in your wallet against this page.</p>
     </section>
 
@@ -62,6 +72,34 @@ document.addEventListener('click', function (e) {
   var done = function (ok) { var old = b.textContent; b.textContent = ok ? 'Copied' : 'Select and copy'; setTimeout(function () { b.textContent = old; }, 1800); };
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); }); else done(false);
 });
+(function () {
+  var box = document.querySelector('[data-pay-eth]');
+  if (!box) return;
+  var to = box.getAttribute('data-pay-eth');
+  var input = box.querySelector('input'), btn = box.querySelector('button'), msg = box.querySelector('.pay-msg');
+  var say = function (t) { msg.textContent = t; };
+  var toWeiHex = function (t) {
+    if (!/^\d+(\.\d{1,18})?$/.test(t)) return null;
+    var p = t.split('.');
+    var wei = BigInt(p[0]) * 10n ** 18n + BigInt((p[1] || '').padEnd(18, '0'));
+    if (wei <= 0n || wei > 100n * 10n ** 18n) return null;
+    return '0x' + wei.toString(16);
+  };
+  if (!window.ethereum) say('No browser wallet found here. Use "Open in wallet" or copy the address.');
+  btn.addEventListener('click', async function () {
+    var value = toWeiHex(String(input.value).trim());
+    if (!value) { say('Enter an amount in ETH, for example 0.01 (up to 100).'); return; }
+    if (!window.ethereum) { say('No browser wallet found here. Use "Open in wallet" or copy the address.'); return; }
+    try {
+      var accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x1' }] });
+      var hash = await window.ethereum.request({ method: 'eth_sendTransaction', params: [{ from: accounts[0], to: to, value: value }] });
+      say('Sent. Transaction ' + hash + '. Thank you.');
+    } catch (err) {
+      say(err && err.code === 4001 ? 'Cancelled in the wallet. Nothing was sent.' : 'The wallet could not send it. Nothing was sent.');
+    }
+  });
+})();
 </script>
 </body>
 </html>

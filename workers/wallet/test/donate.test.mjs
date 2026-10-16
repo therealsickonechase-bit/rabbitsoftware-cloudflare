@@ -70,3 +70,37 @@ test('paused mode strips every donation surface and open mode puts the block bac
   assert.match(appModule('{}', false), /DONATIONS_OPEN = false/)
   assert.match(appModule('{}', true), /DONATIONS_OPEN = true/)
 })
+
+test('the site payment button asks the visitor wallet to send to the published Ethereum address and nothing else', async () => {
+  const { runInNewContext } = await import('node:vm')
+  const { copyScript } = await import('../build-donate.mjs')
+  const code = copyScript.replace(/^<script>/, '').replace(/<\/script>$/, '')
+  const mk = () => {
+    const input = { value: '0.01' }, msg = { textContent: '' }, listeners = {}
+    const btn = { addEventListener: (_e, fn) => { listeners.click = fn } }
+    const box = { getAttribute: () => wallet.ethereum.address, querySelector: (q) => (q === 'input' ? input : q === 'button' ? btn : msg) }
+    const calls = []
+    const window = { ethereum: { request: async (a) => { calls.push(a); return { eth_requestAccounts: ['0xabc'], eth_sendTransaction: '0xhash' }[a.method] ?? null } } }
+    const sandbox = { window, document: { addEventListener() {}, querySelector: (q) => (q === '[data-pay-eth]' ? box : null) }, navigator: {}, BigInt, setTimeout }
+    runInNewContext(code, sandbox)
+    return { input, msg, listeners, calls, window }
+  }
+  const ok = mk()
+  await ok.listeners.click()
+  assert.deepEqual(ok.calls.map((c) => c.method), ['eth_requestAccounts', 'wallet_switchEthereumChain', 'eth_sendTransaction'])
+  assert.deepEqual(JSON.parse(JSON.stringify(ok.calls[2].params)), [{ from: '0xabc', to: wallet.ethereum.address, value: '0x2386f26fc10000' }])
+  assert.match(ok.msg.textContent, /^Sent\. Transaction 0xhash/)
+  const bad = mk(); bad.input.value = '1e3'
+  await bad.listeners.click()
+  assert.equal(bad.calls.length, 0)
+  assert.match(bad.msg.textContent, /Enter an amount/)
+  assert.match(donatePage(wallet), /data-pay-eth="0x724Dfe717565742b066465813773586df98d9372"/)
+})
+
+test('the generated pages contain exactly the tested script and styles (nothing stale is left on the front page)', async () => {
+  const { copyScript } = await import('../build-donate.mjs')
+  for (const [name, html] of [['index.html', index], ['donate.html', donate]]) {
+    assert.ok(html.includes(copyScript), `${name}: script is the current one`)
+    assert.equal((html.match(/data-pay-eth\]/g) ?? []).length, 1, `${name}: one payment script`)
+  }
+})

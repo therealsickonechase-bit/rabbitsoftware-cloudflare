@@ -29,13 +29,41 @@ export async function loadVerified(walletPath = PATHS.wallet) {
   return wallet
 }
 
-const copyScript = `<script>
+export const copyScript = String.raw`<script>
 document.addEventListener('click', function (e) {
   var b = e.target.closest('[data-copy]'); if (!b) return;
   var text = b.getAttribute('data-copy');
   var done = function (ok) { var old = b.textContent; b.textContent = ok ? 'Copied' : 'Select and copy'; setTimeout(function () { b.textContent = old; }, 1800); };
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); }); else done(false);
 });
+(function () {
+  var box = document.querySelector('[data-pay-eth]');
+  if (!box) return;
+  var to = box.getAttribute('data-pay-eth');
+  var input = box.querySelector('input'), btn = box.querySelector('button'), msg = box.querySelector('.pay-msg');
+  var say = function (t) { msg.textContent = t; };
+  var toWeiHex = function (t) {
+    if (!/^\d+(\.\d{1,18})?$/.test(t)) return null;
+    var p = t.split('.');
+    var wei = BigInt(p[0]) * 10n ** 18n + BigInt((p[1] || '').padEnd(18, '0'));
+    if (wei <= 0n || wei > 100n * 10n ** 18n) return null;
+    return '0x' + wei.toString(16);
+  };
+  if (!window.ethereum) say('No browser wallet found here. Use "Open in wallet" or copy the address.');
+  btn.addEventListener('click', async function () {
+    var value = toWeiHex(String(input.value).trim());
+    if (!value) { say('Enter an amount in ETH, for example 0.01 (up to 100).'); return; }
+    if (!window.ethereum) { say('No browser wallet found here. Use "Open in wallet" or copy the address.'); return; }
+    try {
+      var accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x1' }] });
+      var hash = await window.ethereum.request({ method: 'eth_sendTransaction', params: [{ from: accounts[0], to: to, value: value }] });
+      say('Sent. Transaction ' + hash + '. Thank you.');
+    } catch (err) {
+      say(err && err.code === 4001 ? 'Cancelled in the wallet. Nothing was sent.' : 'The wallet could not send it. Nothing was sent.');
+    }
+  });
+})();
 </script>`
 
 const styles = `<style>
@@ -46,6 +74,11 @@ const styles = `<style>
     .donate-row .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
     .donate-row button, .donate-row a.uri { font: inherit; padding: 6px 12px; border: 1px solid var(--line, #bbb); border-radius: 6px; background: transparent; color: inherit; cursor: pointer; text-decoration: none; }
     .donate-note { color: var(--muted, #666); font-size: 14px; }
+    .pay-eth { display: grid; gap: 8px; padding: 14px 0; border-top: 1px solid var(--line, #d8d2c4); }
+    .pay-eth .label { font: 700 12px/1.4 Consolas, monospace; text-transform: uppercase; color: var(--green, #2f6f4f); }
+    .pay-eth .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .pay-eth input { font: inherit; padding: 6px 10px; border: 1px solid var(--line, #bbb); border-radius: 6px; background: transparent; color: inherit; max-width: 100%; }
+    .pay-eth button { font: inherit; padding: 6px 12px; border: 1px solid var(--line, #bbb); border-radius: 6px; background: transparent; color: inherit; cursor: pointer; }
   </style>`
 
 function rows(w) {
@@ -58,6 +91,11 @@ function rows(w) {
         <span class="label">Ethereum (ETH), Ethereum mainnet</span>
         <code id="eth-address">${w.ethereum.address}</code>
         <div class="actions"><button type="button" data-copy="${w.ethereum.address}">Copy address</button><a class="uri" href="ethereum:${w.ethereum.address}">Open in wallet</a></div>
+      </div>
+      <div class="pay-eth" data-pay-eth="${w.ethereum.address}">
+        <span class="label">Or pay with a browser wallet (Ethereum mainnet)</span>
+        <div class="actions"><input type="text" inputmode="decimal" placeholder="Amount in ETH, e.g. 0.01" aria-label="Amount in ETH" size="24"><button type="button">Send from my wallet</button></div>
+        <p class="donate-note pay-msg" role="status"></p>
       </div>`
 }
 
@@ -138,8 +176,10 @@ export function patchIndex(html, w, open = DONATIONS_OPEN) {
   const re = /<!-- donate:start[\s\S]*?<!-- donate:end -->/
   if (!open) return html.replace(re, '<!-- donate:start (donations are paused; see workers/wallet/donations.json) -->\n    <!-- donate:end -->')
   const block = frontBlock(w)
-  const withStyles = (h) => (h.includes('.donate-row') ? h : h.replace('</head>', `  ${styles}\n</head>`))
-  const withScript = (h) => (h.includes('data-copy]') ? h : h.replace('</body>', `${copyScript}\n</body>`))
+  const OLD_STYLE = /<style>\s*\.donate-row[\s\S]*?<\/style>/
+  const OLD_SCRIPT = /<script>\s*document\.addEventListener\('click', function \(e\) \{\s*var b = e\.target\.closest\('\[data-copy\]'\)[\s\S]*?<\/script>/
+  const withStyles = (h) => (OLD_STYLE.test(h) ? h.replace(OLD_STYLE, () => styles) : h.replace('</head>', () => `  ${styles}\n</head>`))
+  const withScript = (h) => (OLD_SCRIPT.test(h) ? h.replace(OLD_SCRIPT, () => copyScript) : h.replace('</body>', () => `${copyScript}\n</body>`))
   let out = re.test(html) ? html.replace(re, () => block) : html.replace('  </main>', () => `    ${block}\n  </main>`)
   if (!out.includes('id="donate"')) throw new Error('could not place the donate block in index.html')
   return withScript(withStyles(out))
