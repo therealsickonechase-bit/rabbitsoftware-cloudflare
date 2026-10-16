@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Support RabbitSoftware with a voluntary Bitcoin or Ethereum donation. Addresses, safety notes and how to verify them.">
+  <title>Donate | RabbitSoftware</title>
+  <link rel="icon" type="image/svg+xml" href="assets/rabbit-mark.svg">
+  <link rel="stylesheet" href="polish.css?v=bio-photo-1">
+  <style>
+    .donate-row { display: grid; gap: 6px; padding: 14px 0; border-top: 1px solid var(--line, #d8d2c4); }
+    .donate-row:first-of-type { border-top: 0; }
+    .donate-row .label { font: 700 12px/1.4 Consolas, monospace; text-transform: uppercase; color: var(--green, #2f6f4f); }
+    .donate-row code { display: block; padding: 10px 12px; background: rgba(127,127,127,.12); border-radius: 6px; font: 15px/1.5 Consolas, monospace; overflow-wrap: anywhere; user-select: all; }
+    .donate-row .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .donate-row button, .donate-row a.uri { font: inherit; padding: 6px 12px; border: 1px solid var(--line, #bbb); border-radius: 6px; background: transparent; color: inherit; cursor: pointer; text-decoration: none; }
+    .donate-note { color: var(--muted, #666); font-size: 14px; }
+  </style>
+</head>
+<body class="document-page">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="top wrap">
+    <a class="brand" href="index.html"><img src="assets/rabbit-mark.svg" width="34" height="34" alt="">RabbitSoftware</a>
+    <a class="back" href="index.html">Back to project overview</a>
+  </header>
+  <main class="document-main wrap" id="main">
+    <p class="eyebrow">Support the work</p>
+    <h1>Donate</h1>
+    <p>RabbitSoftware is independent research tooling. Donations are voluntary gifts toward its running costs, such as hosting and development. They are not investments, they buy no goods or services, and they are not tax-deductible unless this page says so.</p>
+    <p>Learn what you would be supporting: <a href="story.html">why RabbitSoftware exists</a>, <a href="blockchain.html">how the chain works and how to check it</a>, and the <a href="press.html">press kit</a>.</p>
+
+    <section aria-labelledby="addresses-title">
+      <h2 id="addresses-title">Addresses</h2>
+      <div class="donate-row">
+        <span class="label">Bitcoin (BTC), native SegWit</span>
+        <code id="btc-address">bc1qxudt9x4hcftvwkfryln2qhn4e5g2qvt09mlp56</code>
+        <div class="actions"><button type="button" data-copy="bc1qxudt9x4hcftvwkfryln2qhn4e5g2qvt09mlp56">Copy address</button><a class="uri" href="bitcoin:bc1qxudt9x4hcftvwkfryln2qhn4e5g2qvt09mlp56">Open in wallet</a></div>
+      </div>
+      <div class="donate-row">
+        <span class="label">Ethereum (ETH), Ethereum mainnet</span>
+        <code id="eth-address">0x724Dfe717565742b066465813773586df98d9372</code>
+        <div class="actions"><button type="button" data-copy="0x724Dfe717565742b066465813773586df98d9372">Copy address</button><a class="uri" href="ethereum:0x724Dfe717565742b066465813773586df98d9372">Open in wallet</a></div>
+      </div>
+      <p class="donate-note">Send Bitcoin only to the Bitcoin address, and ETH only on Ethereum mainnet to the Ethereum address. Tokens or coins sent on other networks, or to the wrong address, can be lost for good. Blockchain transactions cannot be reversed. For a first donation, send a small test amount, and check the first and last six characters of the address in your wallet against this page.</p>
+    </section>
+
+    <section aria-labelledby="verify-title">
+      <h2 id="verify-title">Check that these addresses are ours</h2>
+      <p>Both addresses come from one key that lives inside a Google Cloud hardware security module (HSM). Its private key cannot be exported or read by anyone. To prove control, that key signed this message:</p>
+      <p><code>RabbitOS donation wallet proof of control, 2026-10-15</code></p>
+      <p>Ethereum signature (paste the address, message and signature into any Ethereum &ldquo;verify message&rdquo; tool, for example the one on Etherscan):</p>
+      <p><code>0x93ad45bbd3ca37c4b540f86e85e5a9d6db350e274bc338a4fb0a83e58551e734096c58b61cdb10a48e8a284776337ac2c9a775680536aa4ab173ac9345c01ada1c</code></p>
+      <p>The same public key (compressed, hex) gives both addresses: <code>03db772bb7f8987bb8315c0d09eb23c30ba2ce33e760c9d74695903fb4061300f8</code>. The full public record is in <a href="wallet.json">wallet.json</a>.</p>
+      <p class="donate-note">Our public chains are also anchored to Bitcoin through OpenTimestamps. The proofs are listed in the <a href="https://rabbitsoftware-io-ledger-public.storage.googleapis.com/anchors/index.json">anchor index</a> and can be checked with the standard <code>ots verify</code> tool. An anchor proves that a document existed by a given Bitcoin block; it does not prove the document is true.</p>
+    </section>
+  </main>
+  <footer class="wrap"><div class="footer-inner"><p class="footer-brand">RabbitSoftware</p><p class="footer-note">Not a clinical product. Not financial advice.</p></div></footer>
+  <script>
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-copy]'); if (!b) return;
+  var text = b.getAttribute('data-copy');
+  var done = function (ok) { var old = b.textContent; b.textContent = ok ? 'Copied' : 'Select and copy'; setTimeout(function () { b.textContent = old; }, 1800); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); }); else done(false);
+});
+</script>
+</body>
+</html>

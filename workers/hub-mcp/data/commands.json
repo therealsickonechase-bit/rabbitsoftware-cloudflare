@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-16T01:20:02.970Z",
+ "generatedAt": "2026-10-16T09:37:27.745Z",
  "commandMaxBytes": 4000,
  "projects": [
   "rabbit-web",
@@ -2428,7 +2428,7 @@
    "scope": "owner",
    "risk": "local",
    "command": "cd workers/wallet && node build-donate.mjs",
-   "description": "Re-checks both addresses and the signed proof, then rebuilds the donation surfaces from workers/wallet/donations.json. While open is false (donations paused) it REMOVES site/donate.html and site/wallet.json and empties the front-page block; set open to true to publish them again. Stops if anything fails. --check changes nothing.",
+   "description": "Re-checks both addresses and the signed proof, then rebuilds the donation surfaces from workers/wallet/donations.json. While open is true (donations open, the current setting) it writes site/donate.html, site/wallet.json and the front-page block; with open false it REMOVES them. Stops if anything fails. --check changes nothing.",
    "project": "rabbitsoftware-cloudflare",
    "runsIn": "computer"
   },

@@ -6,8 +6,9 @@ import test from 'node:test'
 import { fileURLToPath } from 'node:url'
 
 const site = join(dirname(fileURLToPath(import.meta.url)), '..', 'site')
-const PAGES = ['story.html', 'blockchain.html', 'press.html']
 const read = (f) => readFileSync(join(site, f), 'utf8')
+const OPEN = JSON.parse(readFileSync(join(site, '..', 'workers', 'wallet', 'donations.json'), 'utf8')).open === true
+const PAGES = OPEN ? ['story.html', 'blockchain.html', 'press.html', 'donate.html'] : ['story.html', 'blockchain.html', 'press.html']
 const visible = (html) => html
   .replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<style[\s\S]*?<\/style>/g, ' ').replace(/<!--[\s\S]*?-->/g, ' ')
   .replace(/<[^>]+>/g, ' ').replace(/&rsquo;|&lsquo;/g, "'").replace(/&ldquo;|&rdquo;/g, '"').replace(/&mdash;/g, '-').replace(/&amp;/g, '&').replace(/&hellip;/g, '...').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ')
@@ -97,8 +98,8 @@ test('the story page only repeats what the approved author page says: no ages, m
   assert.match(text, /marked as a personal reflection rather than verified research/)
 })
 
-test('donations are paused: no donate page, no wallet file, no donation address or invitation anywhere on the public site', () => {
-  assert.equal(JSON.parse(read('../workers/wallet/donations.json')).open, false)
+test('donations are paused: no donate page, no wallet file, no donation address or invitation anywhere on the public site', { skip: OPEN && 'donations are open' }, () => {
+  assert.equal(OPEN, false)
   assert.ok(!existsSync(join(site, 'donate.html')) && !existsSync(join(site, 'wallet.json')))
   for (const f of ['index.html', 'story.html', 'blockchain.html', 'press.html', 'sitemap.xml']) {
     const html = read(f)
@@ -106,4 +107,17 @@ test('donations are paused: no donate page, no wallet file, no donation address 
     assert.ok(!/id="donate"/.test(html), `${f}: donate section`)
   }
   for (const f of PAGES) assert.ok(!/voluntary donations|support the work|Donate</i.test(visible(read(f))), `${f}: invites donations`)
+})
+
+test('donations are open: the front page shows both addresses with open-in-wallet links, and the donate page, wallet file, sitemap and nav agree', { skip: !OPEN && 'donations are paused' }, () => {
+  const wallet = JSON.parse(read('wallet.json'))
+  const index = read('index.html')
+  for (const [uri, address] of [['bitcoin', wallet.bitcoin.address], ['ethereum', wallet.ethereum.address]]) {
+    assert.ok(index.includes(`href="${uri}:${address}"`), `front page: ${uri}: open-in-wallet link`)
+    assert.ok(index.includes(`data-copy="${address}"`), `front page: copy button for ${uri}`)
+    assert.ok(read('donate.html').includes(address), `donate page: ${uri} address`)
+  }
+  assert.ok(index.includes('href="donate.html"') && read('sitemap.xml').includes('/donate.html<'))
+  assert.match(visible(read('donate.html')), /not investments/)
+  assert.match(visible(read('donate.html')), /cannot be reversed/)
 })
