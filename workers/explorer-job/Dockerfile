@@ -5,8 +5,8 @@
 FROM python:3.12-slim
 WORKDIR /app
 RUN pip install --no-cache-dir biopython==1.85 && useradd --system --uid 10001 explorer
-COPY cloud_explorer.py task_worker.py rabbit_sync.py multi_source_research.py extended_research_sources.py research_matcher.py http_util.py brain_research.py crispr_data.py crispr_guide_design.py ./
-RUN python -c "import cloud_explorer, task_worker, rabbit_sync, multi_source_research, extended_research_sources, research_matcher"
+COPY cloud_explorer.py task_worker.py stage_box.py echo_link.py rabbit_sync.py multi_source_research.py extended_research_sources.py research_matcher.py http_util.py brain_research.py crispr_data.py crispr_guide_design.py ./
+RUN python -c "import cloud_explorer, task_worker, stage_box, echo_link, rabbit_sync, multi_source_research, extended_research_sources, research_matcher"
 USER explorer
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 RABBIT_URL=https://app.rabbitsoftware.io
 CMD ["python", "cloud_explorer.py"]

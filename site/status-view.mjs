@@ -93,5 +93,7 @@ export function heartbeatView(hb, now = Date.now()) {
     : state === 'quiet'
       ? `The PC was last heard ${ageText(hb.lastHeard?.pc, now)}. It runs on a private computer, so a quiet PC is not an outage.`
       : `The cloud last heard the PC ${ageText(hb.lastHeard?.pc, now)}; the PC last heard the cloud ${ageText(hb.lastHeard?.cloud, now)}.`
-  return { state, text: String(hb.sentence ?? ''), detail, cells, label: `Heartbeat, last 24 hours: ${hb.mutualPct ?? '?'} percent of slots heard by both sides` }
+  const n = hb.notes && typeof hb.notes === 'object' ? hb.notes : null
+  const noteLine = n && [n.waiting, n.delivered, n.handled].every(Number.isFinite) ? ` Notes between the two: ${n.delivered} delivered, ${n.handled} handled, ${n.waiting} waiting.` : ''
+  return { state, text: String(hb.sentence ?? ''), detail: detail + noteLine, cells, label: `Heartbeat, last 24 hours: ${hb.mutualPct ?? '?'} percent of slots heard by both sides` }
 }

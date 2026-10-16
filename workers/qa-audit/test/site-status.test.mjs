@@ -102,6 +102,13 @@ test('a quiet PC is not an outage, but a silent cloud side makes the chart stale
   assert.equal(heartbeatView(beat({ lastCloudStep: '2026-10-15T10:00:00Z' }), NOW).state, 'stale')
 })
 
+test('the heartbeat shows only note counts, never note text', () => {
+  const v = heartbeatView(beat({ notes: { waiting: 1, delivered: 12, handled: 9 } }), NOW)
+  assert.ok(v.detail.includes('12 delivered, 9 handled, 1 waiting'))
+  assert.ok(!heartbeatView(beat({ notes: { waiting: 'x' } }), NOW).detail.includes('Notes between'))
+  assert.ok(!heartbeatView(beat(), NOW).detail.includes('Notes between'))
+})
+
 test('an unreadable heartbeat is shown as unknown, and it holds nothing but times and counts', () => {
   assert.equal(heartbeatView(null, NOW).state, 'unknown')
   assert.equal(heartbeatView({ cells: 5 }, NOW).state, 'unknown')
