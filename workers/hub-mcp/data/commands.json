@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-16T17:13:04.523Z",
+ "generatedAt": "2026-10-16T17:19:01.484Z",
  "commandMaxBytes": 4000,
  "projects": [
   "rabbit-web",
@@ -1137,6 +1137,30 @@
    "runsIn": "computer"
   },
   {
+   "id": "gcp-toolbox-preview",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Toolbox access for the cloud agents: preview",
+   "scope": "owner",
+   "risk": "network",
+   "command": "pwsh -File scripts/powershell/Setup-GcpToolbox.ps1 -WhatIf",
+   "description": "Prints what Setup-GcpToolbox.ps1 would do and changes nothing (it may read from Google Cloud). Gives the cloud task worker and research explorer READ-ONLY access to gs://rabbitsoftware-io-backups/toolbox/ (the command catalog and the files the commands use) and nothing else in that bucket. -Check lists who can read it.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-toolbox-run",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Toolbox access for the cloud agents: run",
+   "scope": "owner",
+   "risk": "deploy",
+   "command": "pwsh -File scripts/powershell/Setup-GcpToolbox.ps1",
+   "description": "Changes Google Cloud (project rabbitsoftware-io). Safe to run again. Gives the cloud task worker and research explorer READ-ONLY access to gs://rabbitsoftware-io-backups/toolbox/ (the command catalog and the files the commands use) and nothing else in that bucket. -Check lists who can read it.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
    "id": "gcp-echo-preview",
    "group": "Google Cloud setup (run on your PC)",
    "label": "PC and cloud echo (cloud side): preview",
@@ -1638,6 +1662,18 @@
     "RABBIT_INGEST_SECRET"
    ],
    "description": "Loads only the signing key from research-agents\\.env, runs the local comparison and echoes an acknowledgement. -Status shows announced / acknowledged counts.",
+   "project": "rabbit-web",
+   "source": "scripts/powershell/Register-ResearchTasks.ps1",
+   "runsIn": "computer"
+  },
+  {
+   "id": "toolbox-publish",
+   "group": "Toolbox",
+   "label": "Publish the toolbox (commands and files) to the cloud",
+   "scope": "owner",
+   "risk": "network",
+   "command": "pwsh -File scripts/powershell/Run-Toolbox.ps1",
+   "description": "Builds the bundle from git-tracked code, scripts and documents that pass the secret scan, uploads it with a manifest of hashes to the private backups bucket. -DryRun checks and uploads nothing. The nightly backup job does this too.",
    "project": "rabbit-web",
    "source": "scripts/powershell/Register-ResearchTasks.ps1",
    "runsIn": "computer"
@@ -2958,6 +2994,42 @@
    "description": "How many local comparisons were announced and how many the cloud acknowledged, with the typical acknowledgement time. Counts and times only.",
    "project": "research-agents",
    "source": "dna_local.py",
+   "runsIn": "computer"
+  },
+  {
+   "id": "toolbox-list",
+   "group": "Toolbox",
+   "label": "List the published toolbox files",
+   "scope": "owner",
+   "risk": "network",
+   "command": "python toolbox.py list --repo research-agents",
+   "description": "The command-and-file bundle published to the private bucket, from the manifest (path, size, hash). Read-only.",
+   "project": "research-agents",
+   "source": "toolbox.py",
+   "runsIn": "computer"
+  },
+  {
+   "id": "toolbox-command",
+   "group": "Toolbox",
+   "label": "A command and the files it uses (from the toolbox)",
+   "scope": "owner",
+   "risk": "network",
+   "command": "python toolbox.py command dna-local-run",
+   "description": "One catalog command with its scope and the published files it uses, checked against the bundle manifest.",
+   "project": "research-agents",
+   "source": "toolbox.py",
+   "runsIn": "computer"
+  },
+  {
+   "id": "toolbox-verify",
+   "group": "Toolbox",
+   "label": "Check this PC against the toolbox (drift report)",
+   "scope": "owner",
+   "risk": "network",
+   "command": "python toolbox.py verify",
+   "description": "Compares this PC's copy of every published file with the manifest hash and lists files that differ or are missing. Changes nothing.",
+   "project": "research-agents",
+   "source": "toolbox.py",
    "runsIn": "computer"
   },
   {
