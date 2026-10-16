@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { buildResearchLive } from '../src/research-live.mjs'
+import { buildResearchLive, latestResearchAnchor } from '../src/research-live.mjs'
 import { checkPlatform } from '../src/platform.mjs'
 import { recordStatus } from '../src/status.mjs'
 import { validName } from '../src/gcs.mjs'
@@ -80,4 +80,32 @@ test('recording writes the live research file with a no-cache header, and a fail
   await recordStatus({ fetchImpl: async (u) => (String(u).includes('research-feed') ? new Response('', { status: 503 }) : serve(feed())(u)), bucket: 'status-bucket', upload: async (u) => { none.push(u.name); return true }, log: () => {} })
   assert.deepEqual(none, ['status/latest.json', 'status/history.json'])         // no feed, no live file (the last good one stays in the bucket)
   assert.ok(validName('status/research-live.json'))
+})
+
+const H = (c) => c.repeat(64)
+const chain = (blocks) => ({ blocks })
+const block = (index, sender, extra = {}) => ({ index, timestamp: 1792169012.3, hash: `00${String(index).repeat(62)}`.slice(0, 64), transactions: [{ sender, root: H('a'), count: 918, ...extra }] })
+
+test('the newest research anchor of the Maxwell chain is found, and other blocks and odd shapes are ignored', () => {
+  const a = latestResearchAnchor(chain([block(4, 'RESEARCH_ANCHOR', { count: 597 }), block(5, 'RABBITWEB_MINER'), block(7, 'RESEARCH_ANCHOR'), block(8, 'RABBITWEB_MINER')]))
+  assert.deepEqual([a.block, a.count, a.root, a.chainLength], [7, 918, H('a'), 4])
+  assert.equal(a.time, new Date(1792169012.3 * 1000).toISOString())
+  assert.equal(a.hash.length, 16)
+  for (const bad of [null, {}, { blocks: 'x' }, chain([]), chain([block(1, 'RABBITWEB_MINER')]), chain([block(1, 'RESEARCH_ANCHOR', { root: 'short' })]), chain([block(1, 'RESEARCH_ANCHOR', { count: 'many' })])]) assert.equal(latestResearchAnchor(bad), null)
+})
+
+test('the anchor rides along in the live file, and a missing anchor is null, not an error', () => {
+  const a = latestResearchAnchor(chain([block(7, 'RESEARCH_ANCHOR')]))
+  assert.equal(buildResearchLive(feed(), new Date('2026-10-16T20:01:00Z'), a).maxwell.block, 7)
+  assert.equal(buildResearchLive(feed(), new Date('2026-10-16T20:01:00Z')).maxwell, null)
+})
+
+test('the platform check reads the Maxwell mirror, and a broken mirror only means no anchor', async () => {
+  const body = JSON.stringify(chain([block(7, 'RESEARCH_ANCHOR')]))
+  const fetchOk = async (u) => (String(u).includes('/maxwell/maxwell_chain.json') ? new Response(body, { status: 200 }) : serve(feed())(u))
+  assert.equal((await checkPlatform({ fetchImpl: fetchOk })).researchLive.maxwell.block, 7)
+  const fetchBad = async (u) => (String(u).includes('/maxwell/maxwell_chain.json') ? new Response('not json', { status: 200 }) : serve(feed())(u))
+  const p = await checkPlatform({ fetchImpl: fetchBad })
+  assert.equal(p.researchLive.maxwell, null)
+  assert.equal(p.researchLive.recent.length, 2)
 })

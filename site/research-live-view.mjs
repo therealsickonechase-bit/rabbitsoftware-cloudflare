@@ -12,9 +12,9 @@ export const QUIET_AFTER_HOURS = 24
 export const SOURCE_LABEL = Object.freeze({
   trial: 'Trials', pubmed: 'PubMed', stjude: 'St. Jude papers', stjude_dataset: 'St. Jude datasets', europepmc: 'Europe PMC', nih_grant: 'NIH grants', clinvar: 'ClinVar',
   ncbi_datasets: 'NCBI sequences', topic_summary: 'Topic summaries', crispr_guide: 'CRISPR guides', crispr_trial: 'CRISPR trials', crispr_paper: 'CRISPR papers',
-  crispr_preprint: 'CRISPR preprints', brain_paper: 'Brain / EEG papers', brain_preprint: 'Brain / EEG preprints',
+  crispr_preprint: 'CRISPR preprints', brain_paper: 'Brain / EEG papers', brain_preprint: 'Brain / EEG preprints', physics_paper: 'Physics papers', physics_preprint: 'Physics preprints',
 })
-const LINK_HOSTS = [/(^|\.)nih\.gov$/, /(^|\.)ebi\.ac\.uk$/, /^europepmc\.org$/, /^clinicaltrials\.gov$/, /(^|\.)stjude\.org$/, /(^|\.)stjude\.cloud$/, /^doi\.org$/, /^(www\.)?(bio|med)rxiv\.org$/]
+const LINK_HOSTS = [/(^|\.)nih\.gov$/, /(^|\.)ebi\.ac\.uk$/, /^europepmc\.org$/, /^clinicaltrials\.gov$/, /(^|\.)stjude\.org$/, /(^|\.)stjude\.cloud$/, /^doi\.org$/, /^arxiv\.org$/, /^inspirehep\.net$/, /^openalex\.org$/, /^(www\.)?(bio|med)rxiv\.org$/]
 
 /** A link is passed on only if it is https and its host is a known public research site. Anything else is shown as plain text. */
 export function safeLink(url) {
@@ -61,4 +61,30 @@ export function dnaView(data, now = Date.now()) {
   const stamp = [built ? `index built ${built}` : null, compared ? `compared ${compared}` : null].filter(Boolean).join(', ')
   return { line: parts.join(' '), stamp: stamp ? stamp[0].toUpperCase() + stamp.slice(1) + '.' : '',
     gaps: gaps.length ? `Genes with known variants and no research record yet (the agents are exploring them): ${gaps.join(', ')}.` : 'Every panel gene with known variants has at least one research record.' }
+}
+
+export const SEARCH_ORIGIN = 'https://app.rabbitsoftware.io'
+
+/** The data-hub search for the box on research.html, or null if the words are unusable. */
+export function searchUrl(words) {
+  const q = String(words ?? '').replace(/\s+/g, ' ').trim()
+  return q.length >= 2 && q.length <= 120 && !/[\u0000-\u001f]/.test(q) ? `${SEARCH_ORIGIN}/api/data/research_records?limit=20&q=${encodeURIComponent(q)}` : null
+}
+
+/**
+ * Turns the data hub rows into lines for the page and ties each to the Maxwell chain: a record first seen at or before the newest research anchor
+ * (`live.maxwell.time`) was in the public record set that block's Merkle root covers. Anything else is "not yet" or "unknown".
+ */
+export function searchView(data, live, now = Date.now()) {
+  const rows = Array.isArray(data?.rows) ? data.rows : null
+  if (!rows) return { summary: 'The search could not be read just now.', rows: [] }
+  const m = live?.version === 1 ? live.maxwell : null
+  const anchorMs = m ? Date.parse(m.time) : NaN
+  const out = rows.slice(0, 20).map((r) => {
+    const seen = Date.parse(r.first_seen_at)
+    const maxwell = !Number.isFinite(anchorMs) || !Number.isFinite(seen) ? 'Maxwell: unknown' : seen <= anchorMs ? `Covered by Maxwell block ${m.block}` : 'Not yet in a Maxwell block'
+    return { title: String(r.title ?? '').slice(0, 220), source: label(r.source), link: safeLink(r.url), ago: Number.isFinite(seen) ? ageText(r.first_seen_at, now) : '', maxwell }
+  }).filter((r) => r.title)
+  const anchorText = Number.isFinite(anchorMs) ? ` Newest Maxwell research anchor: block ${m.block}, ${m.count} records, mined ${ageText(m.time, now)}.` : ''
+  return { summary: `${out.length} matching record${out.length === 1 ? '' : 's'} in the shared research store.${anchorText}`, rows: out }
 }

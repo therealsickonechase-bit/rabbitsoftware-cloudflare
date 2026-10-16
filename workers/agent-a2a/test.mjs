@@ -162,3 +162,54 @@ test('agent data from the slice is trimmed and never carries a command for sendi
   assert.ok(!JSON.stringify(r).includes('stage_box'))
   assert.equal(r.result.parts[1].data.agents[0].tasks[0].about.length, 200)
 })
+
+// ---- research-link and the physics sources ----
+const linkFetch = (log = []) => async (url) => {
+  const u = new URL(url)
+  log.push(u.host)
+  const json = (v, status = 200) => new Response(JSON.stringify(v), { status })
+  if (u.host === 'api.openalex.org') return json({ results: [{ id: 'https://openalex.org/W111', title: 'Antigravity: A crazy idea?', publication_year: 1979, doi: 'https://doi.org/10.1016/0370-2693(79)90463-5' }] })
+  if (u.host === 'inspirehep.net') return json({ hits: { hits: [{ metadata: { control_number: 5, titles: [{ title: 'Physical Interpretation of Antigravity' }], arxiv_eprints: [{ value: '1511.05128' }] } }] } })
+  if (u.host === 'www.ebi.ac.uk') return json({ resultList: { result: [] } })
+  if (u.host === 'eutils.ncbi.nlm.nih.gov') return json({ esearchresult: { idlist: [] } })
+  if (u.host === 'app.rabbitsoftware.io') return json({ rows: [{ id: 'physics_paper:W111', source: 'physics_paper', title: 'Antigravity: A crazy idea?', url: 'https://doi.org/10.1016/0370-2693(79)90463-5', first_seen_at: '2026-10-16T10:00:00+00:00' }] })
+  if (u.host === 'rabbitsoftware-io-status-public.storage.googleapis.com') return json({ version: 1, generatedAt: '2026-10-16T20:21:29Z', total: 1309, topics: { explored: 47 }, maxwell: { block: 7, hash: '00bd0bae38a9f35c', root: 'a'.repeat(64), count: 918, time: '2026-10-16T16:43:32.000Z', chainLength: 9, headHash: '00f7' } })
+  throw new Error('unexpected host ' + u.host)
+}
+
+test('a question about physics goes to INSPIRE-HEP, and OpenAlex can be named', () => {
+  assert.equal(interpret(msg('antigravity experiments').params.message).source, 'inspirehep')
+  assert.equal(interpret(msg('arxiv papers on antimatter gravity').params.message).source, 'inspirehep')
+  assert.equal(interpret(msg('openalex: antigravity').params.message).source, 'openalex')
+  assert.equal(interpret(msg('recent papers on BRCA1').params.message).source, 'pubmed')
+  assert.equal(interpret(msg('Find clinical trials for glioma').params.message).source, 'clinicaltrials')
+})
+
+test('"link: topic" searches the sources and ties the answer to RabbitOS, Maxwell and Google Cloud', async () => {
+  assert.deepEqual(interpret(msg('link: antigravity').params.message), { action: 'link', query: 'antigravity' })
+  assert.equal(interpret({ parts: [{ kind: 'data', data: { skill: 'research-link', query: 'x1', sources: ['openalex'] } }] }).sources[0], 'openalex')
+  assert.equal(interpret(msg('pubmed: BRCA1').params.message).action, 'search')
+  const seen = []
+  const r = await handleRpc(msg('link: antigravity'), linkFetch(seen))
+  const text = r.result.parts[0].text
+  assert.match(text, /Research on "antigravity"/)
+  assert.match(text, /OpenAlex: 1 result\(s\)[\s\S]*Antigravity: A crazy idea\? - https:\/\/doi\.org\/10\.1016[\s\S]*\(already in RabbitOS\)/)
+  assert.match(text, /INSPIRE-HEP: 1 result\(s\)[\s\S]*https:\/\/arxiv\.org\/abs\/1511\.05128/)
+  assert.match(text, /RabbitOS stores 1 matching record\(s\); 1 covered by the Maxwell research anchor/)
+  assert.match(text, /Maxwell: block 7 anchors 918 public records/)
+  assert.match(text, /Google Cloud: 1309 public records/)
+  assert.match(text, /not endorsements/)
+  assert.equal(r.result.parts[1].data.rabbitos.records[0].maxwell.status, 'covered')
+  const hosts = new Set(seen)
+  for (const h of hosts) assert.ok(['api.openalex.org', 'inspirehep.net', 'www.ebi.ac.uk', 'eutils.ncbi.nlm.nih.gov', 'app.rabbitsoftware.io', 'rabbitsoftware-io-status-public.storage.googleapis.com'].includes(h), h)
+})
+
+test('the link skill is on the card, refuses bad sources politely, and survives a failing source', async () => {
+  assert.ok(agentCard('https://x').skills.some((x) => x.id === 'research-link' && x.tags.includes('maxwell')))
+  const bad = await handleRpc({ jsonrpc: '2.0', id: 1, method: 'message/send', params: { message: { kind: 'message', role: 'user', messageId: 'm', parts: [{ kind: 'data', data: { skill: 'research-link', query: 'ok query', sources: ['nope'] } }] } } }, linkFetch())
+  assert.equal(bad.error.code, -32602)
+  const flaky = async (url) => (new URL(url).host === 'api.openalex.org' ? new Response('', { status: 503 }) : linkFetch()(url))
+  const r = await handleRpc(msg('link: antigravity'), flaky)
+  assert.match(r.result.parts[0].text, /OpenAlex: OpenAlex returned 503/)
+  assert.match(r.result.parts[0].text, /INSPIRE-HEP: 1 result/)
+})

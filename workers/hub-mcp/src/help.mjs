@@ -87,7 +87,7 @@ export function helpFor(topic, catalog, role = 'guest') {
     case 'research': return {
       topic: 'research', role,
       read_stored: ['research_feed', 'data_rows {"dataset":"research_records"}', 'concept_lookup', 'chain_events'],
-      search_live: 'research_search {"source":"pubmed|europepmc|clinicaltrials|openfda","query":"..."}',
+      search_live: 'research_search {"source":"pubmed|europepmc|clinicaltrials|openfda|openalex|inspirehep","query":"..."}; research_link {"query":"..."} searches several sources and links the answer to RabbitOS, Maxwell and Google Cloud',
       explain: 'research_sources shows the whole flow from public sources to the shell.',
       commands: idsFor(catalog, role, ['hub-research-sources', 'hub-research-pubmed', 'hub-research-feed']),
     }

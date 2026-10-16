@@ -11,8 +11,25 @@ const iso = (s) => { const t = Date.parse(s); return Number.isFinite(t) ? new Da
 /** Only https links are passed on. */
 const httpsUrl = (u) => { try { const x = new URL(String(u)); return x.protocol === 'https:' && x.hostname.includes('.') ? x.toString().slice(0, 300) : null } catch { return null } }
 
-/** @param {object|null} feed the app's public research feed @returns {object|null} */
-export function buildResearchLive(feed, now = new Date()) {
+const HEX64 = /^[0-9a-f]{64}$/
+
+/**
+ * The newest RESEARCH_ANCHOR block of the Maxwell chain (public mirror in Google Cloud): which block, its hash and root, how many records it covers and when it was mined.
+ * A stored record whose first-seen time is before `time` was already in the public record set when this block was mined. Returns null if there is none or the shape is unexpected.
+ */
+export function latestResearchAnchor(chain) {
+  const blocks = Array.isArray(chain?.blocks) ? chain.blocks : []
+  for (let i = blocks.length - 1; i >= 0; i--) {
+    const b = blocks[i]
+    const tx = Array.isArray(b?.transactions) ? b.transactions.find((t) => t?.sender === 'RESEARCH_ANCHOR') : null
+    if (!tx || !HEX64.test(String(tx.root)) || !HEX64.test(String(b.hash).padEnd(64, '0').slice(0, 64)) || !Number.isInteger(tx.count) || !Number.isFinite(b.timestamp)) continue
+    return { block: b.index, hash: String(b.hash).slice(0, 16), root: tx.root, count: tx.count, time: new Date(b.timestamp * 1000).toISOString(), chainLength: blocks.length, headHash: String(blocks[blocks.length - 1]?.hash ?? '').slice(0, 16) }
+  }
+  return null
+}
+
+/** @param {object|null} feed the app's public research feed @param {object|null} anchor from latestResearchAnchor @returns {object|null} */
+export function buildResearchLive(feed, now = new Date(), anchor = null) {
   if (!feed || typeof feed !== 'object') return null
   const bySource = {}
   let total = 0
@@ -25,5 +42,5 @@ export function buildResearchLive(feed, now = new Date()) {
     return id && title && source ? [{ id, source, title, url: httpsUrl(r.url), seenAt: iso(r.first_seen_at) }] : []
   })
   const topics = feed.topics && typeof feed.topics === 'object' ? { explored: int(feed.topics.explored), queued: int(feed.topics.queued) } : { explored: null, queued: null }
-  return { version: 1, generatedAt: now.toISOString(), lastReportAt: iso(feed.chain?.audit_head_time), total, bySource, topics, recent }
+  return { version: 1, generatedAt: now.toISOString(), lastReportAt: iso(feed.chain?.audit_head_time), total, bySource, topics, recent, maxwell: anchor ?? null }
 }

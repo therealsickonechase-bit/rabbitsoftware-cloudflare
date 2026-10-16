@@ -123,5 +123,5 @@ test('tool failures do not leak details', async () => {
   const out = await call('chain_head', {}, async () => { throw new TypeError('secret path /etc/x') })
   assert.equal(out.result.isError, true)
   assert.ok(!textOf(out).includes('/etc/x'))
-  assert.equal(TOOLS.length, 27)
+  assert.equal(TOOLS.length, 28)
 })

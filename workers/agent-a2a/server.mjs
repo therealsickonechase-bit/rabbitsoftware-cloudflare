@@ -6,9 +6,9 @@
 import { createServer } from 'node:http'
 import { randomUUID } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
-import { NORMALIZE, PLANS, SOURCES, SOURCE_IDS, validateSearch } from './research.mjs'
+import { NORMALIZE, PLANS, SOURCES, SOURCE_IDS, researchLinkReport, validateSearch } from './research.mjs'
 
-export const VERSION = '1.2.0'
+export const VERSION = '1.3.0'
 // The public slice of the toolbox, written by rabbit-web/scripts/toolbox-publish.mjs next to the status feed: the commands a guest may see, links to files in the two public repositories,
 // and the root hash and counts of the whole bundle. This service never reads the private toolbox: it has no credentials and no sign-in, so it can only serve what is already public.
 export const TOOLBOX_URL = 'https://rabbitsoftware-io-status-public.storage.googleapis.com/status/toolbox-public.json'
@@ -29,9 +29,10 @@ export function agentCard(baseUrl) {
     defaultInputModes: ['text/plain', 'application/json'],
     defaultOutputModes: ['text/plain', 'application/json'],
     skills: [
-      { id: 'search-literature', name: 'Search the literature', description: 'Find papers on a topic in PubMed or Europe PMC.', tags: ['research', 'pubmed', 'europepmc', 'literature'], examples: ['pubmed: BRCA1 breast cancer', 'Find recent papers on SLC6A4 in Europe PMC'] },
+      { id: 'search-literature', name: 'Search the literature', description: 'Find papers on a topic in PubMed, Europe PMC, OpenAlex (all fields) or INSPIRE-HEP (physics).', tags: ['research', 'pubmed', 'europepmc', 'literature'], examples: ['pubmed: BRCA1 breast cancer', 'Find recent papers on SLC6A4 in Europe PMC'] },
       { id: 'search-trials', name: 'Search clinical trials', description: 'Find registered studies on ClinicalTrials.gov.', tags: ['research', 'clinicaltrials'], examples: ['clinical trials for glioma'] },
       { id: 'drug-adverse-events', name: 'Most reported drug reactions', description: 'The reactions most often reported for a drug in openFDA. Reports are not proof that a drug caused an event.', tags: ['research', 'openfda', 'safety'], examples: ['openfda: metformin'] },
+      { id: 'research-link', name: 'Search and link to RabbitOS, Maxwell and Google Cloud', description: 'Search several public sources at once (OpenAlex, INSPIRE-HEP, Europe PMC, PubMed), then show what RabbitOS already stores about the topic, whether the Maxwell chain research anchor covers it, and the Google Cloud copies. Works for physics as well as medicine.', tags: ['research', 'link', 'maxwell', 'google-cloud', 'physics'], examples: ['link: antigravity', 'link: antihydrogen gravity ALPHA-g', 'link: BRCA1 PARP'] },
       { id: 'toolbox', name: 'Toolbox: platform commands and files', description: 'Look up the RabbitOS commands a guest may use and the public files behind them (with links), see which toolbox bundle they come from, and ask what each agent can do (the task kinds a worker runs and the actions it carries out). Owner-only commands and private files are not listed.', tags: ['toolbox', 'commands', 'catalog', 'files', 'agents', 'capabilities'], examples: ['toolbox: chain', 'which commands check the public chain?', 'what can the task worker do?'] },
       { id: 'list-sources', name: 'List the sources', description: 'Which public sources this agent can search.', tags: ['research'], examples: ['what sources can you search?'] },
     ],
@@ -43,18 +44,22 @@ export function interpret(message) {
   const parts = Array.isArray(message?.parts) ? message.parts : []
   const data = parts.find((p) => p?.kind === 'data' && p.data && typeof p.data === 'object')?.data
   const data0 = data
-  if (data && data.skill !== 'toolbox') return { action: 'search', source: data.source, query: data.query, limit: data.limit }
+  if (data && data.skill !== 'toolbox' && data.skill !== 'research-link') return { action: 'search', source: data.source, query: data.query, limit: data.limit }
   const text = parts.filter((p) => p?.kind === 'text' && typeof p.text === 'string').map((p) => p.text).join(' ').trim()
+  if (data0?.skill === 'research-link') return { action: 'link', query: String(data0.query ?? '').slice(0, 120), sources: Array.isArray(data0.sources) ? data0.sources.slice(0, 4) : undefined }
   if (!text && data0?.skill === 'toolbox') return { action: 'toolbox', query: String(data0.query ?? '').slice(0, 120) }
   if (!text) return { action: 'error', error: 'send a text question or a data part {source, query, limit}' }
   if (/\b(what|which|list)\b.*\bsources?\b|\bsources?\b.*\b(can|do)\b/i.test(text) && !/:/.test(text)) return { action: 'sources' }
   if (data0?.skill === 'toolbox') return { action: 'toolbox', query: String(data0.query ?? '').slice(0, 120) }
+  const linkMatch = /^\s*link(?:ed)?\s*:\s*(.+)$/i.exec(text)
+  if (linkMatch) return { action: 'link', query: linkMatch[1].trim().slice(0, 120) }
   if (/\b(toolbox|catalog|commands?|capabilit\w*|task kinds?|workers?|explorers?)\b/i.test(text) && !/^(pubmed|europepmc|clinicaltrials|openfda)\s*:/i.test(text)) return { action: 'toolbox', query: text.slice(0, 160) }
   let source = SOURCE_IDS.find((id) => new RegExp(`\\b${id}\\b`, 'i').test(text))
   if (!source) {
     if (/europe\s*pmc/i.test(text)) source = 'europepmc'
     else if (/clinical\s*trials?|\btrials?\b|\bstud(y|ies)\b/i.test(text)) source = 'clinicaltrials'
     else if (/\bfda\b|adverse|side effects?|reactions?/i.test(text)) source = 'openfda'
+    else if (/\b(physics|gravity|antigravity|antimatter|antihydrogen|cosmolog\w*|quantum|arxiv|inspire|particle|relativity)\b/i.test(text)) source = 'inspirehep'
     else source = 'pubmed'
   }
   const query = text.replace(/^[a-z ]{2,20}:\s*/i, '').replace(/\b(please|find|search( for)?|show( me)?|look up|recent|papers?|articles?|on|about|for|in|using|from|pubmed|europe\s*pmc|europepmc|clinicaltrials?(\.gov)?|clinical trials?|openfda|fda)\b/gi, ' ').replace(/\s+/g, ' ').trim() || text.slice(0, 120)
@@ -127,6 +132,21 @@ export async function handleRpc(body, fetchImpl = fetch) {
   if (intent.action === 'sources') {
     const list = SOURCE_IDS.map((id) => ({ id, name: SOURCES[id].name, about: SOURCES[id].about }))
     return reply(body.id, [{ kind: 'text', text: list.map((s) => `${s.name}: ${s.about}`).join('\n') }, { kind: 'data', data: { sources: list } }])
+  }
+  if (intent.action === 'link') {
+    const fetchText = async (origin, path) => {
+      const res = await fetchImpl(new URL(path, origin).toString(), { headers: { Accept: 'application/json', 'User-Agent': 'rabbitos-research-agent/1.3 (+https://rabbitsoftware.io)' }, signal: AbortSignal.timeout(12_000) })
+      return { status: res.status, text: (await res.text()).slice(0, 400_000) }
+    }
+    const report = await researchLinkReport({ query: intent.query, ...(intent.sources ? { sources: intent.sources } : {}), limit: 4 }, fetchText)
+    if (report.error) return rpcError(body.id, -32602, report.error)
+    const lines = [`Research on "${report.query}":`]
+    for (const l of report.live) lines.push(l.error ? `- ${l.name}: ${l.error}` : `- ${l.name}: ${l.items.length} result(s)` + l.items.slice(0, 2).map((it) => `\n    ${it.title ?? it.id}${it.url ? ` - ${it.url}` : ''}${it.inRabbitOS ? ' (already in RabbitOS)' : ''}`).join(''))
+    const covered = report.rabbitos.records.filter((r) => r.maxwell.status === 'covered').length
+    lines.push(`RabbitOS stores ${report.rabbitos.records.length} matching record(s)${report.rabbitos.records.length ? `; ${covered} covered by the Maxwell research anchor` : ''}${report.rabbitos.error ? ` (${report.rabbitos.error})` : ''}.`)
+    lines.push(report.maxwell.latestResearchAnchor ? `Maxwell: block ${report.maxwell.latestResearchAnchor.block} anchors ${report.maxwell.latestResearchAnchor.count} public records (mined ${report.maxwell.latestResearchAnchor.time}). Google Cloud: ${report.googleCloud.publicRecords ?? '?'} public records, refreshed ${report.googleCloud.refreshedAt ?? 'unknown'}.` : 'Maxwell and Google Cloud state could not be read just now.')
+    lines.push(report.caution)
+    return reply(body.id, [{ kind: 'text', text: lines.join('\n') }, { kind: 'data', data: report }])
   }
   if (intent.action === 'toolbox') {
     const t = await toolbox(intent.query, fetchImpl)

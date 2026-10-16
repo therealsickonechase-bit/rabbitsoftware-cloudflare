@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-16T17:40:30.394Z",
+ "generatedAt": "2026-10-16T21:40:59.439Z",
  "commandMaxBytes": 4000,
  "projects": [
   "rabbit-web",
@@ -324,6 +324,30 @@
    "description": "Run in PowerShell on your PC after Import-Module. Pulls the public ledger into a local .jsonl, verifies the hash chain, refuses a broken one. Uploads nothing.",
    "project": "rabbit-web",
    "source": "scripts/powershell/RabbitNet.psd1",
+   "runsIn": "computer"
+  },
+  {
+   "id": "web-research-search",
+   "group": "Research",
+   "label": "Research search from the terminal (antigravity)",
+   "scope": "owner",
+   "risk": "network",
+   "command": "node scripts/research-search.mjs antigravity",
+   "description": "Asks the RabbitOS Hub for research_link: live OpenAlex, INSPIRE-HEP, Europe PMC and PubMed results, what RabbitOS stores, and whether the Maxwell research anchor covers it. Add --sources openalex,inspirehep or --json. Read only.",
+   "project": "rabbit-web",
+   "source": "scripts/research-search.mjs",
+   "runsIn": "computer"
+  },
+  {
+   "id": "web-connect-agy",
+   "group": "Research",
+   "label": "Connect Google Antigravity to the RabbitOS Hub",
+   "scope": "owner",
+   "risk": "local",
+   "command": "pwsh -File scripts/powershell/Connect-Antigravity.ps1 -WhatIf",
+   "description": "Registers the Hub MCP with the agy CLI so Antigravity can call research_link and research_search. Public read-only tools, no key. Drop -WhatIf to apply; -Remove undoes it.",
+   "project": "rabbit-web",
+   "source": "scripts/powershell/Connect-Antigravity.ps1",
    "runsIn": "computer"
   },
   {
@@ -3273,6 +3297,30 @@
    "description": "Fewer results per query.",
    "project": "research-agents",
    "source": "brain_research.py",
+   "runsIn": "computer"
+  },
+  {
+   "id": "ra-physics",
+   "group": "Research",
+   "label": "physics_research (antigravity)",
+   "scope": "owner",
+   "risk": "network",
+   "command": "python physics_research.py",
+   "description": "Searches OpenAlex and INSPIRE-HEP for antigravity and antihydrogen gravity papers; writes physics_records.json for the research sync.",
+   "project": "research-agents",
+   "source": "physics_research.py",
+   "runsIn": "computer"
+  },
+  {
+   "id": "ra-physics-q",
+   "group": "Research",
+   "label": "physics_research for one topic",
+   "scope": "owner",
+   "risk": "network",
+   "command": "python physics_research.py --query \"antihydrogen gravity\" --per-query 3",
+   "description": "Same, for words you choose.",
+   "project": "research-agents",
+   "source": "physics_research.py",
    "runsIn": "computer"
   },
   {

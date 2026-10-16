@@ -1,4 +1,4 @@
-import { buildResearchLive } from './research-live.mjs'
+import { buildResearchLive, latestResearchAnchor } from './research-live.mjs'
 
 // Is each piece of the platform answering? Public endpoints only, no credentials. Feeds the platform map in the report.
 
@@ -44,6 +44,15 @@ export async function readResearchFeed(fetchImpl, timeoutMs = 12_000) {
   } catch { return null }
 }
 
+/** The public Maxwell chain mirror in Google Cloud, reduced to its newest research anchor. Null if it cannot be read (the live file then simply has no anchor). */
+export async function readMaxwellAnchor(fetchImpl, timeoutMs = 12_000) {
+  try {
+    const res = await fetchImpl(`${BUCKET}/maxwell/maxwell_chain.json?cb=${Math.floor(Date.now() / 60_000)}`, { headers: { 'user-agent': 'rabbitweb-audit/1.0' }, signal: AbortSignal.timeout(timeoutMs) })
+    if (res.status !== 200) return null
+    return latestResearchAnchor(JSON.parse(await res.text()))
+  } catch { return null }
+}
+
 export function summarizeResearch(feed) {
   if (!feed) return null
   const at = Date.parse(feed?.chain?.audit_head_time)
@@ -60,9 +69,9 @@ export async function readResearch(fetchImpl, timeoutMs = 12_000) { return summa
 
 /** @returns {Promise<{nodes: Record<string, object>, chain: object, data: object, research: object|null}>} */
 export async function checkPlatform({ fetchImpl = fetch, timeoutMs = 12_000 } = {}) {
-  const [results, researchFeed] = await Promise.all([Promise.all(PROBES.map((p) => probe(fetchImpl, p, timeoutMs))), readResearchFeed(fetchImpl, timeoutMs)])
+  const [results, researchFeed, maxwellAnchor] = await Promise.all([Promise.all(PROBES.map((p) => probe(fetchImpl, p, timeoutMs))), readResearchFeed(fetchImpl, timeoutMs), readMaxwellAnchor(fetchImpl, timeoutMs)])
   const research = summarizeResearch(researchFeed)
-  const researchLive = buildResearchLive(researchFeed)
+  const researchLive = buildResearchLive(researchFeed, new Date(), maxwellAnchor)
   const nodes = Object.fromEntries(results.map(({ text, ...r }) => [r.key, r]))
   const text = Object.fromEntries(results.map((r) => [r.key, r.text]))
   const json = (k) => { try { return JSON.parse(text[k]) } catch { return null } }

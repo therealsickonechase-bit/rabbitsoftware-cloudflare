@@ -74,6 +74,10 @@
     .live-list { margin:0; padding:0; list-style:none; border-top:1px solid var(--line); }
     .live-list li { padding:10px 0; border-bottom:1px solid var(--line); font-size:15px; overflow-wrap:anywhere; }
     .live-list small { display:block; color:var(--muted); font-size:12px; }
+    .live-search { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:14px 0 6px; }
+    .live-search label { flex-basis:100%; }
+    .live-search input { flex:1 1 220px; min-width:0; padding:8px 10px; font:inherit; border:1px solid var(--line); background:transparent; color:inherit; }
+    .live-search button { padding:8px 14px; font:inherit; cursor:pointer; }
     .live .small { color:var(--muted); font-size:13px; }
     .live-dna { margin:8px 0 22px; padding:18px 20px; border:1px solid var(--line); background:var(--panel); }
     .live-dna p { margin:0 0 8px; }
@@ -104,6 +108,13 @@
     <p class="index">LIVE / FROM THE AGENTS</p>
     <h2 id="live-h">What the research agents found most recently</h2>
     <p class="dek" id="live-when" aria-live="polite">Loading the latest findings…</p>
+    <form class="live-search" id="live-search" role="search">
+      <label for="live-q"><strong>Search the shared research store</strong> (try <em>antigravity</em>)</label>
+      <input id="live-q" type="search" minlength="2" maxlength="120" autocomplete="off" placeholder="topic, gene or title words">
+      <button type="submit">Search</button>
+    </form>
+    <p class="small" id="live-search-summary" aria-live="polite"></p>
+    <ul class="live-list" id="live-search-results"></ul>
     <div class="live-grid">
       <div>
         <h3>Newest records</h3>

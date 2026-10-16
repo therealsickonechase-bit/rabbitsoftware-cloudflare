@@ -23,6 +23,16 @@ export const SOURCES = Object.freeze({
     about: 'US FDA public drug adverse-event reports. Reports are not proof a drug caused an event.',
     gives: 'the most reported reactions for a drug name',
   },
+  openalex: {
+    name: 'OpenAlex', host: 'https://api.openalex.org', home: 'https://openalex.org/',
+    about: 'Open catalogue of scholarly works in every field: journal papers and preprints (including arXiv), with venues and citation counts. Use it for physics, engineering and anything outside medicine.',
+    gives: 'titles, years, venues, DOIs and citation counts',
+  },
+  inspirehep: {
+    name: 'INSPIRE-HEP', host: 'https://inspirehep.net', home: 'https://inspirehep.net/',
+    about: 'High-energy physics literature (CERN, DESY, Fermilab), including arXiv preprints: gravity, antimatter, cosmology, particle physics.',
+    gives: 'titles, dates, arXiv or DOI links and citation counts',
+  },
 })
 export const SOURCE_IDS = Object.keys(SOURCES)
 
@@ -52,6 +62,9 @@ export const PLANS = Object.freeze({
   europepmc: (q, n) => ({ first: { origin: SOURCES.europepmc.host, path: `/europepmc/webservices/rest/search?format=json&resultType=lite&pageSize=${n}&query=${enc(q)}` } }),
   clinicaltrials: (q, n) => ({ first: { origin: SOURCES.clinicaltrials.host, path: `/api/v2/studies?format=json&pageSize=${n}&query.term=${enc(q)}` } }),
   openfda: (q, n) => ({ first: { origin: SOURCES.openfda.host, path: `/drug/event.json?limit=${n}&count=patient.reaction.reactionmeddrapt.exact&search=patient.drug.openfda.generic_name:${enc('"' + q.replace(/["\\]/g, '') + '"')}` } }),
+  // Physics and general science (added with research_link): one GET each, the query text is the only variable part.
+  openalex: (q, n) => ({ first: { origin: SOURCES.openalex.host, path: `/works?search=${enc(q)}&per-page=${n}&select=id,title,publication_year,doi,type,cited_by_count,primary_location` } }),
+  inspirehep: (q, n) => ({ first: { origin: SOURCES.inspirehep.host, path: `/api/literature?q=${enc(q)}&size=${n}&fields=titles,arxiv_eprints,dois,control_number,preprint_date,citation_count` } }),
 })
 
 /** Reduce each source's answer to a few plain fields. Unknown shapes give an empty list, never an exception. */
@@ -77,6 +90,27 @@ export const NORMALIZE = Object.freeze({
   openfda(json) {
     return (json?.results ?? []).map((x) => ({ reaction: clean(x.term, 120), reports: Number.isFinite(x.count) ? x.count : null }))
   },
+  openalex(json) {
+    return (json?.results ?? []).flatMap((w) => {
+      const id = /^https:\/\/openalex\.org\/(W\d{1,12})$/.exec(String(w?.id ?? ''))?.[1]
+      const title = clean(w?.title)
+      if (!id || !title) return []
+      const doi = /^https:\/\/doi\.org\/10\.[^\s]{3,150}$/.test(String(w?.doi ?? '')) ? String(w.doi) : null
+      return [{ id: `openalex:${id}`, title, journal: clean(w?.primary_location?.source?.display_name, 120), date: clean(w?.publication_year, 10), citations: Number.isFinite(w?.cited_by_count) ? w.cited_by_count : null, url: doi ?? `https://openalex.org/${id}` }]
+    })
+  },
+  inspirehep(json) {
+    return (json?.hits?.hits ?? []).flatMap((h) => {
+      const m = h?.metadata ?? {}
+      const id = String(m.control_number ?? '')
+      const title = clean(m.titles?.[0]?.title)
+      if (!/^\d{1,10}$/.test(id) || !title) return []
+      const arxiv = String(m.arxiv_eprints?.[0]?.value ?? '')
+      const doi = String(m.dois?.[0]?.value ?? '')
+      const url = /^[A-Za-z0-9.\-/]{5,40}$/.test(arxiv) ? `https://arxiv.org/abs/${arxiv}` : /^10\.[^\s]{3,150}$/.test(doi) ? `https://doi.org/${doi}` : `https://inspirehep.net/literature/${id}`
+      return [{ id: `inspire:${id}`, title, date: clean(m.preprint_date, 10), citations: Number.isFinite(m.citation_count) ? m.citation_count : null, url }]
+    })
+  },
 })
 
 export function validateSearch(args) {
@@ -87,11 +121,84 @@ export function validateSearch(args) {
   return null
 }
 
+const APP = 'https://app.rabbitsoftware.io'
+const STATUS_BUCKET = 'https://rabbitsoftware-io-status-public.storage.googleapis.com'
+export const LINK_DEFAULT_SOURCES = Object.freeze(['openalex', 'inspirehep', 'europepmc', 'pubmed'])
+const norm = (t) => String(t ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+
+/** One live search, with failures kept inside the result so one slow source never hides the others. */
+async function liveSearch(id, q, n, fetchText) {
+  const plan = PLANS[id](q, n)
+  const get = async (req) => {
+    const r = await fetchText(req.origin, req.path)
+    if (r.status !== 200) throw new Error(`${SOURCES[id].name} returned ${r.status}`)
+    return JSON.parse(r.text)
+  }
+  try {
+    let json = await get(plan.first)
+    if (plan.then) { const next = plan.then(json); json = next ? await get(next) : null }
+    return { source: id, name: SOURCES[id].name, items: json ? NORMALIZE[id](json).slice(0, n) : [] }
+  } catch (e) { return { source: id, name: SOURCES[id].name, items: [], error: String(e.message).startsWith(SOURCES[id].name) ? e.message : `${SOURCES[id].name} could not be read right now` } }
+}
+
+/** What RabbitOS already holds that matches (the data hub's own text search over research_records). */
+async function storedSearch(q, n, fetchText) {
+  try {
+    const r = await fetchText(APP, `/api/data/research_records?limit=${n}&q=${enc(q)}`)
+    if (r.status !== 200) return { rows: [], error: `the data hub returned ${r.status}` }
+    const rows = (JSON.parse(r.text).rows ?? []).slice(0, n).map((x) => ({ id: clean(x.id, 80), source: clean(x.source, 30), title: clean(x.title, 220), url: /^https:\/\//.test(x.url ?? '') ? clean(x.url, 300) : null, firstSeenAt: Number.isFinite(Date.parse(x.first_seen_at)) ? new Date(x.first_seen_at).toISOString() : null }))
+    return { rows }
+  } catch { return { rows: [], error: 'the data hub could not be read right now' } }
+}
+
+/** The live research file the status job writes in Google Cloud: counts, freshness and the newest Maxwell research anchor. */
+async function googleCloudState(fetchText) {
+  try {
+    const r = await fetchText(STATUS_BUCKET, '/status/research-live.json')
+    if (r.status !== 200) return null
+    const d = JSON.parse(r.text)
+    return d?.version === 1 ? d : null
+  } catch { return null }
+}
+
+/**
+ * The cross-linked answer for a topic: live public sources, what RabbitOS stores, the Maxwell research anchor and the Google Cloud copies. `fetchText(origin, path)` returns {status, text}.
+ * Shared by the hub tool research_link and the Research Agent (A2A), so both give the same answer. Returns {error} for bad input, otherwise the report object.
+ */
+export async function researchLinkReport(args, fetchText) {
+  const bad = validateSearch({ source: SOURCE_IDS[0], query: args?.query, limit: args?.limit })
+  if (bad) return { error: bad }
+  if (args.sources !== undefined && (!Array.isArray(args.sources) || !args.sources.length || args.sources.length > 4 || args.sources.some((x) => !SOURCE_IDS.includes(x)) || new Set(args.sources).size !== args.sources.length)) return { error: `sources must be 1 to 4 different ids from: ${SOURCE_IDS.join(', ')}` }
+  const q = args.query.trim(), n = args.limit ?? 4
+  const ids = args.sources ?? [...LINK_DEFAULT_SOURCES]
+  const [live, stored, gc] = await Promise.all([Promise.all(ids.map((id) => liveSearch(id, q, n, fetchText))), storedSearch(q, n, fetchText), googleCloudState(fetchText)])
+  const holdTitles = new Set(stored.rows.map((r) => norm(r.title))), holdUrls = new Set(stored.rows.map((r) => r.url).filter(Boolean))
+  const anchor = gc?.maxwell ?? null
+  const anchorMs = anchor ? Date.parse(anchor.time) : NaN
+  const liveOut = live.map((l) => ({ ...l, items: l.items.map((it) => ({ ...it, inRabbitOS: holdUrls.has(it.url) || holdTitles.has(norm(it.title)) })) }))
+  const storedOut = stored.rows.map((r) => {
+    const seen = Date.parse(r.firstSeenAt)
+    const anchored = anchor && Number.isFinite(seen) && Number.isFinite(anchorMs) ? seen <= anchorMs : null
+    return { ...r, maxwell: anchored === null ? { status: 'unknown', why: 'no Maxwell anchor was readable' } : anchored
+      ? { status: 'covered', block: anchor.block, root: anchor.root, recordsInAnchor: anchor.count, minedAt: anchor.time }
+      : { status: 'not yet', why: `first seen after block ${anchor.block} (${anchor.time}); the next research anchor will cover it` } }
+  })
+  return {
+    query: q,
+    live: liveOut,
+    rabbitos: { records: storedOut, matchesShown: storedOut.length, ...(stored.error ? { error: stored.error } : {}), read_more: 'data_rows with dataset research_records and q, or research_feed' },
+    maxwell: anchor ? { latestResearchAnchor: anchor, meaning: 'A record first seen before minedAt was in the public record set whose Merkle root this block holds. The chain proves existence and time, not that a claim is true.' } : { unavailable: true },
+    googleCloud: gc ? { researchLiveFile: `${STATUS_BUCKET}/status/research-live.json`, refreshedAt: gc.generatedAt, publicRecords: gc.total, topicsExplored: gc.topics?.explored ?? null, maxwellMirror: anchor ? { chainLength: anchor.chainLength, headHash: anchor.headHash } : null, publicLedger: 'https://rabbitsoftware-io-ledger-public.storage.googleapis.com/ledger/chain_head.json' } : { unavailable: true },
+    caution: 'Results are pointers to public records, not endorsements. Every field has speculative and fringe papers; check the venue, the citations and whether a result was replicated.',
+    next: "To keep findings, the owner's agents ingest them (python physics_research.py --query \"...\" then the research sync). Nothing was stored by this call.",
+  }
+}
+
 export const RESEARCH_TOOLS = (helpers) => {
   const { asText, fail, getText, UNTRUSTED } = helpers
   return [
     {
-      name: 'research_sources', description: 'The research web: which public sources feed it (PubMed, Europe PMC, ClinicalTrials.gov, openFDA), how data flows from them through the agents, the chain and Supabase to the data hub and the shell, and which tool reads each stage.',
+      name: 'research_sources', description: 'The research web: which public sources feed it (PubMed, Europe PMC, ClinicalTrials.gov, openFDA, OpenAlex, INSPIRE-HEP), how data flows from them through the agents, the chain and Supabase to the data hub and the shell, and which tool reads each stage.',
       inputSchema: { type: 'object', properties: {}, additionalProperties: false },
       async run() {
         return asText({
@@ -99,14 +206,22 @@ export const RESEARCH_TOOLS = (helpers) => {
           also_ingested_by_agents: ['ClinVar', 'NIH RePORTER', 'St. Jude public research'],
           flow: FLOW,
           read_stored_research_with: ['research_feed', 'data_rows (research_records, research_topics, research_runs, research_summaries)', 'concept_lookup', 'chain_events'],
-          search_live_with: 'research_search',
+          search_live_with: 'research_search (one source) or research_link (several sources, plus RabbitOS, Maxwell and Google Cloud)',
           map: 'https://app.rabbitsoftware.io/guide',
           rules: ['Public sources only.', 'Personal data (EEG, wearables, labs) never enters this web.', 'AI summaries are interpretation, not findings.', 'A chain entry proves existence and time, not truth.'],
         })
       },
     },
     {
-      name: 'research_search', description: 'Search one public research source live (pubmed, europepmc, clinicaltrials, openfda) for a topic. Returns a short list with links. Nothing is stored; use it when the stored records do not cover the question.' + UNTRUSTED,
+      name: 'research_link', description: 'Search for a topic across the whole research web at once and link the answers: (1) public sources live (default OpenAlex, INSPIRE-HEP, Europe PMC, PubMed; physics and other fields work too), (2) what RabbitOS already stores about it (the data hub), (3) whether each stored record is covered by the Maxwell chain research anchor, and (4) the Google Cloud copies (live research file, public chain mirror). Read only; nothing is stored.' + UNTRUSTED,
+      inputSchema: { type: 'object', properties: { query: { type: 'string', minLength: 2, maxLength: 120 }, sources: { type: 'array', items: { type: 'string', enum: SOURCE_IDS }, minItems: 1, maxItems: 4 }, limit: { type: 'integer', minimum: 1, maximum: 8 } }, required: ['query'], additionalProperties: false },
+      async run(args, ctx) {
+        const out = await researchLinkReport(args, (origin, path) => getText(ctx.fetchImpl, origin, path, 12_000))
+        return out.error ? fail(out.error) : asText(out)
+      },
+    },
+    {
+      name: 'research_search', description: 'Search one public research source live (pubmed, europepmc, clinicaltrials, openfda, openalex, inspirehep) for a topic. Returns a short list with links. Nothing is stored; use it when the stored records do not cover the question.' + UNTRUSTED,
       inputSchema: { type: 'object', properties: { source: { type: 'string', enum: SOURCE_IDS }, query: { type: 'string', minLength: 2, maxLength: 120 }, limit: { type: 'integer', minimum: 1, maximum: 20 } }, required: ['source', 'query'], additionalProperties: false },
       async run(args, ctx) {
         const bad = validateSearch(args)

@@ -85,3 +85,29 @@ test('the page script draws with textContent only, uses ids that exist on the pa
   const headers = readFileSync(new URL('../../../site/_headers', import.meta.url), 'utf8')
   assert.match(headers, /\/research-live-view\.mjs\s+Content-Type: application\/javascript/)
 })
+
+import { searchUrl, searchView } from '../../../site/research-live-view.mjs'
+
+test('the search box builds a data-hub URL only from usable words', () => {
+  assert.equal(searchUrl('  anti   gravity '), 'https://app.rabbitsoftware.io/api/data/research_records?limit=20&q=anti%20gravity')
+  for (const bad of ['', 'x', 'a'.repeat(121), 'bad\u0001char', null]) assert.equal(searchUrl(bad), null)
+})
+
+test('search hits are marked with their Maxwell coverage and unsafe links are dropped', () => {
+  const anchor = { block: 7, count: 918, time: '2026-10-16T16:43:32.000Z' }
+  const rows = [
+    { title: 'Antigravity: A crazy idea?', source: 'physics_paper', url: 'https://doi.org/10.1016/x', first_seen_at: '2026-10-16T10:00:00+00:00' },
+    { title: 'Newer', source: 'physics_preprint', url: 'https://evil.example/x', first_seen_at: '2026-10-16T19:00:00+00:00' },
+    { title: '', source: 'pubmed' },
+  ]
+  const v = searchView({ rows }, live({ maxwell: anchor }), NOW)
+  assert.equal(v.rows.length, 2)
+  assert.equal(v.rows[0].maxwell, 'Covered by Maxwell block 7')
+  assert.equal(v.rows[0].source, 'Physics papers')
+  assert.equal(v.rows[1].maxwell, 'Not yet in a Maxwell block')
+  assert.equal(v.rows[1].link, null)
+  assert.match(v.summary, /2 matching records[\s\S]*block 7, 918 records/)
+  assert.equal(searchView({ rows }, live(), NOW).rows[0].maxwell, 'Maxwell: unknown')
+  assert.match(searchView(null, null).summary, /could not be read/)
+  assert.equal(safeLink('https://arxiv.org/abs/1511.05128') !== null, true)
+})
