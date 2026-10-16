@@ -8,13 +8,17 @@ import { randomUUID } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { NORMALIZE, PLANS, SOURCES, SOURCE_IDS, validateSearch } from './research.mjs'
 
-export const VERSION = '1.0.0'
+export const VERSION = '1.1.0'
+// The public slice of the toolbox, written by rabbit-web/scripts/toolbox-publish.mjs next to the status feed: the commands a guest may see, links to files in the two public repositories,
+// and the root hash and counts of the whole bundle. This service never reads the private toolbox: it has no credentials and no sign-in, so it can only serve what is already public.
+export const TOOLBOX_URL = 'https://rabbitsoftware-io-status-public.storage.googleapis.com/status/toolbox-public.json'
+const GITHUB_PREFIX = 'https://github.com/therealsickonechase-bit/'
 const MAX_BODY = 16_000
 
 export function agentCard(baseUrl) {
   return {
     name: 'RabbitOS Research Agent',
-    description: 'Searches public biomedical research live (PubMed, Europe PMC, ClinicalTrials.gov, openFDA) and returns short lists with links. Read only: it stores nothing, holds no secrets and never sees personal data. Results are pointers to public records, not medical advice.',
+    description: 'Searches public biomedical research live (PubMed, Europe PMC, ClinicalTrials.gov, openFDA) and returns short lists with links; it also looks up the public RabbitOS commands and the files behind them (the toolbox). Read only: it stores nothing, holds no secrets and never sees personal data. Results are pointers to public records, not medical advice.',
     url: baseUrl,
     version: VERSION,
     protocolVersion: '0.3.0',
@@ -28,6 +32,7 @@ export function agentCard(baseUrl) {
       { id: 'search-literature', name: 'Search the literature', description: 'Find papers on a topic in PubMed or Europe PMC.', tags: ['research', 'pubmed', 'europepmc', 'literature'], examples: ['pubmed: BRCA1 breast cancer', 'Find recent papers on SLC6A4 in Europe PMC'] },
       { id: 'search-trials', name: 'Search clinical trials', description: 'Find registered studies on ClinicalTrials.gov.', tags: ['research', 'clinicaltrials'], examples: ['clinical trials for glioma'] },
       { id: 'drug-adverse-events', name: 'Most reported drug reactions', description: 'The reactions most often reported for a drug in openFDA. Reports are not proof that a drug caused an event.', tags: ['research', 'openfda', 'safety'], examples: ['openfda: metformin'] },
+      { id: 'toolbox', name: 'Toolbox: platform commands and files', description: 'Look up the RabbitOS commands a guest may use and the public files behind them (with links), and see which toolbox bundle they come from. Owner-only commands and private files are not listed.', tags: ['toolbox', 'commands', 'catalog', 'files'], examples: ['toolbox: chain', 'which commands check the public chain?', 'list the toolbox commands'] },
       { id: 'list-sources', name: 'List the sources', description: 'Which public sources this agent can search.', tags: ['research'], examples: ['what sources can you search?'] },
     ],
   }
@@ -37,10 +42,14 @@ export function agentCard(baseUrl) {
 export function interpret(message) {
   const parts = Array.isArray(message?.parts) ? message.parts : []
   const data = parts.find((p) => p?.kind === 'data' && p.data && typeof p.data === 'object')?.data
-  if (data) return { action: 'search', source: data.source, query: data.query, limit: data.limit }
+  const data0 = data
+  if (data && data.skill !== 'toolbox') return { action: 'search', source: data.source, query: data.query, limit: data.limit }
   const text = parts.filter((p) => p?.kind === 'text' && typeof p.text === 'string').map((p) => p.text).join(' ').trim()
+  if (!text && data0?.skill === 'toolbox') return { action: 'toolbox', query: String(data0.query ?? '').slice(0, 120) }
   if (!text) return { action: 'error', error: 'send a text question or a data part {source, query, limit}' }
   if (/\b(what|which|list)\b.*\bsources?\b|\bsources?\b.*\b(can|do)\b/i.test(text) && !/:/.test(text)) return { action: 'sources' }
+  if (data0?.skill === 'toolbox') return { action: 'toolbox', query: String(data0.query ?? '').slice(0, 120) }
+  if (/\b(toolbox|catalog|commands?)\b/i.test(text) && !/^(pubmed|europepmc|clinicaltrials|openfda)\s*:/i.test(text)) return { action: 'toolbox', query: text.slice(0, 160) }
   let source = SOURCE_IDS.find((id) => new RegExp(`\\b${id}\\b`, 'i').test(text))
   if (!source) {
     if (/europe\s*pmc/i.test(text)) source = 'europepmc'
@@ -70,6 +79,33 @@ async function run(plan, fetchImpl) {
   } catch (e) { return { error: String(e.message).startsWith(SOURCES[plan.source].name) ? e.message : `${SOURCES[plan.source].name} could not be read right now` } }
 }
 
+const STOP = new Set(['toolbox', 'tool', 'command', 'commands', 'catalog', 'the', 'for', 'how', 'what', 'which', 'show', 'list', 'find', 'run', 'use', 'can', 'you', 'that', 'with', 'and', 'are', 'does', 'any', 'all', 'please', 'platform', 'files', 'file'])
+
+/** The toolbox skill: a keyword lookup over the public slice. Only fixed fields are returned, and only links into the public GitHub repositories. */
+async function toolbox(query, fetchImpl) {
+  let slice
+  try {
+    const res = await fetchImpl(TOOLBOX_URL, { headers: { Accept: 'application/json', 'User-Agent': 'rabbitos-research-agent/1.1 (+https://rabbitsoftware.io)' }, signal: AbortSignal.timeout(10_000) })
+    if (!res.ok) throw new Error(`status ${res.status}`)
+    slice = await res.json()
+  } catch { return { error: 'the toolbox listing could not be read right now' } }
+  if (slice?.version !== 1 || !Array.isArray(slice.commands)) return { error: 'the toolbox listing is not in the expected shape' }
+  const safe = slice.commands.slice(0, 500).map((c) => ({
+    id: String(c.id ?? '').slice(0, 80), group: String(c.group ?? '').slice(0, 80), label: String(c.label ?? '').slice(0, 120), command: String(c.command ?? '').slice(0, 400), description: String(c.description ?? '').slice(0, 300),
+    files: (Array.isArray(c.files) ? c.files : []).filter((f) => typeof f?.url === 'string' && f.url.startsWith(GITHUB_PREFIX)).slice(0, 5).map((f) => ({ path: String(f.path ?? '').slice(0, 200), url: f.url.slice(0, 300), sha256: String(f.sha256 ?? '').slice(0, 64) })),
+  })).filter((c) => c.id)
+  const words = String(query ?? '').toLowerCase().split(/[^a-z0-9_-]+/).filter((w) => w.length >= 3 && !STOP.has(w))
+  const scored = safe.map((c) => {
+    const hay = `${c.id} ${c.label} ${c.group} ${c.description} ${c.command}`.toLowerCase()
+    return { c, score: words.reduce((n, w) => n + (hay.includes(w) ? (c.id.toLowerCase().includes(w) || c.label.toLowerCase().includes(w) ? 3 : 1) : 0), 0) }
+  })
+  const picked = (words.length ? scored.filter((x) => x.score > 0).sort((a, b) => b.score - a.score) : scored).slice(0, 8).map((x) => x.c)
+  const groups = {}
+  for (const c of safe) groups[c.group || 'Other'] = (groups[c.group || 'Other'] ?? 0) + 1
+  return { root: String(slice.root ?? '').slice(0, 64), generatedAt: String(slice.generatedAt ?? '').slice(0, 40), counts: { files: Number(slice.counts?.files) || 0, commands: Number(slice.counts?.commands) || 0, publicCommands: safe.length },
+    query: words.join(' '), groups, commands: picked }
+}
+
 const reply = (id, parts) => ({ jsonrpc: '2.0', id, result: { kind: 'message', role: 'agent', messageId: randomUUID(), parts } })
 const rpcError = (id, code, message) => ({ jsonrpc: '2.0', id: id ?? null, error: { code, message } })
 
@@ -82,6 +118,14 @@ export async function handleRpc(body, fetchImpl = fetch) {
   if (intent.action === 'sources') {
     const list = SOURCE_IDS.map((id) => ({ id, name: SOURCES[id].name, about: SOURCES[id].about }))
     return reply(body.id, [{ kind: 'text', text: list.map((s) => `${s.name}: ${s.about}`).join('\n') }, { kind: 'data', data: { sources: list } }])
+  }
+  if (intent.action === 'toolbox') {
+    const t = await toolbox(intent.query, fetchImpl)
+    if (t.error) return reply(body.id, [{ kind: 'text', text: `I could not read the toolbox: ${t.error}` }, { kind: 'data', data: { error: t.error } }])
+    const lines = t.commands.map((c, i) => `${i + 1}. ${c.id}: ${c.label}\n   ${c.command}${c.files.length ? `\n   files: ${c.files.map((f) => f.url).join(' ')}` : ''}`)
+    const head = t.commands.length ? (t.query ? `${t.commands.length} command(s) for "${t.query}":` : `${t.counts.publicCommands} commands a guest may use (showing ${t.commands.length}; ask with a topic to narrow it):`) : `No guest command matches "${t.query}". Groups: ${Object.entries(t.groups).map(([g, n]) => `${g} (${n})`).join(', ')}.`
+    const foot = `Toolbox bundle ${t.root.slice(0, 12)} (${t.counts.files} files, ${t.counts.commands} commands in all). Owner-only commands and private files are not listed here.`
+    return reply(body.id, [{ kind: 'text', text: [head, ...lines, foot].join('\n') }, { kind: 'data', data: t }])
   }
   const out = await run(intent, fetchImpl)
   if (out.error) return reply(body.id, [{ kind: 'text', text: `I could not do that search: ${out.error}` }, { kind: 'data', data: { error: out.error } }])

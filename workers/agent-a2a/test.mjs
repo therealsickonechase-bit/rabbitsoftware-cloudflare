@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { agentCard, handleRpc, interpret, makeServer } from './server.mjs'
+import { TOOLBOX_URL, agentCard, handleRpc, interpret, makeServer } from './server.mjs'
 
 const json = (v, status = 200) => new Response(JSON.stringify(v), { status })
 const fakeFetch = (log = []) => async (url) => {
@@ -70,4 +70,68 @@ test('the HTTP server serves the card, health and RPC, refuses big bodies and un
     assert.equal((await fetch(base, { method: 'POST', body: '{not json' })).status, 400)
     assert.equal((await fetch(`${base}/admin`)).status, 404)
   } finally { server.close() }
+})
+
+// ---- the toolbox skill ----
+const GH = 'https://github.com/therealsickonechase-bit/'
+const slice = (over = {}) => ({
+  version: 1, generatedAt: '2026-10-16T12:00:00Z', root: 'ab'.repeat(32), counts: { files: 709, commands: 284, publicCommands: 3 },
+  commands: [
+    { id: 'chain-head', group: 'Public chain', label: 'Read the head of the public chain', command: 'curl https://app.rabbitsoftware.io/api/chain/head', description: 'Length and head hash.',
+      files: [{ repo: 'rabbit-web', path: 'src/app/api/chain/head/route.ts', sha256: 'c'.repeat(64), url: GH + 'rabbit-web/blob/main/src/app/api/chain/head/route.ts' }] },
+    { id: 'chain-dna', group: 'Public chain', label: 'The chain head as DNA letters', command: 'curl https://app.rabbitsoftware.io/api/chain/dna', description: 'A=00 C=01 G=10 T=11.', files: [] },
+    { id: 'web-test-auth', group: 'Checks', label: 'Run all unit tests', command: 'npm run test:auth', description: 'node --test', files: [] },
+  ],
+  ...over,
+})
+const toolboxFetch = (data = slice(), log = []) => async (url) => { log.push(String(url)); if (String(url) === TOOLBOX_URL) return json(data); throw new Error('unexpected ' + url) }
+
+test('the card lists the toolbox skill and the words that ask for it are recognised, without stealing source searches', () => {
+  assert.ok(agentCard('https://x').skills.some((s) => s.id === 'toolbox' && s.tags.includes('commands')))
+  assert.equal(interpret(msg('toolbox: chain').params.message).action, 'toolbox')
+  assert.equal(interpret(msg('which commands read the public chain?').params.message).action, 'toolbox')
+  assert.deepEqual(interpret({ parts: [{ kind: 'data', data: { skill: 'toolbox', query: 'dna' } }] }), { action: 'toolbox', query: 'dna' })
+  assert.equal(interpret(msg('pubmed: BRCA1 commands').params.message).action, 'search')
+  assert.equal(interpret(msg('Find clinical trials for glioma').params.message).source, 'clinicaltrials')
+})
+
+test('a toolbox question returns matching guest commands with links into the public repositories, and the bundle it comes from', async () => {
+  const seen = []
+  const r = await handleRpc(msg('which commands read the public chain?'), toolboxFetch(slice(), seen))
+  const text = r.result.parts[0].text
+  assert.match(text, /chain-head: Read the head of the public chain/)
+  assert.match(text, /files: https:\/\/github\.com\/therealsickonechase-bit\/rabbit-web\/blob\/main\/src\/app\/api\/chain\/head\/route\.ts/)
+  assert.match(text, /Toolbox bundle abababababab \(709 files, 284 commands in all\)/)
+  assert.match(text, /Owner-only commands and private files are not listed here/)
+  assert.ok(!text.includes('web-test-auth'))                                    // does not match the question
+  assert.deepEqual(seen, [TOOLBOX_URL])                                          // only the one fixed public address
+  assert.equal(r.result.parts[1].data.commands.length, 2)
+})
+
+test('with no topic the skill lists what a guest may use, and an unmatched topic says which groups exist', async () => {
+  const all = await handleRpc(msg('list the toolbox commands'), toolboxFetch())
+  assert.match(all.result.parts[0].text, /3 commands a guest may use/)
+  const none = await handleRpc(msg('toolbox: zebra'), toolboxFetch())
+  assert.match(none.result.parts[0].text, /No guest command matches "zebra"\. Groups: Public chain \(2\), Checks \(1\)/)
+})
+
+test('only github links in the public repositories are passed on, and odd data is trimmed or dropped', async () => {
+  const bad = slice({ commands: [{ id: 'x', group: 'g', label: 'l', command: 'c', description: 'd'.repeat(900), files: [
+    { path: 'a', url: 'https://evil.example.com/steal', sha256: '1' }, { path: 'b', url: 'http://github.com/therealsickonechase-bit/x/blob/main/b', sha256: '2' },
+    { path: 'ok', url: GH + 'rabbit-web/blob/main/ok.ts', sha256: '3' }] }, { nope: true }] })
+  const r = await handleRpc(msg('toolbox: x'), toolboxFetch(bad))
+  const c = r.result.parts[1].data.commands[0]
+  assert.deepEqual(c.files.map((f) => f.path), ['ok'])
+  assert.equal(c.description.length, 300)
+  assert.equal(r.result.parts[1].data.commands.length, 1)
+  assert.ok(!JSON.stringify(r).includes('evil.example.com'))
+})
+
+test('the skill never exposes private material even if it were published by mistake into the slice text, and failures are polite', async () => {
+  const down = await handleRpc(msg('toolbox: chain'), async () => json({}, 500))
+  assert.match(down.result.parts[0].text, /could not read the toolbox/)
+  const odd = await handleRpc(msg('toolbox: chain'), toolboxFetch({ version: 2, commands: 'x' }))
+  assert.match(odd.result.parts[0].text, /not in the expected shape/)
+  const src = (await import('node:fs')).readFileSync(new URL('./server.mjs', import.meta.url), 'utf8')
+  assert.ok(!/storage\.googleapis\.com\/storage\/v1|rabbitsoftware-io-backups|metadata\.google\.internal/.test(src))     // no path to the private toolbox or to credentials
 })
