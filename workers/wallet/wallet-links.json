@@ -1,0 +1,40 @@
+{
+  "note": "Plain links to third-party sites for visitors who need a wallet. Not endorsements; RabbitSoftware has no affiliation and uses no referral codes. Edit here, then run build-donate.mjs.",
+  "apps": [
+    {
+      "name": "MetaMask",
+      "url": "https://metamask.io/download/",
+      "about": "Ethereum browser and phone wallet"
+    },
+    {
+      "name": "Exodus",
+      "url": "https://www.exodus.com/download/",
+      "about": "Bitcoin and Ethereum desktop and phone wallet"
+    },
+    {
+      "name": "Trust Wallet",
+      "url": "https://trustwallet.com/download",
+      "about": "Phone wallet for both"
+    },
+    {
+      "name": "Ledger",
+      "url": "https://www.ledger.com/",
+      "about": "Hardware wallet"
+    },
+    {
+      "name": "Trezor",
+      "url": "https://trezor.io/",
+      "about": "Hardware wallet"
+    }
+  ],
+  "guides": [
+    {
+      "name": "Choosing a Bitcoin wallet (bitcoin.org)",
+      "url": "https://bitcoin.org/en/choose-your-wallet"
+    },
+    {
+      "name": "Finding an Ethereum wallet (ethereum.org)",
+      "url": "https://ethereum.org/en/wallets/find-wallet/"
+    }
+  ]
+}

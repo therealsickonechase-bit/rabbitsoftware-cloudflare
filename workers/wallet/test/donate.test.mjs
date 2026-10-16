@@ -104,3 +104,17 @@ test('the generated pages contain exactly the tested script and styles (nothing 
     assert.equal((html.match(/data-pay-eth\]/g) ?? []).length, 1, `${name}: one payment script`)
   }
 })
+
+test('every outside link on the donate page and front-page block opens safely over https with no referral parameters', () => {
+  for (const [name, html] of [['index.html', index.match(/<!-- donate:start[\s\S]*?<!-- donate:end -->/)[0]], ['donate.html', donate]]) {
+    const anchors = [...html.matchAll(/<a [^>]*href="(https?:[^"]+)"[^>]*>/g)]
+    assert.ok(anchors.length >= 9, `${name}: expected the explorer, wallet and guide links`)
+    for (const m of anchors) {
+      assert.match(m[1], /^https:\/\//, `${name}: ${m[1]}`)
+      if (/anchors\/index\.json|ots/.test(m[1])) continue
+      assert.match(m[0], /rel="noopener noreferrer"/, `${name}: ${m[1]} needs rel`)
+      assert.ok(!new URL(m[1]).search, `${name}: ${m[1]} has parameters`)
+    }
+    assert.match(html, /not endorsements/)
+  }
+})
