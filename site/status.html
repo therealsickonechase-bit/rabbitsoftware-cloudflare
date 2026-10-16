@@ -43,6 +43,9 @@
     ul.cols { list-style:none; margin:8px 0 2px; padding:0 0 0 18px; display:flex; flex-wrap:wrap; gap:4px 14px; color:var(--muted); font:.86rem ui-monospace,Consolas,monospace; }
     button { font:inherit; padding:8px 14px; border:1px solid var(--line); border-radius:6px; background:var(--card); color:var(--ink); cursor:pointer; }
     button:disabled { opacity:.6; cursor:default; }
+    .beat { display:flex; gap:1px; height:38px; align-items:stretch; }
+    .beat i { flex:1; min-width:1px; border-radius:1px; background:var(--tick-none); } .beat i.mutual { background:var(--green); } .beat i.partial { background:var(--warn); }
+    .beat-axis { display:flex; justify-content:space-between; color:var(--muted); font-size:.8rem; margin-top:4px; }
     .legend { display:flex; flex-wrap:wrap; gap:6px 18px; font-size:.86rem; color:var(--muted); margin-top:8px; }
     .legend i { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; }
     @media (max-width:640px) { ul.services li { grid-template-columns:1fr; } }
@@ -66,6 +69,16 @@
       <ul id="services" class="services"></ul>
       <div class="legend"><span><i style="background:var(--green)"></i>answering</span><span><i style="background:var(--bad)"></i>not answering</span><span><i style="background:var(--tick-none)"></i>no report in that half hour</span></div>
       <p class="small" style="margin-top:8px">Each strip is the last 24 hours in half-hour slots, oldest on the left.</p>
+    </section>
+
+    <section>
+      <h2>Heartbeat: PC and cloud</h2>
+      <p class="small" style="margin-bottom:10px">The RabbitOS PC and Google Cloud share no network link. Every five minutes each leaves a signed note in a private mailbox and acknowledges the other's last note. One cell is five minutes, oldest on the left.</p>
+      <div id="beat" class="beat" role="img" aria-label="Heartbeat loading"></div>
+      <div class="beat-axis"><span>24 h ago</span><span>12 h</span><span>now</span></div>
+      <div class="legend"><span><i style="background:var(--green)"></i>heard by both sides</span><span><i style="background:var(--warn)"></i>one side only</span><span><i style="background:var(--tick-none)"></i>nothing recorded</span></div>
+      <p id="beat-text" style="margin-top:8px">Loading…</p>
+      <p id="beat-detail" class="small"></p>
     </section>
 
     <section>

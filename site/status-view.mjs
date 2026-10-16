@@ -70,3 +70,28 @@ export function uptimePercent(history, index) {
   if (!list.length) return null
   return Math.round((list.filter((e) => e.s[index] === '1').length / list.length) * 1000) / 10
 }
+
+export const HEARTBEAT_STALE_AFTER_MIN = 30
+export const PC_QUIET_AFTER_MIN = 60
+
+/**
+ * The heartbeat chart: 24 hours of 5-minute slots showing whether the owner's PC and Google Cloud heard each other (they share no network link; each leaves signed notes in a private mailbox).
+ * cells: 'mutual' (both heard a fresh note), 'partial' (one side only), 'none' (nothing recorded). A quiet PC is not an outage: it runs on a private computer that may be off.
+ */
+export function heartbeatView(hb, now = Date.now()) {
+  if (!hb || typeof hb.cells !== 'string') return { state: 'unknown', text: 'The heartbeat could not be read in the last check.', detail: '', cells: [], label: 'Heartbeat unavailable' }
+  const names = { 0: 'none', 1: 'partial', 2: 'mutual' }
+  const cells = [...hb.cells].map((c) => names[c] ?? 'none')
+  const cloudAge = ageMinutes(hb.lastCloudStep, now)
+  const pcHeardAge = ageMinutes(hb.lastHeard?.cloud, now)       // when the PC last heard the cloud
+  const cloudHeardAge = ageMinutes(hb.lastHeard?.pc, now)       // when the cloud last heard the PC
+  let state = 'ok'
+  if (!(cloudAge <= HEARTBEAT_STALE_AFTER_MIN)) state = 'stale'
+  else if (!(Math.min(pcHeardAge, cloudHeardAge) <= PC_QUIET_AFTER_MIN)) state = 'quiet'
+  const detail = state === 'stale'
+    ? `The cloud side has not reported for ${ageText(hb.lastCloudStep, now).replace(' ago', '')}, so this chart is out of date.`
+    : state === 'quiet'
+      ? `The PC was last heard ${ageText(hb.lastHeard?.pc, now)}. It runs on a private computer, so a quiet PC is not an outage.`
+      : `The cloud last heard the PC ${ageText(hb.lastHeard?.pc, now)}; the PC last heard the cloud ${ageText(hb.lastHeard?.cloud, now)}.`
+  return { state, text: String(hb.sentence ?? ''), detail, cells, label: `Heartbeat, last 24 hours: ${hb.mutualPct ?? '?'} percent of slots heard by both sides` }
+}

@@ -1,11 +1,11 @@
 // Live status page. Reads the public feed that the Google Cloud recorder writes every five minutes, draws it, and re-reads it every minute, so a change shows up without a reload.
 // The feed holds only public facts. If it cannot be read, the page says so and keeps the last picture it had.
 import { publicPlatformMap } from './status-map.mjs'
-import { ageText, freshness, overall, researchLine, strip, uptimePercent } from './status-view.mjs'
+import { ageText, freshness, heartbeatView, overall, researchLine, strip, uptimePercent } from './status-view.mjs'
 
 const BASE = 'https://rabbitsoftware-io-status-public.storage.googleapis.com/status'
 const REFRESH_MS = 60_000
-let feed = null, history = []
+let feed = null, history = [], beat = null
 
 const $ = (id) => document.getElementById(id)
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e }
@@ -47,6 +47,16 @@ function renderServices() {
   }
 }
 
+function renderHeartbeat() {
+  const v = heartbeatView(beat)
+  const box = $('beat')
+  box.replaceChildren(...v.cells.map((c) => el('i', c)))
+  box.setAttribute('aria-label', v.label)
+  $('beat-text').textContent = v.text || 'No heartbeat has been recorded yet.'
+  $('beat-detail').textContent = v.detail
+  $('beat-detail').className = v.state === 'ok' ? 'small' : 'small warn'
+}
+
 function renderResearch() {
   const r = researchLine(feed.research)
   $('research').textContent = r.text
@@ -84,6 +94,7 @@ function render() {
   renderServices()
   renderChain()
   renderResearch()
+  renderHeartbeat()
   renderTree()
 }
 
@@ -91,6 +102,7 @@ async function load() {
   try {
     const [latest, hist] = await Promise.all([getJson('latest.json'), getJson('history.json').catch(() => history)])
     feed = latest; history = hist
+    beat = await getJson('echo.json').catch(() => beat)
     $('error').hidden = true
   } catch (error) {
     console.error('Status feed could not be read', error)

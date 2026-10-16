@@ -83,3 +83,28 @@ test('the page and its headers fit together', () => {
   assert.ok(!/<script(?![^>]*src=)[^>]*>/.test(html), 'no inline script: the CSP allows it, but the page does not need it')
   assert.ok(!/innerHTML\s*=/.test(js.replace("$('map').innerHTML = publicPlatformMap(feed)", '')), 'innerHTML is used only for the escaped map')
 })
+
+import { heartbeatView } from '../../../site/status-view.mjs'
+const beat = (over = {}) => ({ cells: '0'.repeat(280) + '12212120', mutualPct: 3.1, sentence: 'In the last 24 hours the PC and the cloud heard each other in 3.1% of 5-minute slots.', lastCloudStep: '2026-10-15T13:58:00Z', lastPcStep: '2026-10-15T13:55:00Z', lastHeard: { pc: '2026-10-15T13:58:00Z', cloud: '2026-10-15T13:55:00Z' }, ...over })
+
+test('the heartbeat maps cells to three states and says when each side last heard the other', () => {
+  const v = heartbeatView(beat(), NOW)
+  assert.equal(v.cells.length, 288)
+  assert.deepEqual([...new Set(v.cells)].sort(), ['mutual', 'none', 'partial'])
+  assert.equal(v.state, 'ok')
+  assert.ok(v.detail.includes('2 minutes ago') && v.detail.includes('5 minutes ago'))
+})
+
+test('a quiet PC is not an outage, but a silent cloud side makes the chart stale', () => {
+  const quiet = heartbeatView(beat({ lastHeard: { pc: '2026-10-15T09:00:00Z', cloud: '2026-10-15T09:00:00Z' } }), NOW)
+  assert.equal(quiet.state, 'quiet')
+  assert.ok(quiet.detail.includes('not an outage'))
+  assert.equal(heartbeatView(beat({ lastCloudStep: '2026-10-15T10:00:00Z' }), NOW).state, 'stale')
+})
+
+test('an unreadable heartbeat is shown as unknown, and it holds nothing but times and counts', () => {
+  assert.equal(heartbeatView(null, NOW).state, 'unknown')
+  assert.equal(heartbeatView({ cells: 5 }, NOW).state, 'unknown')
+  const html = readFileSync(new URL('../../../site/status.html', import.meta.url), 'utf8')
+  assert.ok(html.includes('id="beat"') && html.includes('Heartbeat: PC and cloud'))
+})
