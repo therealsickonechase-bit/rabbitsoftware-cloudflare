@@ -36,7 +36,7 @@ function run(ws, claims) {
   const sid = claims.sid
   let shell = null
   let output = 0
-  let lastInput = Date.now()
+  let lastActive = Date.now()                         // typing OR terminal output: a build or an agent that is working is not idle
   let ended = false
   const end = (reason, code = 1000) => {
     if (ended) return
@@ -48,7 +48,7 @@ function run(ws, claims) {
   }
   const hello = setTimeout(() => end('hello timeout', 1008), LIMITS.helloTimeoutMs)
   const lifetime = setTimeout(() => end('max lifetime'), Math.min(LIMITS.maxLifetimeMs, Math.max(1000, claims.expiresAt - Date.now())))
-  const idle = setInterval(() => { if (Date.now() - lastInput > LIMITS.idleMs) end('idle') }, 15_000)
+  const idle = setInterval(() => { if (Date.now() - lastActive > LIMITS.idleMs) end('idle') }, 15_000)
   ws.on('close', () => { clearTimeout(hello); clearTimeout(lifetime); clearInterval(idle); end('closed') })
   ws.on('error', () => end('socket error', 1011))
 
@@ -71,6 +71,7 @@ function run(ws, claims) {
       }
       shell.onData((chunk) => {
         output += chunk.length
+        lastActive = Date.now()
         if (output > LIMITS.maxOutputBytes) return end('output limit', 1009)
         try { ws.send(Buffer.from(chunk, 'utf8')) } catch { /* closed */ }
       })
@@ -80,7 +81,7 @@ function run(ws, claims) {
     }
     const frame = parseClientFrame(text)
     if (!frame.ok) return end(frame.error, 1008)
-    lastInput = Date.now()
+    lastActive = Date.now()
     if (frame.t === 'i') shell.write(frame.d)
     else shell.resize(frame.cols, frame.rows)
   })

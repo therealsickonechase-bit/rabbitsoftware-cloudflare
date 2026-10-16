@@ -43,20 +43,20 @@ test("daily session and command quotas reset on the next UTC day and never count
   assert.equal(q.admit(s, { now: tomorrow, ipKey: "a", sid: fresh }, { ...limits, maxLifetimeMs: 2 * 24 * 3600_000, idleMs: 2 * 24 * 3600_000 }).ok, true);
 });
 
-test("sessions expire when idle (10 min) and at the hard maximum (30 min) even with activity", () => {
+test("sessions expire when idle (15 min) and at the hard maximum (60 min) even with activity", () => {
   const s = q.emptyState();
   const a = sid();
   const b = sid();
   q.admit(s, { now: T0, ipKey: "a", sid: a });
   q.admit(s, { now: T0, ipKey: "b", sid: b });
   q.attach(s, a, T0); q.attach(s, b, T0);   // real sessions connect within seconds; never-connected ones are released sooner (see the attach grace test)
-  assert.deepEqual(q.expired(s, T0 + 9 * 60_000), []);
-  assert.deepEqual(q.expired(s, T0 + 10 * 60_000).map((e) => e.reason), ["idle", "idle"]);
-  for (let t = 5; t <= 29; t += 5) assert.equal(q.touch(s, b, T0 + t * 60_000), true);   // b stays active
-  assert.equal(q.touch(s, b, T0 + 30 * 60_000), false);
-  assert.deepEqual(q.expired(s, T0 + 30 * 60_000).find((e) => e.sid === b), { sid: b, reason: "max_lifetime" });
-  assert.equal(q.consumeCommands(s, b, 1, T0 + 31 * 60_000).ok, false);
-  assert.equal(q.attach(s, b, T0 + 31 * 60_000).ok, false);
+  assert.deepEqual(q.expired(s, T0 + 14 * 60_000), []);
+  assert.deepEqual(q.expired(s, T0 + 15 * 60_000).map((e) => e.reason), ["idle", "idle"]);
+  for (let t = 5; t <= 59; t += 5) assert.equal(q.touch(s, b, T0 + t * 60_000), true);   // b stays active
+  assert.equal(q.touch(s, b, T0 + 60 * 60_000), false);
+  assert.deepEqual(q.expired(s, T0 + 60 * 60_000).find((e) => e.sid === b), { sid: b, reason: "max_lifetime" });
+  assert.equal(q.consumeCommands(s, b, 1, T0 + 61 * 60_000).ok, false);
+  assert.equal(q.attach(s, b, T0 + 61 * 60_000).ok, false);
   assert.ok(q.nextAlarm(s, T0) > T0);
 });
 
@@ -341,4 +341,43 @@ test("egress: the hub MCP and the public ledger bucket are reachable only for wh
     assert.equal(egressDecision(url, "GET").allow, false, url);
   }
   assert.equal(EGRESS_HOSTS.length, 15);
+});
+
+test("the session limits are the ones the Cloud Run service can honour, and a busy terminal is not idle", async () => {
+  assert.equal(LIMITS.idleMs, 15 * 60_000);
+  assert.equal(LIMITS.maxLifetimeMs, 60 * 60_000);
+  assert.equal(LIMITS.tokenTtlMs, LIMITS.maxLifetimeMs);
+  assert.equal(LIMITS.maxOutputBytes, 32 * 1024 * 1024);
+  assert.ok(LIMITS.maxLifetimeMs <= 3600_000, "Cloud Run cuts a request at 60 minutes");
+  const fs = await import("node:fs");
+  const server = fs.readFileSync(new URL("../workers/public-shell-gcp/src/server.mjs", import.meta.url), "utf8");
+  const worker = fs.readFileSync(new URL("../workers/public-shell/src/index.ts", import.meta.url), "utf8");
+  assert.equal((server.match(/lastActive = Date\.now\(\)/g) ?? []).length, 3, "set at start, on terminal output and on input");
+  assert.ok(!server.includes("lastInput"), "idle must not look only at input");
+  assert.match(worker, /lastActive = at; noteActivity\(warned\)/, "terminal output must count as activity in the Worker");
+  assert.match(fs.readFileSync(new URL("../../rabbit-web/scripts/powershell/Setup-GcpShell.ps1", import.meta.url), "utf8"), /--timeout 3600/);
+});
+
+test("warnings come before the end, once each, and a busy terminal never gets the idle warning", async () => {
+  const { dueWarning, noteActivity } = await import("../workers/public-shell/src/warnings.mjs");
+  const base = { expiresAt: 3_600_000, lastActive: 0, idleMs: 900_000, sent: new Set() };
+  assert.equal(dueWarning({ ...base, now: 1_000_000, lastActive: 1_000_000 }), null);
+  const five = dueWarning({ ...base, now: 3_600_000 - 300_000, lastActive: 3_500_000 });
+  assert.equal(five.key, "life:300000");
+  assert.match(five.message, /time limit in 5 minutes/);
+  base.sent.add(five.key);
+  assert.equal(dueWarning({ ...base, now: 3_600_000 - 200_000, lastActive: 3_500_000 }), null);
+  const one = dueWarning({ ...base, now: 3_600_000 - 50_000, lastActive: 3_590_000 });
+  assert.match(one.message, /time limit in 1 minute\./);
+  assert.equal(dueWarning({ ...base, now: 3_600_000 + 1, lastActive: 3_600_000 }), null);   // after the limit nothing more is said
+  const idle = { expiresAt: 10_000_000, idleMs: 900_000, sent: new Set() };
+  assert.equal(dueWarning({ ...idle, now: 600_000, lastActive: 0 }), null);                  // 10 of 15 minutes quiet: still fine
+  const warn = dueWarning({ ...idle, now: 800_000, lastActive: 0 });                          // 13 of 15 minutes quiet
+  assert.equal(warn.key, "idle");
+  assert.match(warn.message, /about 2 minutes/);
+  idle.sent.add("idle");
+  assert.equal(dueWarning({ ...idle, now: 820_000, lastActive: 0 }), null);                  // not repeated
+  noteActivity(idle.sent);
+  assert.equal(dueWarning({ ...idle, now: 800_000 + 900_000, lastActive: 800_000 }), null);  // active again, so the clock restarted
+  assert.equal(dueWarning({ ...idle, now: 800_000 + 800_000, lastActive: 800_000 })?.key, "idle");
 });

@@ -10,7 +10,7 @@
     "dev:vault-agent": "wrangler dev --config workers/vault-agent/wrangler.dev.jsonc --local --port 8805",
     "dev:cloudshell": "wrangler dev --config workers/cloudshell/wrangler.jsonc --local --port 8806",
     "test:tasks": "node --test scripts/test-tasks-worker.mjs",
-    "test:cloudshell": "node --test scripts/test-cloudshell.mjs scripts/test-cloud-access.mjs scripts/test-vault-cloud-access.mjs",
+    "test:cloudshell": "node --test scripts/test-cloudshell.mjs scripts/test-cloudshell-session.mjs scripts/test-cloud-access.mjs scripts/test-vault-cloud-access.mjs",
     "dev:public-shell": "wrangler dev --config workers/public-shell/wrangler.jsonc --local --port 8807",
     "test:public-shell": "node --test scripts/test-public-shell.mjs",
     "typecheck:public-shell": "tsc -p workers/public-shell/tsconfig.json",

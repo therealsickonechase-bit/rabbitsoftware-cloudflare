@@ -51,13 +51,36 @@ export async function boundedJson(request, maxBytes) {
   catch { throw new HttpError(400, "Send valid UTF-8 JSON."); }
 }
 
-export async function handleShell(request, token, execute) {
+const SESSION_TIMEOUT_MAX = 150;
+
+/** `session` is optional: { status(), start(), end() }. Without it the session routes do not exist (404) and nothing else changes. */
+export async function handleShell(request, token, execute, session) {
   if (typeof token !== "string" || token.length < 32) return json(503, { error: "Cloud shell is not configured." });
   if (request.headers.has("Origin")) return json(403, { error: "Use the authenticated RabbitOS backend." });
   if (!await tokenMatches(request, token)) return json(401, { error: "Unauthorized." });
   const path = new URL(request.url).pathname;
   if (request.method === "GET" && path === "/health") {
-    return json(200, { ok: true, commandTimeoutMs: 60000, outputBytes: 65536, arbitraryShell: true });
+    return json(200, { ok: true, commandTimeoutMs: 60000, outputBytes: 65536, arbitraryShell: true, ...(session ? { sessionMode: true } : {}) });
+  }
+  if (session && request.method === "GET" && path === "/session") {
+    try { const result = await session.status(); return json(result.status, result.body); }
+    catch { return json(502, { error: "Session status could not be read." }); }
+  }
+  if (session && request.method === "POST" && (path === "/session/start" || path === "/session/end")) {
+    let body;
+    try { body = await boundedJson(request, 512); }
+    catch (error) {
+      if (error instanceof HttpError) return json(error.status, { error: error.message });
+      throw error;
+    }
+    if (!body || typeof body !== "object" || Array.isArray(body) || Object.keys(body).some(key => key !== "consent") || body.consent !== true) {
+      return json(400, { error: "Approve the session action with {\"consent\": true}." });
+    }
+    try { const result = await (path === "/session/start" ? session.start() : session.end()); return json(result.status, result.body); }
+    catch (error) {
+      console.error(JSON.stringify({ event: "cloudshell_session_failed", action: path, type: error instanceof Error ? error.name : "Error" }));
+      return json(502, { error: "The session request failed. Nothing was retried automatically." });
+    }
   }
   if (request.method !== "POST" || path !== "/execute") return json(404, { error: "Not found." });
   let value;
@@ -66,14 +89,20 @@ export async function handleShell(request, token, execute) {
     if (error instanceof HttpError) return json(error.status, { error: error.message });
     throw error;
   }
+  const allowed = session ? ["command", "consent", "session", "timeoutSeconds"] : ["command", "consent"];
   if (!value || typeof value !== "object" || Array.isArray(value)
-      || Object.keys(value).some(key => !["command", "consent"].includes(key))
+      || Object.keys(value).some(key => !allowed.includes(key))
       || value.consent !== true || typeof value.command !== "string" || !value.command.trim()
       || new TextEncoder().encode(value.command).length > 4000 || value.command.includes("\0")) {
     return json(400, { error: "Approve execution and send a command of 1-4000 UTF-8 bytes." });
   }
+  const inSession = value.session === true;
+  if (("session" in value && typeof value.session !== "boolean")
+      || ("timeoutSeconds" in value && (!inSession || !Number.isInteger(value.timeoutSeconds) || value.timeoutSeconds < 1 || value.timeoutSeconds > SESSION_TIMEOUT_MAX))) {
+    return json(400, { error: `session must be true or false; timeoutSeconds (1-${SESSION_TIMEOUT_MAX}) is only for session commands.` });
+  }
   try {
-    const result = await execute(value.command);
+    const result = inSession ? await execute(value.command, { session: true, timeoutSeconds: value.timeoutSeconds }) : await execute(value.command);
     return json(result.status, result.body);
   } catch (error) {
     console.error(JSON.stringify({ event: "cloudshell_execution_failed", type: error instanceof Error ? error.name : "Error" }));

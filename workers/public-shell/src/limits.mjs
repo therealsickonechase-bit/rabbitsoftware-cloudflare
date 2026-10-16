@@ -2,15 +2,15 @@
 // The operator can only tighten them with the optional numeric vars handled in `limitsFrom` (never loosen past HARD).
 
 export const LIMITS = Object.freeze({
-  idleMs: 10 * 60_000,              // no input for this long: session ends and its container is destroyed
-  maxLifetimeMs: 30 * 60_000,       // hard maximum from creation, regardless of activity
-  tokenTtlMs: 30 * 60_000,          // signed session token lifetime (never longer than maxLifetimeMs)
+  idleMs: 15 * 60_000,              // no typing AND no terminal output for this long: session ends and its container is destroyed (a running build or agent is not idle)
+  maxLifetimeMs: 60 * 60_000,       // hard maximum from creation, regardless of activity (the Cloud Run request limit is also 60 minutes)
+  tokenTtlMs: 60 * 60_000,          // signed session token lifetime (never longer than maxLifetimeMs)
   commandTimeoutMs: 60_000,         // applies to non-interactive helper runs; see README (a PTY has no per-command timeout)
   maxGlobalSessions: 6,             // concurrent live sessions across all visitors
   maxSessionsPerIp: 1,              // concurrent live sessions per visitor address
   maxSessionsPerIpPerDay: 6,        // sessions an address may create per UTC day
   maxCommandsPerIpPerDay: 400,      // Enter presses (command lines) per address per UTC day
-  maxOutputBytes: 8 * 1024 * 1024,  // terminal output per session before it is cut off
+  maxOutputBytes: 32 * 1024 * 1024, // terminal output per session before it is cut off (coding agents redraw a lot; 8 MiB ended real work)
   maxFrameBytes: 16 * 1024,         // one WebSocket frame from the browser
   maxInputBytesPerSecond: 64 * 1024,
   maxHelloBytes: 8 * 1024,          // the first frame (carries optional API keys)

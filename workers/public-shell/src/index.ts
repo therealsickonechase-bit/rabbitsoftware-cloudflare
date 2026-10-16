@@ -20,6 +20,7 @@ async function connectPty(origin: string, protocols: string[]): Promise<WebSocke
   socket.accept();
   return socket;
 }
+import { dueWarning, noteActivity } from "./warnings.mjs";
 import { LIMITS, WS_PROTOCOL, allowedOrigins, originAllowed, shellEnabled } from "./limits.mjs";
 import * as quota from "./quota.mjs";
 import { ipKey, newSessionId, secretUsable, signToken, verifyToken } from "./tokens.mjs";
@@ -230,6 +231,8 @@ async function bridge(ws: WebSocket, env: Env, sid: string, expiresAt: number): 
   let started = false;
   let output = 0;
   let lastTouch = 0;
+  let lastActive = Date.now();                       // typing OR terminal output; a busy shell is not idle
+  const warned = new Set<string>();
   const budget = { windowStart: Date.now(), used: 0 };
   const encoder = new TextEncoder();
   let chain: Promise<void> = Promise.resolve();   // serialise handling so input order is kept
@@ -238,6 +241,10 @@ async function bridge(ws: WebSocket, env: Env, sid: string, expiresAt: number): 
 
   const hello = setTimeout(() => { if (!started) { safeClose(ws, 1008, "hello timeout"); closed(); } }, LIMITS.helloTimeoutMs);
   const lifetime = setTimeout(() => { text(ws, "Session time limit reached. Goodbye."); safeClose(ws, 1000, "max lifetime"); closed(); }, Math.max(1000, expiresAt - Date.now()));
+  const warnings = setInterval(() => {
+    const due = dueWarning({ now: Date.now(), expiresAt, lastActive, idleMs: LIMITS.idleMs, sent: warned });
+    if (due) { warned.add(due.key); text(ws, due.message); }
+  }, 15_000);
 
   const handle = async (data: string) => {
     if (!shellEnabled(env)) { text(ws, "The public sandbox has been switched off."); safeClose(ws, 1013, "disabled"); closed(); return; }
@@ -273,6 +280,7 @@ async function bridge(ws: WebSocket, env: Env, sid: string, expiresAt: number): 
       if (!spent.ok) { text(ws, spent.reason === "daily_commands" ? "Daily command limit reached for your address." : "Session is over."); if (spent.reason !== "daily_commands") { safeClose(ws, 1000, "over"); closed(); } return; }
     }
     const now = Date.now();
+    lastActive = now; noteActivity(warned);
     if (now - lastTouch > 20_000) { lastTouch = now; if (!(await gate.touch(sid))) { safeClose(ws, 1000, "expired"); closed(); return; } }
     await terminal.write(encoder.encode(frame.d));
   };
@@ -288,6 +296,9 @@ async function bridge(ws: WebSocket, env: Env, sid: string, expiresAt: number): 
           output += value.data.length;
           if (output > LIMITS.maxOutputBytes) { text(ws, "Output limit reached; closing."); await t.terminate().catch(() => undefined); safeClose(ws, 1009, "output limit"); closed(); return; }
           ws.send(value.data);
+          const at = Date.now();
+          lastActive = at; noteActivity(warned);
+          if (at - lastTouch > 20_000) { lastTouch = at; void gate.touch(sid).then((alive) => { if (!alive) { text(ws, "Session is over."); safeClose(ws, 1000, "expired"); closed(); } }).catch(() => undefined); }
         } else if (value.type === "terminal") { text(ws, "Shell exited."); safeClose(ws, 1000, "exited"); closed(); return; }
       }
     } catch (error) { console.log(logLine({ event: "pump_error", sid, reason: error instanceof Error ? `${error.name}: ${error.message}` : "error" })); safeClose(ws, 1011, "terminal error"); closed(); }
@@ -303,6 +314,7 @@ async function bridge(ws: WebSocket, env: Env, sid: string, expiresAt: number): 
   await done;
   clearTimeout(hello);
   clearTimeout(lifetime);
+  clearInterval(warnings);
   if (terminal) await (terminal as TerminalLike).terminate().catch(() => undefined);
 }
 
