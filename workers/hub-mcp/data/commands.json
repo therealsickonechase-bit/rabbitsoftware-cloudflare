@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-16T16:34:28.717Z",
+ "generatedAt": "2026-10-16T17:05:34.732Z",
  "commandMaxBytes": 4000,
  "projects": [
   "rabbit-web",
@@ -1628,6 +1628,21 @@
    "runsIn": "computer"
   },
   {
+   "id": "dna-local-run",
+   "group": "DNA matching",
+   "label": "Compare a DNA sequence on this PC only (script)",
+   "scope": "owner",
+   "risk": "secret",
+   "command": "pwsh -File scripts/powershell/Run-DnaLocal.ps1 -Fasta C:\\Private\\my_region.fasta",
+   "needs": [
+    "RABBIT_INGEST_SECRET"
+   ],
+   "description": "Loads only the signing key from research-agents\\.env, runs the local comparison and echoes an acknowledgement. -Status shows announced / acknowledged counts.",
+   "project": "rabbit-web",
+   "source": "scripts/powershell/Register-ResearchTasks.ps1",
+   "runsIn": "computer"
+  },
+  {
    "id": "echo-pc-register",
    "group": "Echo",
    "label": "Echo: schedule the PC side",
@@ -2913,6 +2928,36 @@
    "description": "Writes dna_index/matches.json and stages the findings (with the echo health line) to the research agent, the task workers and the cloud explorer, including explore-this-gene actions for coverage gaps.",
    "project": "research-agents",
    "source": "dna_relay.py",
+   "runsIn": "computer"
+  },
+  {
+   "id": "dna-local-compare",
+   "group": "DNA matching",
+   "label": "Compare a DNA sequence on this PC only",
+   "scope": "owner",
+   "risk": "secret",
+   "command": "python dna_local.py compare --fasta C:\\Private\\my_region.fasta",
+   "needs": [
+    "RABBIT_INGEST_SECRET"
+   ],
+   "description": "Compares a FASTA sequence (each up to 5,000 bases) with the public variant index on this PC. The sequence and the result never leave it: only an acknowledgement is echoed (time, count, public index root, completed or failed, a seal only this PC can reproduce). Prefer Run-DnaLocal.ps1, which loads the signing key for you.",
+   "project": "research-agents",
+   "source": "dna_local.py",
+   "runsIn": "computer"
+  },
+  {
+   "id": "dna-local-status",
+   "group": "DNA matching",
+   "label": "DNA echo status (announced / acknowledged)",
+   "scope": "owner",
+   "risk": "secret",
+   "command": "python dna_local.py status",
+   "needs": [
+    "RABBIT_INGEST_SECRET"
+   ],
+   "description": "How many local comparisons were announced and how many the cloud acknowledged, with the typical acknowledgement time. Counts and times only.",
+   "project": "research-agents",
+   "source": "dna_local.py",
    "runsIn": "computer"
   },
   {

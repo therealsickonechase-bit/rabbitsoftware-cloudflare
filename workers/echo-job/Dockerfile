@@ -3,8 +3,8 @@
 # The build folder is assembled by rabbit-web/scripts/powershell/Setup-GcpEcho.ps1, which copies research-agents/echo_link.py and echo_record.py next to this Dockerfile.
 FROM python:3.12-slim
 WORKDIR /app
-COPY echo_link.py echo_record.py stage_box.py ./
-RUN python -c "import echo_link, echo_record, stage_box" && useradd --system --uid 10001 echo
+COPY echo_link.py echo_record.py stage_box.py dna_echo.py ./
+RUN python -c "import echo_link, echo_record, stage_box, dna_echo" && useradd --system --uid 10001 echo
 USER echo
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 CMD ["python", "echo_link.py", "--side", "cloud"]
