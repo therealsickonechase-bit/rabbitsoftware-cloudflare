@@ -132,3 +132,13 @@ test('the community links (Reddit, GitHub profile) are on the front page and the
     }
   }
 })
+
+test('every GitHub link on the website points at a public repository or profile that exists (checked 2026-10-16)', async () => {
+  const { readdirSync } = await import('node:fs')
+  const ALLOWED = [/^https:\/\/github\.com\/therealsickonechase-bit\/?$/, /^https:\/\/github\.com\/therealsickonechase-bit\/(rabbitsoftware-cloudflare|rabbit-web)(\.git|\/?$)/, /^https:\/\/github\.com\/meta-llama\/llama-models\//]
+  for (const f of readdirSync(site).filter((n) => n.endsWith('.html'))) {
+    for (const m of read(f).matchAll(/https:\/\/github\.com\/[^"'\s<)]+/g)) {
+      assert.ok(ALLOWED.some((re) => re.test(m[0])), `${f}: ${m[0]} is not on the list of public repositories`)
+    }
+  }
+})

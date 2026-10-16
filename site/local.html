@@ -5,7 +5,7 @@
   <h1>What runs locally, and what does not</h1>
   <p>Use this website from a local checkout without uploading your files. After obtaining its static assets and optional model, these local functions need no internet: published research reading, corpus metadata search, selected-file viewing, software simulation, offline CLI demo/local lookup, and local Ollama chat. Hosted AI and live web searches still need internet. RabbitOS is account-free; it does not provide cloud account/device sync.</p>
   <h2>Run the static website on your computer</h2>
-  <p>From a reviewed checkout of <a href="https://github.com/rabbitsoftware-io/rabbitsoftware-cloudflare">the website repository</a>, run:</p>
+  <p>From a reviewed checkout of <a href="https://github.com/therealsickonechase-bit/rabbitsoftware-cloudflare">the website repository</a>, run:</p>
   <pre><code>python -m http.server 8788 --bind 127.0.0.1 --directory site</code></pre>
   <p>Open http://127.0.0.1:8788/. Keep the server running while using the pages; stop with Ctrl+C. Use HTTP, not file URLs, so JavaScript modules and the local metadata asset can load. This serves files from your local checkout, not from a private vault. Python's server does not apply the Pages security headers. Do not expose it to other computers.</p>
   <h2>Optional offline AI with Ollama</h2>
