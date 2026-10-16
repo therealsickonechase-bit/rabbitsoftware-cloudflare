@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-16T13:33:08.129Z",
+ "generatedAt": "2026-10-16T14:03:09.848Z",
  "commandMaxBytes": 4000,
  "projects": [
   "rabbit-web",
@@ -1137,6 +1137,30 @@
    "runsIn": "computer"
   },
   {
+   "id": "gcp-echo-preview",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "PC and cloud echo (cloud side): preview",
+   "scope": "owner",
+   "risk": "network",
+   "command": "pwsh -File scripts/powershell/Setup-GcpEcho.ps1 -RunNow -WhatIf",
+   "description": "Prints what Setup-GcpEcho.ps1 would do and changes nothing (it may read from Google Cloud). Cloud Run job rabbit-echo every 5 minutes: reads the PC's signed note from a private bucket folder, acknowledges it and writes its own. No network link to the PC; only counters, random IDs and times are exchanged. Reads only the ingest secret and may touch only the echo/ folder.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-echo-run",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "PC and cloud echo (cloud side): run",
+   "scope": "owner",
+   "risk": "deploy",
+   "command": "pwsh -File scripts/powershell/Setup-GcpEcho.ps1 -RunNow",
+   "description": "Changes Google Cloud (project rabbitsoftware-io). Safe to run again. Cloud Run job rabbit-echo every 5 minutes: reads the PC's signed note from a private bucket folder, acknowledges it and writes its own. No network link to the PC; only counters, random IDs and times are exchanged. Reads only the ingest secret and may touch only the echo/ folder.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
    "id": "gcp-research-explorer-preview",
    "group": "Google Cloud setup (run on your PC)",
    "label": "Research explorer in Google Cloud (stateless): preview",
@@ -1584,6 +1608,33 @@
     "RABBIT_INGEST_SECRET"
    ],
    "description": "Picks up queued task proposals from the app and runs them in the agents.",
+   "project": "rabbit-web",
+   "source": "scripts/powershell/Register-ResearchTasks.ps1",
+   "runsIn": "computer"
+  },
+  {
+   "id": "echo-pc-run",
+   "group": "Echo",
+   "label": "Echo: one PC step",
+   "scope": "owner",
+   "risk": "secret",
+   "command": "pwsh -File scripts/powershell/Run-Echo.ps1",
+   "needs": [
+    "RABBIT_INGEST_SECRET"
+   ],
+   "description": "Hears the cloud, acknowledges it and writes the PC's signed note to the private echo/ folder. Reads the key from research-agents\\.env; nothing is printed.",
+   "project": "rabbit-web",
+   "source": "scripts/powershell/Register-ResearchTasks.ps1",
+   "runsIn": "computer"
+  },
+  {
+   "id": "echo-pc-register",
+   "group": "Echo",
+   "label": "Echo: schedule the PC side",
+   "scope": "owner",
+   "risk": "local",
+   "command": "pwsh -File scripts/powershell/Run-Echo.ps1 -Register",
+   "description": "Creates the scheduled task \"RabbitOS Echo\" (every 5 minutes). -Remove deletes it.",
    "project": "rabbit-web",
    "source": "scripts/powershell/Register-ResearchTasks.ps1",
    "runsIn": "computer"
