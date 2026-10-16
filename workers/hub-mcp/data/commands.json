@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-16T11:32:17.632Z",
+ "generatedAt": "2026-10-16T12:25:15.759Z",
  "commandMaxBytes": 4000,
  "projects": [
   "rabbit-web",
@@ -1108,6 +1108,30 @@
    "risk": "deploy",
    "command": "pwsh -File scripts/powershell/Setup-GcpWalletRecovery.ps1",
    "description": "Changes Google Cloud (project rabbitsoftware-io). Safe to run again. Project lien that blocks deleting the project that holds the wallet key, an email alert on any change to the wallet key ring, and a status report (key state, destroy delay, owners, signers). Safe to re-run.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-pc-job-logging-preview",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Google Cloud record of the PC backup and sync jobs: preview",
+   "scope": "owner",
+   "risk": "network",
+   "command": "pwsh -File scripts/powershell/Setup-GcpPcJobLogging.ps1 -WhatIf",
+   "description": "Prints what Setup-GcpPcJobLogging.ps1 would do and changes nothing (it may read from Google Cloud). Log bucket pc-jobs (kept 365 days), a sink for the log rabbit-pc-jobs, the metric pc_job_failed and an email alert. The PC jobs (daily backups, personal folders, Hugging Face, vault upload) write one entry per run with counts, duration and the size of their local cache folders.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-pc-job-logging-run",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Google Cloud record of the PC backup and sync jobs: run",
+   "scope": "owner",
+   "risk": "deploy",
+   "command": "pwsh -File scripts/powershell/Setup-GcpPcJobLogging.ps1",
+   "description": "Changes Google Cloud (project rabbitsoftware-io). Safe to run again. Log bucket pc-jobs (kept 365 days), a sink for the log rabbit-pc-jobs, the metric pc_job_failed and an email alert. The PC jobs (daily backups, personal folders, Hugging Face, vault upload) write one entry per run with counts, duration and the size of their local cache folders.",
    "project": "rabbit-web",
    "source": "docs/gcp-platform.md",
    "runsIn": "computer"
