@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-16T14:03:09.848Z",
+ "generatedAt": "2026-10-16T14:18:41.621Z",
  "commandMaxBytes": 4000,
  "projects": [
   "rabbit-web",
@@ -2862,6 +2862,48 @@
    "description": "Polls every 20 seconds.",
    "project": "research-agents",
    "source": "task_worker.py",
+   "runsIn": "computer"
+  },
+  {
+   "id": "stage-add",
+   "group": "Echo",
+   "label": "Stage a task or note for an agent",
+   "scope": "owner",
+   "risk": "secret",
+   "command": "python stage_box.py stage --to research --kind task --title \"Look at ATM\" --body \"Summarise new papers\"",
+   "needs": [
+    "RABBIT_INGEST_SECRET"
+   ],
+   "description": "Leaves a signed text item in the private echo/stage folder; the PC copies it to the local inbox of the agent on the next echo step even if the agent is not running.",
+   "project": "research-agents",
+   "source": "stage_box.py",
+   "runsIn": "computer"
+  },
+  {
+   "id": "stage-pending",
+   "group": "Echo",
+   "label": "Staging: what is waiting",
+   "scope": "owner",
+   "risk": "secret",
+   "command": "python stage_box.py pending",
+   "needs": [
+    "RABBIT_INGEST_SECRET"
+   ],
+   "description": "Per agent: items waiting, received and ignored.",
+   "project": "research-agents",
+   "source": "stage_box.py",
+   "runsIn": "computer"
+  },
+  {
+   "id": "stage-inbox",
+   "group": "Echo",
+   "label": "Staging: local inbox of an agent",
+   "scope": "owner",
+   "risk": "local",
+   "command": "python stage_box.py inbox --agent research",
+   "description": "Items already delivered to this PC for the agent, oldest first (mark handled with the done command).",
+   "project": "research-agents",
+   "source": "stage_box.py",
    "runsIn": "computer"
   },
   {
