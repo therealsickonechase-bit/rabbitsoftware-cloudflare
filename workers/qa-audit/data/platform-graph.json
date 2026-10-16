@@ -165,7 +165,7 @@
     {"id":"d-miner","title":"Rabbit web data miner on the Maxwell chain","status":"done","area":"Chain","note":"Block 2 mined; the daily job runs it from the next 3:00 AM run."},
     {"id":"d-supabase-tree","title":"Supabase tree, checked against the live database","status":"done","area":"Supabase","note":"29 tables; the 8 closed ones refuse an anonymous reader."},
     {"id":"w-browser-test","title":"Try the guest shell in a browser","status":"waiting","area":"You","note":"Needs the human check, which only a person can pass."},
-    {"id":"w-sql","title":"Apply the platform-graph SQL in the Supabase SQL editor","status":"waiting","area":"You","note":"Two files: the tables, then the data. Nothing is written until you run them."},
+    {"id":"d-sql","title":"Platform-graph tables and data applied in Supabase (2026-10-15)","status":"done","area":"Supabase","note":"55 nodes, 89 connections, 49 roadmap items. Row-level security on; everyone can read, only the service role can write."},
     {"id":"w-push","title":"Push the local commits to GitHub","status":"waiting","area":"You","note":"All three repositories have commits that exist only on this computer."},
     {"id":"d-app-deploy","title":"RabbitOS app deployed (2026-10-15)","status":"done","area":"RabbitOS","note":"Ships the guest shell prompt box and key toggle, the command catalog page, enforced content-security-policy on 17 more pages, and hides the paused Donate card, link and page."},
     {"id":"w-owner-key","title":"Create a hub key and test the owner role","status":"waiting","area":"You","note":"Run New-HubKey.ps1; the key goes to the clipboard and is never printed."},
@@ -200,7 +200,7 @@
     {"id":"w-wallet-test","title":"Test the wallet with a small real amount, then decide the recovery plan","status":"waiting","area":"You","note":"Follow docs/wallet.md. There is no seed phrase; decide how you will limit the one-copy risk."},
     {"id":"p-donations","title":"Public donations","status":"paused","area":"Chain","note":"Paused on purpose. Reopen by setting open to true in workers/wallet/donations.json after the small wallet test, the recovery plan and the legal and tax decision."},
     {"id":"p-eth-xrpl","title":"Ethereum and XRP Ledger anchoring","status":"paused","area":"Chain","note":"Built and deployed with its own key. Fund about 0.003 ETH and 2 XRP at the addresses in anchors/chains.json, then resume the Scheduler job rabbit-anchor-chains-6h."},
-    {"id":"w-btc-confirm","title":"Bitcoin anchor confirmation","status":"waiting","area":"Chain","note":"The first proof is submitted; it confirms once Bitcoin includes it and the job upgrades it by itself."},
+    {"id":"d-btc-confirm","title":"First Bitcoin anchor confirmed (block 971631)","status":"done","area":"Chain","note":"The scheduled job upgraded the proof by itself at 01:00 UTC. Checked independently: the document hash matches and the proof ends at the Bitcoin block merkle root."},
     {"id":"n-live-more","title":"Live search for NIH RePORTER and ClinVar","status":"next","area":"Research","note":"RePORTER needs a POST; ClinVar needs its own response shape. Both are already used by the owner's agents."},
     {"id":"n-ingest-proposals","title":"Let a live search propose an ingest task","status":"next","area":"Research","note":"The tasks page already takes proposals; a person approves before the owner's agents fetch and store anything."}
   ]
