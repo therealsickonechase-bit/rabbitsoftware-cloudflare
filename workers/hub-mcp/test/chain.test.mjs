@@ -64,3 +64,17 @@ test('chain_consistency says so when a system cannot be read, without leaking de
   const notFound = body(await call('chain_consistency', {}, router({ 'rabbitsoftware-io-ledger-public.storage.googleapis.com/ledger/chain_head.json': reply('nope', 404) })))
   assert.equal(notFound.allOk, false)
 })
+
+test('anchor_status reports Bitcoin proofs and the Ethereum and XRPL accounts from the public bucket only', async () => {
+  const f = router({
+    'rabbitsoftware-io-ledger-public.storage.googleapis.com/anchors/index.json': [{ id: 'a1', digest: 'dd', status: 'pending', bitcoinHeight: null }],
+    'rabbitsoftware-io-ledger-public.storage.googleapis.com/anchors/chains.json': { updatedAt: 't', ethereum: { address: '0xabc', funded: false, balance: '0' }, xrpl: { address: 'rXYZ', funded: true, balance: '3', recent: [{ id: 'a1', status: 'submitted', txid: 'TX', explorer: 'e' }] } },
+  })
+  const out = body(await call('anchor_status', {}, f))
+  assert.equal(out.bitcoin[0].status, 'pending')
+  assert.equal(out.ethereum.funded, false)
+  assert.equal(out.xrpl.recent[0].txid, 'TX')
+  assert.match(out.note, /not donation addresses/)
+  const none = await call('anchor_status', {}, router({ 'rabbitsoftware-io-ledger-public.storage.googleapis.com/anchors/index.json': reply('x', 404) }))
+  assert.equal(none.isError, true)
+})

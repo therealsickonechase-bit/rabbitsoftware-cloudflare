@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-15T23:08:21.365Z",
+ "generatedAt": "2026-10-16T00:06:26.893Z",
  "commandMaxBytes": 4000,
  "projects": [
   "rabbit-web",
@@ -976,6 +976,30 @@
    "risk": "deploy",
    "command": "pwsh -File scripts/powershell/Setup-GcpAnchor.ps1",
    "description": "Changes Google Cloud (project rabbitsoftware-io). Safe to run again. Cloud Run job rabbit-anchor: stamps the public ledger and Maxwell chain heads, stores proofs under anchors/ in the public ledger bucket, upgrades them once Bitcoin confirms. No keys, no fees.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-anchor-chains-preview",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Ethereum and XRP Ledger anchoring: preview",
+   "scope": "owner",
+   "risk": "network",
+   "command": "pwsh -File scripts/powershell/Setup-GcpAnchorChains.ps1 -WhatIf",
+   "description": "Prints what Setup-GcpAnchorChains.ps1 would do and changes nothing (it may read from Google Cloud). Cloud Run job rabbit-anchor-chains with its own hardware key (anchor-signer): posts the anchor fingerprint to Ethereum and the XRP Ledger once the two fee addresses are funded. Prints the addresses. Never touches the donation key.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-anchor-chains-run",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Ethereum and XRP Ledger anchoring: run",
+   "scope": "owner",
+   "risk": "deploy",
+   "command": "pwsh -File scripts/powershell/Setup-GcpAnchorChains.ps1",
+   "description": "Changes Google Cloud (project rabbitsoftware-io). Safe to run again. Cloud Run job rabbit-anchor-chains with its own hardware key (anchor-signer): posts the anchor fingerprint to Ethereum and the XRP Ledger once the two fee addresses are funded. Prints the addresses. Never touches the donation key.",
    "project": "rabbit-web",
    "source": "docs/gcp-platform.md",
    "runsIn": "computer"
@@ -2369,6 +2393,18 @@
    "risk": "local",
    "command": "cd workers/wallet && npm test",
    "description": "Published keccak, Ethereum and Bitcoin address vectors, signature recovery, and that the public pages show only the two signed addresses.",
+   "project": "rabbitsoftware-cloudflare",
+   "runsIn": "computer"
+  },
+  {
+   "id": "cf-test-anchor-chains",
+   "source": "workers/wallet/anchor-chains.mjs",
+   "group": "Platform tests",
+   "label": "Test: Ethereum and XRPL anchoring",
+   "scope": "owner",
+   "risk": "local",
+   "command": "cd workers/wallet && node --test test/anchor-chains.test.mjs",
+   "description": "XRPL bytes match the official library; the job sends nothing while unfunded and once per anchor when funded.",
    "project": "rabbitsoftware-cloudflare",
    "runsIn": "computer"
   },

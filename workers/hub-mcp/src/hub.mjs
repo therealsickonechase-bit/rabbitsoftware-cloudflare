@@ -203,6 +203,19 @@ export const TOOLS = [
     },
   },
   {
+    name: 'anchor_status', description: 'Where the chain heads are anchored on public networks: the newest Bitcoin (OpenTimestamps) anchors and whether each is confirmed, plus the Ethereum and XRP Ledger anchoring addresses, whether they are funded, and the latest transactions. Read only.' + UNTRUSTED,
+    inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+    async run(_a, ctx) {
+      const get = async (path) => { const r = await getText(ctx.fetchImpl, ORIGINS.ledgerBucket, `${path}?cb=${ctx.now()}`); return r.status === 200 ? JSON.parse(r.text) : null }
+      let index = null, chains = null
+      try { [index, chains] = await Promise.all([get('/anchors/index.json'), get('/anchors/chains.json')]) } catch { return fail('could not read the anchor files') }
+      if (!Array.isArray(index)) return fail('no anchors published yet')
+      const bitcoin = index.slice(0, 5).map((e) => ({ id: e.id, digest: e.digest, status: e.status, bitcoinHeight: e.bitcoinHeight ?? null }))
+      const side = (c) => (c ? { address: c.address, funded: Boolean(c.funded), balance: c.balance ?? null, lastSentAt: c.lastSentAt ?? null, recent: (c.recent ?? []).slice(0, 3).map((r) => ({ id: r.id, status: r.status, txid: r.txid, explorer: r.explorer })) } : null)
+      return asText({ bitcoin, ethereum: side(chains?.ethereum), xrpl: side(chains?.xrpl), updatedAt: chains?.updatedAt ?? null, note: 'Anchoring addresses only pay network fees; they are not donation addresses. A proof shows the record existed by that block; it does not show its contents are true.' })
+    },
+  },
+  {
     name: 'chain_consistency', description: 'Check that the chain agrees across systems: the app (Supabase-backed) against the public Google Cloud bucket mirror (head, block hashes and links). A local copy on the owner\'s PC is compared with scripts, not from here.',
     inputSchema: { type: 'object', properties: {}, additionalProperties: false },
     async run(_a, ctx) {
