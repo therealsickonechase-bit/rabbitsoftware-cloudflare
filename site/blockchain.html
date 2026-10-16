@@ -44,7 +44,7 @@
       </div>
       <div>
         <h3>What it is not</h3>
-        <p>There is no coin, token or price, and nothing to buy, sell or trade. Donations (if you choose to give) are voluntary gifts to running costs, not a stake in anything.</p>
+        <p>There is no coin, token or price, and nothing to buy, sell or trade.</p>
       </div>
     </div>
 
@@ -66,9 +66,9 @@
         <p>Every few hours, if the ledger or Maxwell chain changed, a SHA-256 fingerprint of their latest heads is sent to the public OpenTimestamps calendars, which commit it into Bitcoin. Once Bitcoin confirms it, the proof shows the record existed by that block, witnessed by a network the project does not control. Proofs are public in the <a href="https://rabbitsoftware-io-ledger-public.storage.googleapis.com/anchors/index.json">anchor index</a>.</p>
       </div>
       <div class="layer">
-        <span class="tag">Layer 4</span>
+        <span class="tag">Layer 4 &middot; planned</span>
         <h3>Ethereum and XRP Ledger notes</h3>
-        <p>The same fingerprint is also written into one Ethereum transaction (zero value, sent to itself, data <code>RBOS</code> + version + the fingerprint) and one XRP Ledger memo, so two more independent public networks witness it. They are signed by a dedicated hardware key that holds only a little gas money; it is not the donation wallet. Current state: <b data-anchor="eth-anchor">built and waiting for its gas account to be funded; nothing posted yet</b> (Ethereum), <b data-anchor="xrpl-anchor">built and waiting for its gas account to be funded; nothing posted yet</b> (XRP Ledger). Bitcoin: <b data-anchor="btc-anchor">checking the anchor index&hellip;</b>. The fee accounts are not donation addresses and are not shown on the pages; the only address for gifts is the one on the <a href="donate.html">donate page</a>. Status file: <a href="https://rabbitsoftware-io-ledger-public.storage.googleapis.com/anchors/chains.json">chains.json</a>.</p>
+        <p>Not switched on. The plan is to write the same fingerprint into one Ethereum transaction and one XRP Ledger memo, so two more independent public networks witness it. The software exists but nothing has been posted to either network yet, so today the only outside witness is Bitcoin: <b data-anchor="btc-anchor">checking the anchor index&hellip;</b>. Status file: <a href="https://rabbitsoftware-io-ledger-public.storage.googleapis.com/anchors/chains.json">chains.json</a>.</p>
       </div>
     </div>
 
@@ -110,15 +110,14 @@
     </ul>
 
     <h2>Questions people ask</h2>
-    <details><summary>Is there a RabbitSoftware coin or token?</summary><p>No. There is no token, no sale and no price. The only addresses for voluntary gifts are on the <a href="donate.html">donate page</a>. The small fee accounts used for anchoring are listed in the status file only to pay network fees; never send gifts there.</p></details>
-    <details><summary>Are donations an investment?</summary><p>No. They are voluntary gifts toward hosting and development. They buy no goods or services and are not tax-deductible unless the donate page says so.</p></details>
+    <details><summary>Is there a RabbitSoftware coin or token?</summary><p>No. There is no token, no sale and no price. Nothing on this site takes payments or donations at the moment. The small accounts used for anchoring are listed in the status file only to pay network fees.</p></details>
     <details><summary>Why Bitcoin?</summary><p>It is a widely watched public network that none of us control, which makes it a good independent witness for a timestamp. Using it as a witness is not an endorsement of any asset.</p></details>
     <details><summary>Can I put my own data on the chain?</summary><p>No. Personal data belongs in your own encrypted local vault. The public chain only holds fingerprints and public records.</p></details>
     <details><summary>Who runs it?</summary><p>It is created and maintained by Chase Allen Ringquist. See <a href="about.html">the author page</a> and <a href="story.html">the story</a>.</p></details>
     <details><summary>Is the code open?</summary><p>The project code is licensed under UPL-1.0 (see <a href="license.html">license and authorship</a>), but the source repository is not public at the moment. You do not need it to check the chain: every step above uses public files and standard tools.</p></details>
     <details><summary>Where do the identifiers come from?</summary><p>The <a href="chain-identifiers.md">chain and block identifiers guide</a> explains what each id, hash and index means and which ones must not be mixed up.</p></details>
 
-    <p>Next: <a href="story.html">why RabbitSoftware exists</a> &middot; <a href="press.html">press kit</a> &middot; <a href="donate.html">support the work</a>.</p>
+    <p>Next: <a href="story.html">why RabbitSoftware exists</a> &middot; <a href="press.html">press kit</a>.</p>
   </main>
   <footer class="wrap"><p>By Chase Allen Ringquist &middot; <a href="index.html">RabbitSoftware home</a> &middot; <a href="license.html">Author and license</a> &middot; <a href="privacy.html">Privacy policy</a> &middot; Research tooling, not clinical software.</p></footer>
   <script src="live-facts.js" defer></script>

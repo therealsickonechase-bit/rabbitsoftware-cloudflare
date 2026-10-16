@@ -1,0 +1,4 @@
+{
+  "open": false,
+  "note": "Donations are paused. While open is false, build-donate.mjs removes the donate page, wallet.json, the front-page block, the nav and text mentions are written as 'not accepting donations', and the app hides its Donate card and page. Set open to true and run the build to reopen (the page text edits in site/*.html must be restored from git history, commit 'Pause donations')."
+}

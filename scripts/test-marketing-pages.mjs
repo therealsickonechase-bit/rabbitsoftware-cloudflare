@@ -6,7 +6,7 @@ import test from 'node:test'
 import { fileURLToPath } from 'node:url'
 
 const site = join(dirname(fileURLToPath(import.meta.url)), '..', 'site')
-const PAGES = ['story.html', 'blockchain.html', 'press.html', 'donate.html']
+const PAGES = ['story.html', 'blockchain.html', 'press.html']
 const read = (f) => readFileSync(join(site, f), 'utf8')
 const visible = (html) => html
   .replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<style[\s\S]*?<\/style>/g, ' ').replace(/<!--[\s\S]*?-->/g, ' ')
@@ -63,7 +63,6 @@ test('the limits are stated where people will read them', () => {
   assert.match(chain, /Never on the chain/)
   assert.match(visible(read('story.html')), /not clinical software/i)
   assert.match(visible(read('press.html')), /We do not say/)
-  assert.match(visible(read('donate.html')), /not investments/)
 })
 
 test('the pages do not claim open source or link to repositories visitors cannot open (checked 2026-10-15: none is public)', () => {
@@ -84,9 +83,9 @@ test('every live-number slot is filled by live-facts.js', () => {
   }
 })
 
-test('the front page links the story, the chain, the press kit and the donate page, and the sitemap lists them', () => {
+test('the front page links the story, the chain and the press kit, and the sitemap lists them', () => {
   const index = read('index.html')
-  for (const p of ['story.html', 'blockchain.html', 'press.html', 'donate.html']) assert.ok(index.includes(`href="${p}"`), `index: ${p}`)
+  for (const p of ['story.html', 'blockchain.html', 'press.html']) assert.ok(index.includes(`href="${p}"`), `index: ${p}`)
   const map = read('sitemap.xml')
   for (const p of PAGES) assert.ok(map.includes(`/${p}<`), `sitemap: ${p}`)
 })
@@ -96,4 +95,15 @@ test('the story page only repeats what the approved author page says: no ages, m
   assert.ok(!/\bage (three|six|seven|ten|twelve|fourteen|sixteen|eighteen|twenty|thirty)/i.test(text))
   assert.ok(!/\b(ph\.?d|m\.?d\.?|professor|dr\.|board[- ]certified|clinician|surgeon)\b/i.test(text), 'credentials')
   assert.match(text, /marked as a personal reflection rather than verified research/)
+})
+
+test('donations are paused: no donate page, no wallet file, no donation address or invitation anywhere on the public site', () => {
+  assert.equal(JSON.parse(read('../workers/wallet/donations.json')).open, false)
+  assert.ok(!existsSync(join(site, 'donate.html')) && !existsSync(join(site, 'wallet.json')))
+  for (const f of ['index.html', 'story.html', 'blockchain.html', 'press.html', 'sitemap.xml']) {
+    const html = read(f)
+    assert.ok(!/bc1q[a-z0-9]{30,}|0x[0-9a-fA-F]{40}|donate.html|bitcoin:|ethereum:/.test(html), `${f}: donation address or link`)
+    assert.ok(!/id="donate"/.test(html), `${f}: donate section`)
+  }
+  for (const f of PAGES) assert.ok(!/voluntary donations|support the work|Donate</i.test(visible(read(f))), `${f}: invites donations`)
 })
