@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-16T10:18:55.226Z",
+ "generatedAt": "2026-10-16T10:47:49.807Z",
  "commandMaxBytes": 4000,
  "projects": [
   "rabbit-web",
@@ -2513,6 +2513,18 @@
    "risk": "local",
    "command": "cd workers/wallet && npm test",
    "description": "Published keccak, Ethereum and Bitcoin address vectors, signature recovery, and that the public pages show only the two signed addresses.",
+   "project": "rabbitsoftware-cloudflare",
+   "runsIn": "computer"
+  },
+  {
+   "id": "rw-pathways-check",
+   "source": "scripts/pathways-check.mjs",
+   "group": "Platform tests",
+   "label": "Pathways: check VS Code, GitHub, Google Cloud, network, research and blockchain together",
+   "scope": "owner",
+   "risk": "network",
+   "command": "node scripts/pathways-check.mjs",
+   "description": "Read only. About 30 checks across this PC, GitHub, Google Cloud, the websites, the research feed and the chains; exit code 1 if anything failed. Add --report to save the result to ~/RabbitOS/logs and gs://rabbitsoftware-io-reports/pathways/latest.json, --roundtrip to also follow one marker note from the vault to Google Cloud and search (about 4 minutes, writes Ops/Pathway check.md), --json for machine-readable output.",
    "project": "rabbitsoftware-cloudflare",
    "runsIn": "computer"
   },
