@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-16T00:06:26.893Z",
+ "generatedAt": "2026-10-16T00:24:48.477Z",
  "commandMaxBytes": 4000,
  "projects": [
   "rabbit-web",
@@ -981,13 +981,37 @@
    "runsIn": "computer"
   },
   {
+   "id": "gcp-rfnexus-preview",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "RF Nexus static preview: preview",
+   "scope": "owner",
+   "risk": "network",
+   "command": "pwsh -File scripts/powershell/Setup-GcpRfNexus.ps1 -WhatIf",
+   "description": "Prints what Setup-GcpRfNexus.ps1 would do and changes nothing (it may read from Google Cloud). Cloud Run service rf-nexus-preview: serves the three reviewed export files with strict headers; API calls answer 503. Own account with no roles, no secrets. Not part of RabbitOS.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-rfnexus-run",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "RF Nexus static preview: run",
+   "scope": "owner",
+   "risk": "deploy",
+   "command": "pwsh -File scripts/powershell/Setup-GcpRfNexus.ps1",
+   "description": "Changes Google Cloud (project rabbitsoftware-io). Safe to run again. Cloud Run service rf-nexus-preview: serves the three reviewed export files with strict headers; API calls answer 503. Own account with no roles, no secrets. Not part of RabbitOS.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
    "id": "gcp-anchor-chains-preview",
    "group": "Google Cloud setup (run on your PC)",
    "label": "Ethereum and XRP Ledger anchoring: preview",
    "scope": "owner",
    "risk": "network",
    "command": "pwsh -File scripts/powershell/Setup-GcpAnchorChains.ps1 -WhatIf",
-   "description": "Prints what Setup-GcpAnchorChains.ps1 would do and changes nothing (it may read from Google Cloud). Cloud Run job rabbit-anchor-chains with its own hardware key (anchor-signer): posts the anchor fingerprint to Ethereum and the XRP Ledger once the two fee addresses are funded. Prints the addresses. Never touches the donation key.",
+   "description": "Prints what Setup-GcpAnchorChains.ps1 would do and changes nothing (it may read from Google Cloud). Cloud Run job rabbit-anchor-chains with its own hardware key (anchor-signer): posts the anchor fingerprint to Ethereum and the XRP Ledger once the two fee addresses are funded. Prints the addresses. Never touches the donation key. Currently PARKED: its Scheduler job is paused (gcloud scheduler jobs resume rabbit-anchor-chains-6h --location us-west2 after funding).",
    "project": "rabbit-web",
    "source": "docs/gcp-platform.md",
    "runsIn": "computer"
@@ -999,7 +1023,7 @@
    "scope": "owner",
    "risk": "deploy",
    "command": "pwsh -File scripts/powershell/Setup-GcpAnchorChains.ps1",
-   "description": "Changes Google Cloud (project rabbitsoftware-io). Safe to run again. Cloud Run job rabbit-anchor-chains with its own hardware key (anchor-signer): posts the anchor fingerprint to Ethereum and the XRP Ledger once the two fee addresses are funded. Prints the addresses. Never touches the donation key.",
+   "description": "Changes Google Cloud (project rabbitsoftware-io). Safe to run again. Cloud Run job rabbit-anchor-chains with its own hardware key (anchor-signer): posts the anchor fingerprint to Ethereum and the XRP Ledger once the two fee addresses are funded. Prints the addresses. Never touches the donation key. Currently PARKED: its Scheduler job is paused (gcloud scheduler jobs resume rabbit-anchor-chains-6h --location us-west2 after funding).",
    "project": "rabbit-web",
    "source": "docs/gcp-platform.md",
    "runsIn": "computer"
@@ -2356,7 +2380,7 @@
    "scope": "owner",
    "risk": "local",
    "command": "cd workers/wallet && node build-donate.mjs",
-   "description": "Re-checks both addresses and the signed proof, then rewrites site/donate.html, site/wallet.json, the front-page block and the app copy. Stops if anything fails. --check changes nothing.",
+   "description": "Re-checks both addresses and the signed proof, then rebuilds the donation surfaces from workers/wallet/donations.json. While open is false (donations paused) it REMOVES site/donate.html and site/wallet.json and empties the front-page block; set open to true to publish them again. Stops if anything fails. --check changes nothing.",
    "project": "rabbitsoftware-cloudflare",
    "runsIn": "computer"
   },

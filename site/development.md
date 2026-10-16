@@ -1888,8 +1888,8 @@ the embedded Perplexity editor is removed from served HTML, and non-exported
 paths return 404. Reports, spreadsheets, archives and vault contents are never
 served. The preview is public but marked noindex.
 
-Public preview:
-https://rabbitsoftware-rf-nexus-preview.rabbitsoftware-gateway.workers.dev
+Public preview (moved to Google Cloud Run on 2026-10-15; the Cloudflare Worker was deleted):
+https://rf-nexus-preview-vxx5lz7c5a-wl.a.run.app
 
 The original export is preserved in the vault. Staged copies of only
 `index.html`, `assets\index-drmRIFDg.js` and `assets\index--vzZ5AZu.css` go under
@@ -1897,11 +1897,14 @@ the Git-ignored `tools\rf-nexus-preview\public` directory. Do not copy the vault
 folder wholesale. Full source/server recovery is needed for actual integration;
 do not patch the generated bundle to fabricate a working backend.
 
+The Cloud Run copy lives in `workers/rf-nexus-gcp` (a small Node server with the same
+rules as the old Worker: API and WebSocket 503, writes 405, other paths 404, strict CSP,
+noindex). Redeploy it from the RabbitOS repo:
+
 ```powershell
-node --test tools\rf-nexus-preview\test.mjs
-npx --no-install wrangler deploy --config tools\rf-nexus-preview\wrangler.jsonc --dry-run
-# Only after explicit approval to publish the static preview:
-npx --no-install wrangler deploy --config tools\rf-nexus-preview\wrangler.jsonc
+node --test workers\rf-nexus-gcp\test.mjs
+pwsh -File scripts\powershell\Setup-GcpRfNexus.ps1 -WhatIf
+pwsh -File scripts\powershell\Setup-GcpRfNexus.ps1
 ```
 
 ## Supabase
