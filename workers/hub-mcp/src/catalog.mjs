@@ -9,6 +9,12 @@ export const OWNER_SHELL_URL = 'https://rabbit-web-cloud-access.rabbitsoftware-g
 export const HOSTS_GUEST_CAN_REACH = Object.freeze(['registry.npmjs.org', 'registry.yarnpkg.com', 'pypi.org', 'files.pythonhosted.org', 'github.com', 'raw.githubusercontent.com', 'codeload.github.com',
   'objects.githubusercontent.com', 'api.anthropic.com', 'generativelanguage.googleapis.com', 'api.githubcopilot.com', 'api.github.com', 'app.rabbitsoftware.io', 'rabbitos-hub-mcp-vxx5lz7c5a-wl.a.run.app', 'rabbitsoftware-io-ledger-public.storage.googleapis.com'])
 
+// The toolbox (data/toolbox.json, made by rabbit-web/scripts/toolbox-publish.mjs and baked into the image): which files each command uses, and what each agent can do.
+// A guest gets only files of the two PUBLIC repositories, as GitHub links; a hub key also sees the private paths. Nothing here is file content.
+export const PUBLIC_REPOS = Object.freeze(['rabbit-web', 'rabbitsoftware-cloudflare'])
+const GITHUB = 'https://github.com/therealsickonechase-bit/'
+const fileLink = (f) => `${GITHUB}${f.repo}/blob/main/${f.path.split('/').map(encodeURIComponent).join('/')}`
+
 const scopesFor = (role) => (role === 'owner' ? ['public', 'owner'] : ['public'])
 const brief = (e) => ({ id: e.id, project: e.project, group: e.group, label: e.label, scope: e.scope, risk: e.risk, runsIn: e.runsIn, needs: e.needs ?? [], command: e.command, description: e.description })
 
@@ -34,7 +40,7 @@ const RISKY = [
 const RISK_ORDER = ['read', 'local', 'network', 'deploy', 'secret', 'destructive']
 const worst = (a, b) => (RISK_ORDER.indexOf(a) >= RISK_ORDER.indexOf(b) ? a : b)
 
-export function makeCatalog(data) {
+export function makeCatalog(data, toolbox = null) {
   const entries = (data?.entries ?? []).map((e) => Object.freeze({ ...e }))
   const maxBytes = Number(data?.commandMaxBytes) || 4000
   const visible = (role) => entries.filter((e) => scopesFor(role).includes(e.scope))
@@ -55,6 +61,18 @@ export function makeCatalog(data) {
       const words = String(q).toLowerCase().split(/\s+/).filter(Boolean)
       if (!words.length) return []
       return visible(role).filter((e) => { const hay = `${e.id} ${e.project} ${e.group} ${e.label} ${e.command} ${e.description}`.toLowerCase(); return words.every((w) => hay.includes(w)) }).slice(0, limit).map(brief)
+    },
+    /** The published files a command uses, for a role. */
+    files(role, id) {
+      if (!toolbox || !visible(role).some((x) => x.id === id)) return []
+      return (toolbox.files?.[id] ?? []).filter((f) => role === 'owner' || PUBLIC_REPOS.includes(f.repo))
+        .map((f) => ({ repo: f.repo, path: f.path, sha256: f.sha256, ...(PUBLIC_REPOS.includes(f.repo) ? { url: fileLink(f) } : {}) }))
+    },
+    /** Which bundle the file lists and agent descriptions come from (root hash and counts), or null if the toolbox data is not loaded. */
+    bundle: () => (toolbox ? { root: toolbox.root, counts: toolbox.counts } : null),
+    /** What each agent can run and do. The command line for sending it work is only given to a hub key. */
+    agents(withHowToSend, only) {
+      return (toolbox?.agents ?? []).filter((a) => !only || a.id === only).map((a) => { const { howToSend, ...rest } = a; return withHowToSend ? { ...rest, howToSend } : rest })
     },
     get: (role, id) => { const e = visible(role).find((x) => x.id === id); return e ? brief(e) : null },
     all: (role) => visible(role).map(brief),

@@ -289,12 +289,12 @@ export const TOOLS = [
     },
   },
   {
-    name: 'command_get', description: 'One catalog command by id, for a role.',
+    name: 'command_get', description: 'One catalog command by id, for a role, with the published files it uses (a guest gets links into the public GitHub repositories; a hub key also sees the private paths) and the toolbox bundle they come from.',
     inputSchema: { type: 'object', properties: { role: { type: 'string', enum: ROLES }, id: { type: 'string', pattern: '^[a-z0-9-]{1,60}$' } }, required: ['role', 'id'], additionalProperties: false },
     async run(args, ctx) {
       const denied = roleProblem(args.role, ctx); if (denied) return fail(denied)
       const found = typeof args.id === 'string' ? ctx.catalog.get(args.role, args.id) : null
-      return found ? asText(found) : fail('No such command for this role')
+      return found ? asText({ ...found, files: ctx.catalog.files(args.role, args.id), bundle: ctx.catalog.bundle()?.root ?? null }) : fail('No such command for this role')
     },
   },
   {
@@ -304,6 +304,24 @@ export const TOOLS = [
       const denied = roleProblem(args.role, ctx); if (denied) return fail(denied)
       const result = ctx.catalog.draft(args.role, args.command, args.why)
       return result.ok ? asText(result) : { isError: true, content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }
+    },
+  },
+  {
+    name: 'agent_capabilities', description: 'What each agent can do: the task kinds it runs (with the parameters they need) and the actions it carries out, for the PC task worker, the research agent and the two cloud jobs. Use it before sending work, so the work is something the agent supports. A hub key also gets the command line for sending work.',
+    inputSchema: { type: 'object', properties: { agent: { type: 'string', pattern: '^[a-z_]{2,30}$' } }, additionalProperties: false },
+    async run(args, ctx) {
+      if (!ctx.catalog?.bundle()) return fail('The toolbox data is not loaded on this server')
+      const agents = ctx.catalog.agents(ctx.tier === 'key', args.agent)
+      if (args.agent && !agents.length) return fail('No such agent. Known agents: ' + ctx.catalog.agents(false).map((a) => a.id).join(', '))
+      return asText({ agents, bundle: ctx.catalog.bundle().root, note: ctx.tier === 'key' ? undefined : 'A hub key also returns the command line for sending work to each agent.' })
+    },
+  },
+  {
+    name: 'toolbox_status', description: 'Which toolbox bundle this hub describes: the root hash and counts of the published command and file bundle (the same hash the Maxwell chain and the agents hold).',
+    inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+    async run(_a, ctx) {
+      const b = ctx.catalog?.bundle()
+      return b ? asText({ root: b.root, counts: b.counts, where: 'gs://rabbitsoftware-io-backups/toolbox/ (private); agents read it with toolbox.py, callers read it through this hub', verify: 'python toolbox.py verify (owner PC)' }) : fail('The toolbox data is not loaded on this server')
     },
   },
   {

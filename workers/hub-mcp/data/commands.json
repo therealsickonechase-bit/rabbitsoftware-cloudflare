@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-16T17:25:39.210Z",
+ "generatedAt": "2026-10-16T17:37:15.101Z",
  "commandMaxBytes": 4000,
  "projects": [
   "rabbit-web",
@@ -3030,6 +3030,18 @@
    "description": "Compares this PC's copy of every published file with the manifest hash and lists files that differ or are missing. Changes nothing.",
    "project": "research-agents",
    "source": "toolbox.py",
+   "runsIn": "computer"
+  },
+  {
+   "id": "agent-capabilities",
+   "group": "Toolbox",
+   "label": "What an agent can do (tasks and actions)",
+   "scope": "owner",
+   "risk": "local",
+   "command": "python capabilities.py --agent task_worker",
+   "description": "The task kinds the agent runs (with their parameters) and the actions it carries out: task_worker, research, cloud_task_worker or cloud_explorer. Without --agent it prints all four. python capabilities.py --write refreshes agent-capabilities.json.",
+   "project": "research-agents",
+   "source": "capabilities.py",
    "runsIn": "computer"
   },
   {

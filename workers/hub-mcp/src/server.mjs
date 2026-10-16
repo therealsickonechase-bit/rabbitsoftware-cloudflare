@@ -8,7 +8,9 @@ import { readFileSync } from 'node:fs'
 
 // The command catalog is exported from rabbit-web (scripts/export-command-catalog.mjs) and baked into the image. If it is missing, the command tools say so.
 let catalog = null
-try { catalog = makeCatalog(JSON.parse(readFileSync(new URL('../data/commands.json', import.meta.url), 'utf8'))) } catch { console.log(JSON.stringify({ event: 'catalog_missing' })) }
+let toolbox = null
+try { toolbox = JSON.parse(readFileSync(new URL('../data/toolbox.json', import.meta.url), 'utf8')) } catch { console.log(JSON.stringify({ event: 'toolbox_missing' })) }
+try { catalog = makeCatalog(JSON.parse(readFileSync(new URL('../data/commands.json', import.meta.url), 'utf8')), toolbox) } catch { console.log(JSON.stringify({ event: 'catalog_missing' })) }
 
 const PORT = Number(process.env.PORT) || 8080
 const MAX_BODY = 32 * 1024

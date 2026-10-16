@@ -8,7 +8,7 @@ import { randomUUID } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { NORMALIZE, PLANS, SOURCES, SOURCE_IDS, validateSearch } from './research.mjs'
 
-export const VERSION = '1.1.0'
+export const VERSION = '1.2.0'
 // The public slice of the toolbox, written by rabbit-web/scripts/toolbox-publish.mjs next to the status feed: the commands a guest may see, links to files in the two public repositories,
 // and the root hash and counts of the whole bundle. This service never reads the private toolbox: it has no credentials and no sign-in, so it can only serve what is already public.
 export const TOOLBOX_URL = 'https://rabbitsoftware-io-status-public.storage.googleapis.com/status/toolbox-public.json'
@@ -32,7 +32,7 @@ export function agentCard(baseUrl) {
       { id: 'search-literature', name: 'Search the literature', description: 'Find papers on a topic in PubMed or Europe PMC.', tags: ['research', 'pubmed', 'europepmc', 'literature'], examples: ['pubmed: BRCA1 breast cancer', 'Find recent papers on SLC6A4 in Europe PMC'] },
       { id: 'search-trials', name: 'Search clinical trials', description: 'Find registered studies on ClinicalTrials.gov.', tags: ['research', 'clinicaltrials'], examples: ['clinical trials for glioma'] },
       { id: 'drug-adverse-events', name: 'Most reported drug reactions', description: 'The reactions most often reported for a drug in openFDA. Reports are not proof that a drug caused an event.', tags: ['research', 'openfda', 'safety'], examples: ['openfda: metformin'] },
-      { id: 'toolbox', name: 'Toolbox: platform commands and files', description: 'Look up the RabbitOS commands a guest may use and the public files behind them (with links), and see which toolbox bundle they come from. Owner-only commands and private files are not listed.', tags: ['toolbox', 'commands', 'catalog', 'files'], examples: ['toolbox: chain', 'which commands check the public chain?', 'list the toolbox commands'] },
+      { id: 'toolbox', name: 'Toolbox: platform commands and files', description: 'Look up the RabbitOS commands a guest may use and the public files behind them (with links), see which toolbox bundle they come from, and ask what each agent can do (the task kinds a worker runs and the actions it carries out). Owner-only commands and private files are not listed.', tags: ['toolbox', 'commands', 'catalog', 'files', 'agents', 'capabilities'], examples: ['toolbox: chain', 'which commands check the public chain?', 'what can the task worker do?'] },
       { id: 'list-sources', name: 'List the sources', description: 'Which public sources this agent can search.', tags: ['research'], examples: ['what sources can you search?'] },
     ],
   }
@@ -49,7 +49,7 @@ export function interpret(message) {
   if (!text) return { action: 'error', error: 'send a text question or a data part {source, query, limit}' }
   if (/\b(what|which|list)\b.*\bsources?\b|\bsources?\b.*\b(can|do)\b/i.test(text) && !/:/.test(text)) return { action: 'sources' }
   if (data0?.skill === 'toolbox') return { action: 'toolbox', query: String(data0.query ?? '').slice(0, 120) }
-  if (/\b(toolbox|catalog|commands?)\b/i.test(text) && !/^(pubmed|europepmc|clinicaltrials|openfda)\s*:/i.test(text)) return { action: 'toolbox', query: text.slice(0, 160) }
+  if (/\b(toolbox|catalog|commands?|capabilit\w*|task kinds?|workers?|explorers?)\b/i.test(text) && !/^(pubmed|europepmc|clinicaltrials|openfda)\s*:/i.test(text)) return { action: 'toolbox', query: text.slice(0, 160) }
   let source = SOURCE_IDS.find((id) => new RegExp(`\\b${id}\\b`, 'i').test(text))
   if (!source) {
     if (/europe\s*pmc/i.test(text)) source = 'europepmc'
@@ -102,8 +102,17 @@ async function toolbox(query, fetchImpl) {
   const picked = (words.length ? scored.filter((x) => x.score > 0).sort((a, b) => b.score - a.score) : scored).slice(0, 8).map((x) => x.c)
   const groups = {}
   for (const c of safe) groups[c.group || 'Other'] = (groups[c.group || 'Other'] ?? 0) + 1
+  const asksAgents = /\b(workers?|explorers?|agents?|capabilit\w*|task kinds?)\b/i.test(String(query ?? ''))
+  const agentsAll = (Array.isArray(slice.agents) ? slice.agents : []).slice(0, 20).map((a) => ({
+    id: String(a.id ?? '').slice(0, 40), where: String(a.where ?? '').slice(0, 160),
+    tasks: (Array.isArray(a.tasks) ? a.tasks : []).slice(0, 20).map((t) => ({ kind: String(t.kind ?? '').slice(0, 40), about: String(t.about ?? '').slice(0, 200), params: Object.fromEntries(Object.entries(t.params && typeof t.params === 'object' ? t.params : {}).slice(0, 10).map(([k, v]) => [String(k).slice(0, 30), String(v).slice(0, 80)])) })),
+    actions: (Array.isArray(a.actions) ? a.actions : []).slice(0, 20).map((x) => ({ id: String(x.id ?? '').slice(0, 40), about: String(x.about ?? '').slice(0, 200), target: String(x.target ?? '').slice(0, 80) })),
+  })).filter((a) => a.id)
+  const q = String(query ?? '').toLowerCase()
+  const named = agentsAll.filter((a) => q.includes(a.id.replace(/_/g, ' ')) || q.includes(a.id))
+  const agents = asksAgents ? (named.length ? named : agentsAll) : []
   return { root: String(slice.root ?? '').slice(0, 64), generatedAt: String(slice.generatedAt ?? '').slice(0, 40), counts: { files: Number(slice.counts?.files) || 0, commands: Number(slice.counts?.commands) || 0, publicCommands: safe.length },
-    query: words.join(' '), groups, commands: picked }
+    query: words.join(' '), groups, commands: asksAgents && !words.some((w) => !['worker', 'workers', 'explorer', 'agent', 'agents', 'task', 'kinds', 'kind', 'capabilities', 'capability', 'research', 'cloud', 'explorer', 'do', 'does'].includes(w)) ? [] : picked, agents }
 }
 
 const reply = (id, parts) => ({ jsonrpc: '2.0', id, result: { kind: 'message', role: 'agent', messageId: randomUUID(), parts } })
@@ -122,8 +131,10 @@ export async function handleRpc(body, fetchImpl = fetch) {
   if (intent.action === 'toolbox') {
     const t = await toolbox(intent.query, fetchImpl)
     if (t.error) return reply(body.id, [{ kind: 'text', text: `I could not read the toolbox: ${t.error}` }, { kind: 'data', data: { error: t.error } }])
-    const lines = t.commands.map((c, i) => `${i + 1}. ${c.id}: ${c.label}\n   ${c.command}${c.files.length ? `\n   files: ${c.files.map((f) => f.url).join(' ')}` : ''}`)
-    const head = t.commands.length ? (t.query ? `${t.commands.length} command(s) for "${t.query}":` : `${t.counts.publicCommands} commands a guest may use (showing ${t.commands.length}; ask with a topic to narrow it):`) : `No guest command matches "${t.query}". Groups: ${Object.entries(t.groups).map(([g, n]) => `${g} (${n})`).join(', ')}.`
+    const agentLines = t.agents.flatMap((a) => [`${a.id} (${a.where}):`, `  runs: ${a.tasks.map((x) => `${x.kind} [${Object.entries(x.params).map(([k, v]) => `${k}: ${v}`).join('; ')}]`).join('; ')}`, `  carries out: ${a.actions.map((x) => `${x.id} (${x.target})`).join('; ')}`])
+    const lines0 = t.commands.map((c, i) => `${i + 1}. ${c.id}: ${c.label}\n   ${c.command}${c.files.length ? `\n   files: ${c.files.map((f) => f.url).join(' ')}` : ''}`)
+    const lines = [...lines0, ...(agentLines.length ? ['Agents:', ...agentLines] : [])]
+    const head = t.agents.length && !t.commands.length ? `What ${t.agents.length === 1 ? t.agents[0].id : 'the agents'} can do:` : t.commands.length ? (t.query ? `${t.commands.length} command(s) for "${t.query}":` : `${t.counts.publicCommands} commands a guest may use (showing ${t.commands.length}; ask with a topic to narrow it):`) : `No guest command matches "${t.query}". Groups: ${Object.entries(t.groups).map(([g, n]) => `${g} (${n})`).join(', ')}.`
     const foot = `Toolbox bundle ${t.root.slice(0, 12)} (${t.counts.files} files, ${t.counts.commands} commands in all). Owner-only commands and private files are not listed here.`
     return reply(body.id, [{ kind: 'text', text: [head, ...lines, foot].join('\n') }, { kind: 'data', data: t }])
   }

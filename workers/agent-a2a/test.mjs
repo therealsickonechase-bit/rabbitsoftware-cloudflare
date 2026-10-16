@@ -76,6 +76,10 @@ test('the HTTP server serves the card, health and RPC, refuses big bodies and un
 const GH = 'https://github.com/therealsickonechase-bit/'
 const slice = (over = {}) => ({
   version: 1, generatedAt: '2026-10-16T12:00:00Z', root: 'ab'.repeat(32), counts: { files: 709, commands: 284, publicCommands: 3 },
+  agents: [
+    { id: 'task_worker', where: 'PC (scheduled task)', tasks: [{ kind: 'research_topic', about: 'Search for a topic.', params: { topic: 'required', biomarker: 'optional' } }, { kind: 'brain_search', about: 'Brain papers.', params: { query: 'required' } }], actions: [{ id: 'skip_source', about: 'Skip one source.', target: 'one of pubmed, europepmc, trials' }] },
+    { id: 'cloud_explorer', where: 'Google Cloud (hourly)', tasks: [{ kind: 'research_topic', about: 'Search.', params: { topic: 'required' } }], actions: [{ id: 'slow_down', about: 'Slow down.', target: 'none' }] },
+  ],
   commands: [
     { id: 'chain-head', group: 'Public chain', label: 'Read the head of the public chain', command: 'curl https://app.rabbitsoftware.io/api/chain/head', description: 'Length and head hash.',
       files: [{ repo: 'rabbit-web', path: 'src/app/api/chain/head/route.ts', sha256: 'c'.repeat(64), url: GH + 'rabbit-web/blob/main/src/app/api/chain/head/route.ts' }] },
@@ -134,4 +138,27 @@ test('the skill never exposes private material even if it were published by mist
   assert.match(odd.result.parts[0].text, /not in the expected shape/)
   const src = (await import('node:fs')).readFileSync(new URL('./server.mjs', import.meta.url), 'utf8')
   assert.ok(!/storage\.googleapis\.com\/storage\/v1|rabbitsoftware-io-backups|metadata\.google\.internal/.test(src))     // no path to the private toolbox or to credentials
+})
+
+test('callers can ask what an agent can do and get its task kinds with parameters and its actions, from the public slice', async () => {
+  const one = await handleRpc(msg('what can the task worker do?'), toolboxFetch())
+  const text = one.result.parts[0].text
+  assert.match(text, /What task_worker can do:/)
+  assert.match(text, /research_topic \[topic: required; biomarker: optional\]/)
+  assert.match(text, /carries out: skip_source \(one of pubmed, europepmc, trials\)/)
+  assert.ok(!text.includes('cloud_explorer'))                                   // only the agent that was named
+  assert.deepEqual(one.result.parts[1].data.agents.map((a) => a.id), ['task_worker'])
+  const all = await handleRpc(msg('toolbox: which agents and capabilities exist?'), toolboxFetch())
+  assert.deepEqual(all.result.parts[1].data.agents.map((a) => a.id), ['task_worker', 'cloud_explorer'])
+  const plain = await handleRpc(msg('which commands read the public chain?'), toolboxFetch())
+  assert.deepEqual(plain.result.parts[1].data.agents, [])                       // command questions do not drag the agents in
+})
+
+test('agent data from the slice is trimmed and never carries a command for sending work', async () => {
+  const data = slice()
+  data.agents[0].howToSend = 'python stage_box.py stage --to task_worker'
+  data.agents[0].tasks[0].about = 'x'.repeat(900)
+  const r = await handleRpc(msg('what can the task worker do?'), toolboxFetch(data))
+  assert.ok(!JSON.stringify(r).includes('stage_box'))
+  assert.equal(r.result.parts[1].data.agents[0].tasks[0].about.length, 200)
 })
