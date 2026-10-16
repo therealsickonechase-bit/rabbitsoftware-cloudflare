@@ -1,6 +1,7 @@
 // The status recorder. Every few minutes it checks the PUBLIC parts of the platform and writes two small files to a public bucket that rabbitsoftware.io reads in the browser:
 //   status/latest.json   the current picture: services up or down, chain copies, the public data tree
 //   status/history.json  the last 24 hours (one entry per run), for the uptime strips
+// It also writes status/research-live.json, the newest public research findings, which the website reads in the browser so new findings appear without deploying the site.
 // It also logs one "status_check" line, which Cloud Logging keeps and the BigQuery sink records. Nothing private goes in the feed: no addresses, no findings, no private services.
 import { checkPlatform } from './platform.mjs'
 import { uploadObject } from './gcs.mjs'
@@ -48,6 +49,8 @@ export async function recordStatus({ fetchImpl = fetch, bucket, upload = uploadO
   const headers = { cacheControl: 'no-cache', contentType: 'application/json' }
   await upload({ bucket, name: 'status/latest.json', body: JSON.stringify(feed), ...headers })
   await upload({ bucket, name: 'status/history.json', body: JSON.stringify(history), ...headers })
+  // The live research file the website reads in the browser (see research-live.mjs). A failure here must never stop the status feed.
+  if (platform.researchLive) { try { await upload({ bucket, name: 'status/research-live.json', body: JSON.stringify(platform.researchLive), ...headers }) } catch { /* the next run tries again */ } }
   log(JSON.stringify({ event: 'status_check', up: feed.up, total: feed.total, chain_agrees: feed.chain.agree, down: feed.services.filter((s) => !s.ok).map((s) => s.key).join(',') || null }))
   return { feed, history }
 }

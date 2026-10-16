@@ -6,6 +6,8 @@
   Content-Type: application/javascript; charset=utf-8
 /status-view.mjs
   Content-Type: application/javascript; charset=utf-8
+/research-live-view.mjs
+  Content-Type: application/javascript; charset=utf-8
 /development.md
   Content-Type: text/plain; charset=utf-8
 /installers/setup.py

@@ -66,6 +66,18 @@
     @media(max-width:520px) { .wrap { width:calc(100% - 32px); } h1 { font-size:38px; } h2 { font-size:30px; } .hero { padding:46px 0 38px; } .report { padding:48px 0; } .findings { grid-template-columns:1fr; } .finding,.finding:nth-child(even) { padding:15px 0; border-left:0; } .bar-row { grid-template-columns:95px minmax(0,1fr) 37px; gap:7px; } .axis { margin-left:102px; } .diagram-row { grid-template-columns:28px 1fr; gap:8px 12px; } .diagram-row span { grid-column:2; } .chart { padding:14px; } }
     @media(prefers-color-scheme:dark) { :root { --paper:#17211e; --panel:#202d28; --ink:#f0f3ec; --muted:#bac7c0; --line:#52645a; --green:#9dd7b4; --night:#0d1815; --night-ink:#f3f5ef; } .track { background:#17211e; } }
     @media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
+    .live { padding:56px 0 8px; border-bottom:1px solid var(--line); scroll-margin-top:20px; }
+    .live h2 { margin:6px 0 10px; font-size:clamp(24px,3vw,32px); line-height:1.2; }
+    .live h3 { margin:0 0 10px; font-size:15px; }
+    .live .dek.warn { color:var(--orange); }
+    .live-grid { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(280px,.9fr); gap:34px; align-items:start; margin:22px 0; }
+    .live-list { margin:0; padding:0; list-style:none; border-top:1px solid var(--line); }
+    .live-list li { padding:10px 0; border-bottom:1px solid var(--line); font-size:15px; overflow-wrap:anywhere; }
+    .live-list small { display:block; color:var(--muted); font-size:12px; }
+    .live .small { color:var(--muted); font-size:13px; }
+    .live-dna { margin:8px 0 22px; padding:18px 20px; border:1px solid var(--line); background:var(--panel); }
+    .live-dna p { margin:0 0 8px; }
+    @media (max-width:760px) { .live-grid { grid-template-columns:minmax(0,1fr); } }
   </style>
 </head>
 <body>
@@ -81,11 +93,37 @@
     </div>
   </section>
   <nav class="toc wrap" aria-label="Research reports">
+    <a href="#live">Live from the agents</a>
     <a href="#eeg">EEG visual decoding</a>
     <a href="#oncology">DNA editing and oncology</a>
     <a href="local.html">Local and hosted tools</a>
   </nav>
   <div class="notice wrap"><strong>Research only, not medical advice.</strong> These reviews do not diagnose, recommend treatment, or establish clinical benefit for RabbitSoftware. Consult qualified clinicians for personal care. Personal genomes and biosignals are not collected by this website.</div>
+
+  <section class="live wrap" id="live" aria-labelledby="live-h">
+    <p class="index">LIVE / FROM THE AGENTS</p>
+    <h2 id="live-h">What the research agents found most recently</h2>
+    <p class="dek" id="live-when" aria-live="polite">Loading the latest findings…</p>
+    <div class="live-grid">
+      <div>
+        <h3>Newest records</h3>
+        <ul class="live-list" id="live-recent"></ul>
+        <noscript><p class="small">This section needs JavaScript to read the live findings.</p></noscript>
+      </div>
+      <div>
+        <h3>Records by source</h3>
+        <div id="live-sources"></div>
+        <p class="small" id="live-topics"></p>
+      </div>
+    </div>
+    <div class="live-dna" id="live-dna" hidden>
+      <h3>Cancer-gene variant index</h3>
+      <p id="live-dna-line"></p>
+      <p class="small" id="live-dna-gaps"></p>
+      <p class="small" id="live-dna-stamp"></p>
+    </div>
+    <p class="small">This section updates itself from public files that the agents refresh every few minutes, so it does not wait for a website update. Records are pointers to public sources, not medical advice. The variant index lists public ClinVar variants; it holds no data about any person.</p>
+  </section>
 
   <main>
     <article class="report" id="eeg">
@@ -167,5 +205,6 @@
     <p>Research summaries are dated snapshots; consult the linked full reports and original sources for methods, caveats, and updates.</p>
     <p><a href="index.html">RabbitSoftware home</a> · <a href="privacy.html">Privacy policy</a> · <a href="mailto:contact@rabbitsoftware.io">Contact</a></p>
   </footer>
+  <script type="module" src="live-research.js"></script>
 </body>
 </html>
