@@ -19,9 +19,9 @@ Nothing here has been deployed or run against live services. Everything below is
    Durable Object storage, or set with `setEnvVars`. Every other environment variable of the PTY is built from scratch (`env.mjs`); the
    Worker's own env is never spread into it, and protected names (`*_TOKEN`, `*_SECRET`, `SERVICE_ROLE`, `SUPABASE`, `CLOUDFLARE`, ...) are refused.
 4. Frames: `{t:"i",d}` input, `{t:"r",cols,rows}` resize; the Worker sends raw PTY bytes. Text frames only, max 16 KiB (hello 8 KiB), 64 KiB/s of input,
-   NUL rejected, 8 MiB of output per session then the terminal is ended.
+   NUL rejected, 32 MiB of output per session then the terminal is ended.
 5. One `PublicSandbox` container per session id (`basic` instance: 1/4 vCPU, 1 GiB, 4 GB disk), PTY runs as unprivileged user `visitor`.
-   `Gate` has an alarm that destroys the container at 10 minutes idle or 30 minutes after creation (whichever first); the bridge also
+   `Gate` has an alarm that destroys the container at 15 minutes idle (typing or terminal output counts as activity) or 60 minutes after creation (whichever first); the terminal prints a warning 5 and 1 minute before the time limit and 2 minutes before the idle limit; the bridge also
    closes the socket at the hard limit.
 
 Limits live in `src/limits.mjs`: 6 live sessions globally (= `max_instances`), 1 per address, 6 sessions and 400 command lines (Enter presses) per
@@ -31,7 +31,7 @@ address per UTC day. Addresses are stored only as an HMAC (`ipKey`), never raw.
 
 | Abuse | Defence | Residual risk |
 | --- | --- | --- |
-| Crypto mining | 1/4 vCPU, 30 min lifetime, 6 sessions total, egress allowlist (no mining pools, no arbitrary hosts), per-address caps | A miner can still burn the small CPU slice allowed for 30 minutes per session, 6 sessions per address per day. Wasted compute is bounded by the caps, not zero. |
+| Crypto mining | 1/4 vCPU, 60 min lifetime, 6 sessions total, egress allowlist (no mining pools, no arbitrary hosts), per-address caps | A miner can still burn the small CPU slice allowed for 30 minutes per session, 6 sessions per address per day. Wasted compute is bounded by the caps, not zero. |
 | Scanning / attacking other hosts | HTTPS-only allowlist of ~10 hosts, port 443, no IP literals, GET/HEAD only on source hosts | See "What cannot be restricted". |
 | Spam / phishing hosting | No inbound ports exposed, nothing served; sessions are deleted | Visitors can use allowed hosts (e.g. paste text to GitHub is blocked: no credentials, writes refused). |
 | Bot signup flooding | Turnstile before every session, per-address and global caps, Origin check | A real human farm or residential proxies can rotate addresses; the global cap of 6 is the backstop and also the denial-of-service ceiling for legitimate users. |
@@ -52,7 +52,7 @@ or `npx wrangler delete --name rabbitsoftware-public-shell` as the last resort.
 - The allowlist includes `github.com` and registries: a visitor can fetch arbitrary public code and run it inside their sandbox. That is the point of a sandbox, but
   it means content from those hosts can be used for outbound HTTP to those hosts only, not elsewhere.
 - A PTY has no per-command timeout. The 60 s command timeout (`LIMITS.commandTimeoutMs`) is defined for non-interactive helper runs but **no `/exec` endpoint
-  exists yet**; interactive use is bounded by idle (10 min), lifetime (30 min), output (8 MiB), process (`ulimit -u 256`) and file-size limits instead.
+  exists yet**; interactive use is bounded by idle (15 min), lifetime (60 min), output (32 MiB), process (`ulimit -u 256`) and file-size limits instead.
 - Per-IP counters rely on `CF-Connecting-IP`; shared NATs share quota, and attackers with many addresses get many quotas.
 - The daily command quota counts Enter presses, not processes (a script can run many commands from one line).
 - CPU, memory and disk caps are those of the `basic` instance type; custom per-container limits need an enterprise plan.

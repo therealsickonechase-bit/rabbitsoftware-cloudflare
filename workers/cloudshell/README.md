@@ -236,3 +236,18 @@ decisions and exit codes (no command text). Tests: `npm run test:coding-agent`.
 
 **The pilot service token expired 2026-10-13T18:44:42Z and needs operator renewal
 before any live use.**
+
+## Session mode (2026-10-16)
+
+The default shell is one command per sandbox: blank every time, 60 seconds, 64 KiB, destroyed afterwards. That is safe but makes real work (installs, builds, several steps in a row)
+impossible, so there is an opt-in **working session** (`src/session.mts`). The safeguards in front of it are the same: Cloudflare Access sign-in and the server token, an approval for
+each command, one command at a time through the same durable gate.
+
+- `POST /execute {"command", "consent": true, "session": true, "timeoutSeconds": 1-150}` runs the command in ONE persistent sandbox (`rabbitos-owner-session`, separate from the one-command sandbox).
+  Files, installs and background jobs stay between commands; each command starts in `/workspace` (no shell variables or directory carry over). Output up to 128 KiB (the app caps a whole reply at 256 KiB).
+- Lifetime: up to 20 idle minutes, never more than 2 hours in all. A Durable Object alarm destroys the sandbox when the session expires (scheduled before each command runs), even if the page is closed.
+  A failed teardown keeps the record and is retried every minute; a new command is refused until an expired session is cleaned up.
+- `GET /session` (status and limits), `POST /session/start {"consent": true}` (opens it so the first command does not pay the cold start), `POST /session/end {"consent": true}` (destroys it now; refused while a command runs).
+- Work longer than 150 seconds: start it in the background inside the session (`nohup npm run build > build.log 2>&1 &`) and read it with later commands (`tail build.log`).
+- The app overall wait is still 210 seconds per request, so a cold start plus a long command can exceed it: open the session first.
+- Tests: `npm run test:cloudshell` (`scripts/test-cloudshell-session.mjs`). Deploy with `npx wrangler deploy --containers-rollout=none` when only Worker code changed.

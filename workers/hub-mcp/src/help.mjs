@@ -77,7 +77,7 @@ export function helpFor(topic, catalog, role = 'guest') {
     }
     case 'shells': return {
       topic: 'shells', role,
-      guest: { url: GUEST_URL, rules: 'Human check, one terminal per address, 10 idle minutes, 30 in total. Work in ~/work; /workspace is read-only. Network only to the allowlist and the hub.', agents: 'claude, gemini, copilot with your own key entered in the API keys drawer; they reach this hub through MCP.' },
+      guest: { url: GUEST_URL, rules: 'Human check, one terminal per address, 15 idle minutes (typing or output counts), 60 in total. Work in ~/work; /workspace is read-only. Network only to the allowlist and the hub.', agents: 'claude, gemini, copilot with your own key entered in the API keys drawer; they reach this hub through MCP.' },
       owner: { url: OWNER_SHELL_URL, rules: 'Cloudflare Access sign-in. Non-deploy commands only; deploys are run by the owner on their computer.' },
     }
     case 'agents': return {
