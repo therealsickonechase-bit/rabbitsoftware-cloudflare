@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-16T12:25:15.759Z",
+ "generatedAt": "2026-10-16T12:51:49.676Z",
  "commandMaxBytes": 4000,
  "projects": [
   "rabbit-web",
@@ -1108,6 +1108,54 @@
    "risk": "deploy",
    "command": "pwsh -File scripts/powershell/Setup-GcpWalletRecovery.ps1",
    "description": "Changes Google Cloud (project rabbitsoftware-io). Safe to run again. Project lien that blocks deleting the project that holds the wallet key, an email alert on any change to the wallet key ring, and a status report (key state, destroy delay, owners, signers). Safe to re-run.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-research-agent-preview",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Research Agent (A2A) on Cloud Run: preview",
+   "scope": "owner",
+   "risk": "network",
+   "command": "pwsh -File scripts/powershell/Setup-GcpResearchAgent.ps1 -WhatIf",
+   "description": "Prints what Setup-GcpResearchAgent.ps1 would do and changes nothing (it may read from Google Cloud). Deploys the RabbitOS Research Agent as an A2A server: live read-only search of PubMed, Europe PMC, ClinicalTrials.gov and openFDA; stores nothing, no secrets, service account with no roles. Agent card at /.well-known/agent-card.json.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-research-agent-run",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Research Agent (A2A) on Cloud Run: run",
+   "scope": "owner",
+   "risk": "deploy",
+   "command": "pwsh -File scripts/powershell/Setup-GcpResearchAgent.ps1",
+   "description": "Changes Google Cloud (project rabbitsoftware-io). Safe to run again. Deploys the RabbitOS Research Agent as an A2A server: live read-only search of PubMed, Europe PMC, ClinicalTrials.gov and openFDA; stores nothing, no secrets, service account with no roles. Agent card at /.well-known/agent-card.json.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-agent-registry-preview",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "List the agents and MCP servers in the Google Cloud Agent Registry: preview",
+   "scope": "owner",
+   "risk": "network",
+   "command": "pwsh -File scripts/powershell/Register-AgentRegistry.ps1 -WhatIf",
+   "description": "Prints what Register-AgentRegistry.ps1 would do and changes nothing (it may read from Google Cloud). Registers the Research Agent (from its live agent card) and the Hub MCP (from its live tool list) in the Agent Registry, from scripts/agent-registry.json. Describes where they are; gives nobody access. -Remove deletes the registry entries only.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-agent-registry-run",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "List the agents and MCP servers in the Google Cloud Agent Registry: run",
+   "scope": "owner",
+   "risk": "deploy",
+   "command": "pwsh -File scripts/powershell/Register-AgentRegistry.ps1",
+   "description": "Changes Google Cloud (project rabbitsoftware-io). Safe to run again. Registers the Research Agent (from its live agent card) and the Hub MCP (from its live tool list) in the Agent Registry, from scripts/agent-registry.json. Describes where they are; gives nobody access. -Remove deletes the registry entries only.",
    "project": "rabbit-web",
    "source": "docs/gcp-platform.md",
    "runsIn": "computer"

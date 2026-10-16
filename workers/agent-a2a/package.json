@@ -1,0 +1,8 @@
+{
+  "name": "rabbitos-research-agent-a2a",
+  "private": true,
+  "type": "module",
+  "description": "RabbitOS Research Agent as an A2A server (Cloud Run). Read-only live search of public research sources.",
+  "scripts": { "start": "node server.mjs", "test": "node --test test.mjs" },
+  "engines": { "node": ">=22" }
+}
