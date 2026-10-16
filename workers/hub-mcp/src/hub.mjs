@@ -17,7 +17,8 @@ export const ORIGINS = Object.freeze({
   standby: 'https://rabbit-site-standby-vxx5lz7c5a-wl.a.run.app',
   guestShell: 'https://rabbitsoftware-public-shell.rabbitsoftware-gateway.workers.dev',
   gcpShell: 'https://rabbit-visitor-shell-vxx5lz7c5a-wl.a.run.app',
-  ledgerBucket: 'https://rabbitsoftware-io-ledger-public.storage.googleapis.com',   // the PUBLIC chain mirror in Google Cloud Storage (world-readable by design)
+  ledgerBucket: 'https://rabbitsoftware-io-ledger-public.storage.googleapis.com',
+  huggingface: 'https://huggingface.co',                                              // public metadata of the owner's Hugging Face items (read only, no token)   // the PUBLIC chain mirror in Google Cloud Storage (world-readable by design)
 })
 /** Browser pages allowed to call the hub. Clients such as Claude Code or scripts send no Origin and are not affected. */
 export const ALLOWED_ORIGINS_FOR_BROWSERS = Object.freeze(['https://app.rabbitsoftware.io', 'https://rabbitsoftware.io', 'https://www.rabbitsoftware.io', 'https://claude.ai'])
@@ -98,6 +99,15 @@ const HEALTH_CHECKS = [
   ['Guest shell worker', ORIGINS.guestShell, '/health', '"ok":true'],
   ['GCP visitor shell', ORIGINS.gcpShell, '/health', 'ok'],
 ]
+
+// The owner's Hugging Face items that the platform knows about. Only public metadata is read; private items answer 401/404 and are reported as such.
+export const HF_ITEMS = Object.freeze([
+  { kind: 'models', id: 'Therealsickonechase-bit/Llama-3.2-3B-RabbitSoftware-GGUF' },
+  { kind: 'spaces', id: 'Therealsickonechase-bit/rabbitos-eeg-qwen-image' },
+  { kind: 'datasets', id: 'Therealsickonechase-bit/dna_chain_training.jsonl' },
+  { kind: 'datasets', id: 'Therealsickonechase-bit/rabbitsoftware-training' },
+  { kind: 'datasets', id: 'Therealsickonechase-bit/rabbitsoftware-knowledge' },
+])
 
 export const TOOLS = [
   {
@@ -200,6 +210,23 @@ export const TOOLS = [
       if (!path) return fail(`object must be one of: ${Object.keys(MIRROR_OBJECTS).join(', ')}`)
       const r = await getText(ctx.fetchImpl, ORIGINS.ledgerBucket, path)
       return r.status === 200 ? asText(r.text) : fail(`mirror returned ${r.status}`)
+    },
+  },
+  {
+    name: 'huggingface_status', description: 'Public status of the owner’s Hugging Face model, Space and datasets: downloads, likes, last update, and whether the Space is running. Private items are reported as private. Read only.' + UNTRUSTED,
+    inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+    async run(_a, ctx) {
+      const rows = await Promise.all(HF_ITEMS.map(async ({ kind, id }) => {
+        try {
+          const { status, text } = await getText(ctx.fetchImpl, ORIGINS.huggingface, `/api/${kind}/${id}`, 10_000)
+          if (status === 401 || status === 403 || status === 404) return { kind: kind.slice(0, -1), id, visibility: 'private or not found' }
+          if (status !== 200) return { kind: kind.slice(0, -1), id, error: `HTTP ${status}` }
+          const j = JSON.parse(text)
+          return { kind: kind.slice(0, -1), id, visibility: j.private ? 'private' : 'public', downloads: j.downloads ?? null, likes: j.likes ?? null, lastModified: j.lastModified ?? null, ...(kind === 'spaces' ? { stage: j.runtime?.stage ?? null, hardware: j.runtime?.hardware?.current ?? null } : {}) }
+        } catch (error) { return { kind: kind.slice(0, -1), id, error: error instanceof Error ? error.name : 'error' } }
+      }))
+      const space = rows.find((r) => r.kind === 'space')
+      return asText({ checkedAt: new Date(ctx.now()).toISOString(), spaceRunning: space?.stage === 'RUNNING', rows, note: 'Metadata only. Buckets are not listed here (they need the owner’s sign-in). Nothing from private datasets is read.' })
     },
   },
   {

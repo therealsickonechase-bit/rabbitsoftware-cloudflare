@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-16T10:50:36.927Z",
+ "generatedAt": "2026-10-16T11:32:17.632Z",
  "commandMaxBytes": 4000,
  "projects": [
   "rabbit-web",
@@ -107,6 +107,30 @@
    "risk": "network",
    "command": "node scripts/pathways-check.mjs",
    "description": "Read only. About 30 checks across this PC, GitHub, Google Cloud, the websites, the research feed and the chains; exit code 1 if anything failed. Add --report to save the result to ~/RabbitOS/logs and gs://rabbitsoftware-io-reports/pathways/latest.json, --roundtrip to also follow one marker note from the vault to Google Cloud and search (about 4 minutes, writes Ops/Pathway check.md), --json for machine-readable output.",
+   "project": "rabbit-web",
+   "runsIn": "computer"
+  },
+  {
+   "id": "web-personal-backup",
+   "source": "scripts/powershell/Backup-PersonalFolders.ps1",
+   "group": "Backups",
+   "label": "Back up Downloads, Desktop, Documents, Pictures, Music, Videos and key settings to Google Cloud (preview)",
+   "scope": "owner",
+   "risk": "network",
+   "command": "pwsh -File scripts/powershell/Backup-PersonalFolders.ps1 -WhatIf",
+   "description": "Counts what would be sent and lists skipped key-like files; uploads nothing. Run it without -WhatIf to upload, or with -Register to create the nightly 01:30 task (-Remove deletes it). Adds and updates only; never deletes in the bucket. Skips .env, *.pem, *.key, id_rsa*, *.kdbx, files over 2 GB and node_modules. AppData is not copied wholesale (browser profiles and tokens live there); only VS Code settings and extension list, Windows Terminal settings and .gitconfig are.",
+   "project": "rabbit-web",
+   "runsIn": "computer"
+  },
+  {
+   "id": "web-hf-backup-preview",
+   "source": "scripts/powershell/Backup-HuggingFace.ps1",
+   "group": "Backups",
+   "label": "Back up Hugging Face buckets and datasets to Google Cloud (preview)",
+   "scope": "owner",
+   "risk": "network",
+   "command": "pwsh -File scripts/powershell/Backup-HuggingFace.ps1 -WhatIf",
+   "description": "Lists your Hugging Face buckets and datasets (including private ones) and uploads nothing. Needs hf auth login on this PC. Run without -WhatIf to copy them to the private backups bucket (huggingface/), or with -Register for the nightly 02:30 task. Adds and updates only.",
    "project": "rabbit-web",
    "runsIn": "computer"
   },
