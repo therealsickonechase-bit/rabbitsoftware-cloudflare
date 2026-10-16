@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-16T10:47:49.807Z",
+ "generatedAt": "2026-10-16T10:49:10.419Z",
  "commandMaxBytes": 4000,
  "projects": [
   "rabbit-web",
@@ -2517,7 +2517,7 @@
    "runsIn": "computer"
   },
   {
-   "id": "rw-pathways-check",
+   "id": "web-pathways-check",
    "source": "scripts/pathways-check.mjs",
    "group": "Platform tests",
    "label": "Pathways: check VS Code, GitHub, Google Cloud, network, research and blockchain together",
