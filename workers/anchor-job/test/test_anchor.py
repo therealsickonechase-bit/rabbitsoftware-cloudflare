@@ -1,3 +1,4 @@
+import hashlib
 import io
 import json
 import os
@@ -62,9 +63,13 @@ def fake_tsr(digest):
     return bytes([0x30, 0x82]) + len(inner).to_bytes(2, "big") + inner
 
 
-def go(bucket, now=NOW, tsa_fn=fake_tsr):
+def no_snapshots(url):
+    return None
+
+
+def go(bucket, now=NOW, tsa_fn=fake_tsr, fetch_bytes=no_snapshots):
     return A.run(bucket=bucket, fetch_json=fetch, now=now, stamp_fn=lambda d: A.stamp(d, calendars=("https://cal.one", "https://cal.two"), make_calendar=FakeCalendar, nonce=b"n" * 16),
-                 upgrade_fn=lambda o: A.upgrade(o, make_calendar=FakeCalendar), tsa_fn=tsa_fn)
+                 upgrade_fn=lambda o: A.upgrade(o, make_calendar=FakeCalendar), tsa_fn=tsa_fn, fetch_bytes=fetch_bytes)
 
 
 class Anchor(unittest.TestCase):
@@ -151,6 +156,70 @@ class Anchor(unittest.TestCase):
 
         self.assertEqual(A.run(bucket=b, fetch_json=broken, now=NOW), 1)
         self.assertEqual(b.writes, [])
+
+RA_BLOCKS = [{"index": 0, "hash": "a" * 64, "transactions": [{"sender": "MAXWELL_GENESIS"}]},
+             {"index": 1, "hash": "b" * 64, "transactions": [{"sender": "RESEARCH_ANCHOR", "root": "r" * 64, "count": 3}]},
+             {"index": 2, "hash": "c" * 64, "transactions": [{"sender": "RABBITWEB_MINER"}]},
+             {"index": 3, "hash": "d" * 64, "transactions": [{"sender": "RESEARCH_ANCHOR", "root": "s" * 64, "count": 4}]}]
+FILES = {"https://my-ledger.storage.googleapis.com/maxwell/snapshots/block-0001.ndjson.gz": b"one", "https://my-ledger.storage.googleapis.com/maxwell/snapshots/block-0003.ndjson.gz": b"three"}
+
+
+class SnapshotCommitment(unittest.TestCase):
+    def setUp(self):
+        FakeCalendar.confirmed = set()
+
+    def test_the_manifest_can_be_recomputed_by_anyone(self):
+        files = {"0001": hashlib.sha256(b"one").hexdigest(), "0003": hashlib.sha256(b"three").hexdigest()}
+        m = A.manifest_of(files)
+        self.assertEqual((m["count"], m["upTo"]), (2, 3))
+        self.assertEqual(A.manifest_of({"0001": "a" * 64, "0003": "b" * 64})["manifest"], "c6867caacb63ad03604780cc5ca64c0a2cb7bbffe603bfaa0bc7562fe017b3d4")   # pinned: scripts/verify-anchor.py must agree
+        expected = hashlib.sha256((f"0001 {files['0001']}\n" + f"0003 {files['0003']}\n").encode()).hexdigest()
+        self.assertEqual(m["manifest"], expected)
+        self.assertEqual(A.manifest_of(dict(reversed(list(files.items()))))["manifest"], expected)          # block order, not insertion order
+        self.assertNotEqual(A.manifest_of({**files, "0003": "0" * 64})["manifest"], expected)               # any changed file changes it
+
+    def test_only_research_anchor_blocks_are_looked_up_and_known_hashes_are_not_fetched_again(self):
+        asked = []
+        def fetch_bytes(url):
+            asked.append(url)
+            return FILES.get(url)
+        got = A.collect_snapshots(RA_BLOCKS, {}, "https://my-ledger.storage.googleapis.com", fetch_bytes)
+        self.assertEqual(sorted(got), ["0001", "0003"])
+        self.assertEqual(len(asked), 2)                                                                       # blocks 0 and 2 are not research anchors
+        asked.clear()
+        again = A.collect_snapshots(RA_BLOCKS, got, "https://my-ledger.storage.googleapis.com", fetch_bytes)
+        self.assertEqual((again, asked), (got, []))
+        def broken(url):
+            raise OSError("down")
+        self.assertEqual(A.collect_snapshots(RA_BLOCKS, {"0001": got["0001"]}, "https://x", broken), {"0001": got["0001"]})   # a failure keeps what is known
+
+    def test_a_document_without_snapshots_is_unchanged_and_with_them_commits_to_the_manifest(self):
+        plain = A.build_document(HEAD, BLOCKS, NOW)
+        self.assertNotIn("snapshots", plain)
+        files = {"0001": "a" * 64}
+        doc = A.build_document(HEAD, BLOCKS, NOW, files)
+        self.assertEqual(doc["snapshots"], A.manifest_of(files))
+        self.assertNotEqual(A.digest_of(doc), A.digest_of(plain))
+        self.assertNotEqual(A.inputs_key(doc), A.inputs_key(plain))                                           # new snapshots are a reason to anchor
+
+    def test_a_run_publishes_the_snapshot_hashes_and_anchors_the_manifest_once(self):
+        def fetch_chain(url):
+            return HEAD if url.endswith("/api/chain/head") else {"blocks": RA_BLOCKS}
+        b = FakeBucket()
+        b.name = "my-ledger"
+        def run_once(now):
+            return A.run(bucket=b, fetch_json=fetch_chain, now=now, stamp_fn=lambda d: A.stamp(d, calendars=("https://cal.one",), make_calendar=FakeCalendar, nonce=b"n" * 16),
+                         upgrade_fn=lambda o: A.upgrade(o, make_calendar=FakeCalendar), tsa_fn=fake_tsr, fetch_bytes=FILES.get)
+        self.assertEqual(run_once(NOW), 0)
+        listing = json.loads(b.objects["anchors/snapshots.json"])
+        self.assertEqual(sorted(listing["files"]), ["0001", "0003"])
+        index = json.loads(b.objects["anchors/index.json"])
+        doc = json.loads(b.objects[f"anchors/{index[0]['id']}/anchor.json"])
+        self.assertEqual(doc["snapshots"], {"count": 2, "upTo": 3, "manifest": listing["manifest"]})
+        self.assertEqual(index[0]["snapshots"], 2)
+        self.assertEqual(run_once(datetime(2026, 10, 15, 22, 0, tzinfo=timezone.utc)), 0)                     # nothing changed: no second anchor
+        self.assertEqual(len(json.loads(b.objects["anchors/index.json"])), 1)
+
 
 class SecondWitness(unittest.TestCase):
     def setUp(self):

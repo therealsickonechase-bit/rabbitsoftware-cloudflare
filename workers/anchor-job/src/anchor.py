@@ -12,6 +12,7 @@ Files, all public, in gs://<ledger bucket>/anchors/ :
   anchors/<id>/anchor.json   the document
   anchors/<id>/anchor.json.ots  the proof (replaced once, when it is upgraded)
   anchors/<id>/anchor.json.tsr  a second, independent witness: an RFC 3161 timestamp from the free FreeTSA authority (best effort; not a blockchain)
+  anchors/snapshots.json     the SHA-256 of every saved research-record set (maxwell/snapshots/block-NNNN.ndjson.gz), so the anchor can commit to all of them
   anchors/index.json         newest first: id, digest, status ("pending" | "confirmed"), bitcoinHeight
   anchors/latest.json        the newest entry
 
@@ -48,14 +49,59 @@ ID_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{6}Z$")
 
 # ------------------------------------------------------------ the document and its digest
 
-def build_document(ledger_head: dict, maxwell_blocks: list, now: datetime) -> dict:
-    """Only public facts, nothing time-dependent except the date. Identical inputs give an identical digest."""
+def research_anchor_indexes(maxwell_blocks: list) -> list:
+    return [b["index"] for b in maxwell_blocks if any(isinstance(t, dict) and t.get("sender") == "RESEARCH_ANCHOR" for t in b.get("transactions", []))]
+
+
+def manifest_of(files: dict) -> dict:
+    """files: {"0012": sha256 hex of block-0012.ndjson.gz, ...}. The manifest is the SHA-256 of the lines "<block> <sha256>\n" in block order, so anyone can recompute it."""
+    lines = "".join(f"{k} {files[k]}\n" for k in sorted(files))
+    return {"count": len(files), "upTo": int(max(files)) if files else None, "manifest": hashlib.sha256(lines.encode()).hexdigest()}
+
+
+def build_document(ledger_head: dict, maxwell_blocks: list, now: datetime, snapshots: dict | None = None) -> dict:
+    """Only public facts, nothing time-dependent except the date. Identical inputs give an identical digest.
+    `snapshots` (block number -> file hash) adds a commitment to the saved research-record sets, so Bitcoin vouches for those files too."""
     last = maxwell_blocks[-1]
-    return {
+    doc = {
         "v": 1, "kind": "rabbitos-anchor", "date": now.strftime("%Y-%m-%d"),
         "ledger": {"length": ledger_head["length"], "headHash": ledger_head["headHash"]},
         "maxwell": {"length": len(maxwell_blocks), "headHash": last["hash"], "headIndex": last["index"]},
     }
+    if snapshots:
+        doc["snapshots"] = manifest_of(snapshots)
+    return doc
+
+
+def http_bytes(url: str):
+    """The bytes at a public URL, or None for 404."""
+    req = urllib.request.Request(url, headers={"user-agent": "rabbitos-anchor/1.0 (+https://rabbitsoftware.io)"})
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            return resp.read()
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return None
+        raise
+
+
+def collect_snapshots(maxwell_blocks: list, cached: dict, ledger_url: str, fetch_bytes=http_bytes) -> dict:
+    """The hash of the saved record set of every research-anchor block that has one. Files never change once published, so a known hash is reused and only new
+    ones are fetched. A fetch that fails is skipped for this run (the cache still holds the old ones) and never stops the anchor."""
+    out = {}
+    for i in research_anchor_indexes(maxwell_blocks):
+        key = f"{i:04d}"
+        if key in cached:
+            out[key] = cached[key]
+            continue
+        try:
+            body = fetch_bytes(f"{ledger_url}/maxwell/snapshots/block-{key}.ndjson.gz")
+        except Exception as e:
+            log("snapshot_fetch_failed", block=i, reason=e.__class__.__name__)
+            continue
+        if body:
+            out[key] = hashlib.sha256(body).hexdigest()
+    return out
 
 
 def canonical(doc: dict) -> bytes:
@@ -213,7 +259,7 @@ def log(event: str, **fields) -> None:
     print(json.dumps({"severity": "ERROR" if event.endswith("_failed") else "INFO", "event": event, **fields}), flush=True)
 
 
-def run(*, bucket: Bucket, fetch_json=http_json, now: datetime | None = None, stamp_fn=stamp, upgrade_fn=upgrade, tsa_fn=tsa_stamp, ledger_bucket_url: str | None = None) -> int:
+def run(*, bucket: Bucket, fetch_json=http_json, now: datetime | None = None, stamp_fn=stamp, upgrade_fn=upgrade, tsa_fn=tsa_stamp, fetch_bytes=http_bytes, ledger_bucket_url: str | None = None) -> int:
     now = now or datetime.now(timezone.utc)
     ledger_url = ledger_bucket_url or f"https://{bucket.name}.storage.googleapis.com"
     try:
@@ -241,7 +287,15 @@ def run(*, bucket: Bucket, fetch_json=http_json, now: datetime | None = None, st
             upgraded_ids.append(entry["id"])
 
     # 2. make a new anchor if the public heads changed since the last one
-    doc = build_document(head, maxwell, now)
+    cache_raw = bucket.get("anchors/snapshots.json")
+    try:
+        cached = json.loads(cache_raw).get("files", {}) if cache_raw else {}
+    except ValueError:
+        cached = {}
+    snaps = collect_snapshots(maxwell, cached, ledger_url, fetch_bytes)
+    if snaps != cached:
+        bucket.put("anchors/snapshots.json", json.dumps({"v": 1, "about": "SHA-256 of maxwell/snapshots/block-<n>.ndjson.gz for every research-anchor block; each anchor commits to the manifest of these", "files": snaps, **manifest_of(snaps)}, indent=1, sort_keys=True).encode(), "application/json")
+    doc = build_document(head, maxwell, now, snaps)
     key = inputs_key(doc)
     created = None
     if not index or index[0].get("inputs") != key:
@@ -257,7 +311,7 @@ def run(*, bucket: Bucket, fetch_json=http_json, now: datetime | None = None, st
         except Exception as e:
             log("tsa_failed", reason=e.__class__.__name__ + ": " + str(e)[:100])
         created = {"id": run_id, "digest": digest.hex(), "inputs": key, "status": "pending", "bitcoinHeight": None, "calendars": answered,
-                   "ledgerLength": doc["ledger"]["length"], "maxwellLength": doc["maxwell"]["length"], "tsa": tsa}
+                   "ledgerLength": doc["ledger"]["length"], "maxwellLength": doc["maxwell"]["length"], "tsa": tsa, "snapshots": doc.get("snapshots", {}).get("count", 0)}
         index.insert(0, created)
 
     index = index[:MAX_INDEX]

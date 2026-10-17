@@ -61,5 +61,39 @@ class Verify(unittest.TestCase):
         self.assertEqual(report["attestations"][0]["type"], "pending")
 
 
+PINNED = "c6867caacb63ad03604780cc5ca64c0a2cb7bbffe603bfaa0bc7562fe017b3d4"      # the same vector is pinned in workers/anchor-job/test/test_anchor.py
+
+
+class SnapshotCommitment(unittest.TestCase):
+    files = {"0001": "a" * 64, "0003": "b" * 64}
+
+    def doc(self, **over):
+        m = va.manifest_of(self.files)
+        return {"snapshots": {**m, **over}}
+
+    def test_the_manifest_rule_matches_the_anchor_job(self):
+        self.assertEqual(va.manifest_of(self.files)["manifest"], PINNED)
+
+    def test_a_matching_list_and_matching_files_pass(self):
+        listing = {"files": {**self.files, "0007": "c" * 64}}               # a newer block beyond upTo is not covered by this anchor
+        bodies = {1: b"one", 3: b"three"}
+        files = {"0001": hashlib.sha256(b"one").hexdigest(), "0003": hashlib.sha256(b"three").hexdigest()}
+        doc = {"snapshots": va.manifest_of(files)}
+        r = va.check_snapshot_commitment(doc, {"files": {**files, "0007": "c" * 64}}, bodies.get)
+        self.assertEqual((r["committed"], r["ok"], r["count"], r["problems"]), (True, True, 2, []))
+        self.assertEqual(va.check_snapshot_commitment({"v": 1}, listing)["committed"], False)      # an older anchor commits to nothing and is not penalised
+
+    def test_a_changed_list_a_changed_file_and_a_missing_file_are_caught(self):
+        files = {"0001": hashlib.sha256(b"one").hexdigest(), "0003": hashlib.sha256(b"three").hexdigest()}
+        doc = {"snapshots": va.manifest_of(files)}
+        swapped = va.check_snapshot_commitment(doc, {"files": {**files, "0003": "0" * 64}})
+        self.assertFalse(swapped["ok"])                                      # the list was altered after anchoring
+        tampered = va.check_snapshot_commitment(doc, {"files": files}, {1: b"one", 3: b"EDITED"}.get)
+        self.assertFalse(tampered["ok"])
+        self.assertIn("does not match its hash", tampered["problems"][0])
+        missing = va.check_snapshot_commitment(doc, {"files": files}, {1: b"one"}.get)
+        self.assertIn("missing", missing["problems"][0])
+
+
 if __name__ == "__main__":
     unittest.main()

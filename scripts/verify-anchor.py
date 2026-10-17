@@ -5,6 +5,9 @@ proof as anchor.json.ots. This script:
   1. checks that sha256(anchor.json) equals the digest the proof is for,
   2. replays the proof's hash steps (sha256 / append / prepend ...) from that digest,
   3. finds the Bitcoin attestation (block height) and compares the replayed value with the Merkle root of that block, fetched from a public Bitcoin API (Blockstream, mempool.space).
+  4. Newer anchors also commit to the saved research-record sets (maxwell/snapshots/block-NNNN.ndjson.gz): the script recomputes the manifest hash from
+     anchors/snapshots.json, compares it with the one inside anchor.json, and re-downloads every covered file to check its SHA-256. So Bitcoin vouches for
+     those record sets too, not only for the chain heads.
 No private data is involved: only a hash and a block height go to the Bitcoin API.
 
     python verify-anchor.py 2026-10-17T070013Z                    # downloads anchor.json and .ots from the public ledger bucket
@@ -106,6 +109,31 @@ def parse_ots(data):
     return digest, leaves
 
 
+def manifest_of(files):
+    """Same rule as the anchor job: SHA-256 of the lines "<block> <sha256>\n" in block order."""
+    lines = "".join(f"{k} {files[k]}\n" for k in sorted(files))
+    return {"count": len(files), "upTo": int(max(files)) if files else None, "manifest": hashlib.sha256(lines.encode()).hexdigest()}
+
+
+def check_snapshot_commitment(doc, listing, fetch_file=None):
+    """doc: the parsed anchor.json. listing: anchors/snapshots.json. Returns {committed, ok, problems}. `fetch_file(block)` returns the file bytes (or None) to re-hash each one."""
+    commit = doc.get("snapshots")
+    if not commit:
+        return {"committed": False, "ok": True, "problems": []}
+    problems = []
+    covered = {k: v for k, v in (listing.get("files") or {}).items() if int(k) <= commit.get("upTo", -1)}
+    if manifest_of(covered) != {"count": commit.get("count"), "upTo": commit.get("upTo"), "manifest": commit.get("manifest")}:
+        problems.append("the published list of snapshot hashes does not reproduce the manifest inside anchor.json")
+    if fetch_file:
+        for k, want in sorted(covered.items()):
+            body = fetch_file(int(k))
+            if body is None:
+                problems.append(f"block {k}: the saved record set is missing")
+            elif hashlib.sha256(body).hexdigest() != want:
+                problems.append(f"block {k}: the saved record set does not match its hash")
+    return {"committed": True, "ok": not problems, "count": len(covered), "problems": problems}
+
+
 def fetch(url, binary=False):
     request = urllib.request.Request(url, headers={"user-agent": "rabbitos-verify-anchor/1.0"})
     body = urllib.request.urlopen(request, timeout=30).read()
@@ -138,6 +166,16 @@ def verify(anchor_bytes, ots_bytes, lookup=block_merkle_root):
     return report
 
 
+SNAPSHOT_URL = "https://rabbitsoftware-io-ledger-public.storage.googleapis.com/maxwell/snapshots/block-{:04d}.ndjson.gz"
+
+
+def _try_fetch(url):
+    try:
+        return fetch(url, True)
+    except Exception:
+        return None
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("anchor_id", nargs="?")
@@ -152,6 +190,14 @@ def main():
     else:
         parser.error("give an anchor id, or --json and --ots")
     report = verify(anchor_bytes, ots_bytes)
+    doc = json.loads(anchor_bytes.decode("utf-8"))
+    if doc.get("snapshots"):
+        try:
+            listing = json.loads(fetch(f"{BUCKET}/snapshots.json"))
+            report["snapshots"] = check_snapshot_commitment(doc, listing, lambda n: _try_fetch(SNAPSHOT_URL.format(n)))
+        except Exception as error:
+            report["snapshots"] = {"committed": True, "ok": False, "problems": [f"could not read the snapshot list: {error.__class__.__name__}"]}
+        report["verified"] = report["verified"] and report["snapshots"]["ok"]
     print(json.dumps(report, indent=1))
     return 0 if report["verified"] else 1
 
