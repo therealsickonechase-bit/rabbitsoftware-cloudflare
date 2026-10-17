@@ -72,6 +72,22 @@ class Maxwell(unittest.TestCase):
         self.assertTrue(vm.verify_chain({"blocks": []})[0])
         self.assertTrue(vm.verify_chain({"blocks": [{"nope": 1}]})[0])
 
+    def test_a_saved_record_set_proves_the_block_even_after_a_record_is_edited(self):
+        recs = rows(6)
+        data = chain_with_anchor(recs)
+        today = [dict(r) for r in recs]
+        today[1]["title"] = "Paper 1, corrected at the source"
+        today = today[:5]                                           # and one record removed
+        without = vm.verify_research_anchors(data["blocks"], today)[0]
+        self.assertFalse(without["ok"])                             # today's records alone can no longer prove it
+        with_snapshot = vm.verify_research_anchors(data["blocks"], today, {1: recs})[0]
+        self.assertTrue(with_snapshot["ok"])
+        self.assertEqual(with_snapshot["source"], "saved records")
+        self.assertEqual((with_snapshot["changed_since"], with_snapshot["missing_today"]), (1, 1))
+        fake = vm.verify_research_anchors(data["blocks"], today, {1: rows(6, offset=50)})[0]       # a snapshot that is not the anchored set is rejected
+        self.assertFalse(fake["ok"])
+        self.assertIn("saved record set", fake["reason"])
+
     def test_leaf_rule_is_the_documented_one(self):
         r = {"id": "a:1", "source": "s", "title": "t", "url": None, "topic_id": None, "run_id": None, "first_seen_at": "x", "extra": "ignored"}
         expected = hashlib.sha256(b'{"first_seen_at":"x","id":"a:1","run_id":null,"source":"s","title":"t","topic_id":null,"url":null}').hexdigest()

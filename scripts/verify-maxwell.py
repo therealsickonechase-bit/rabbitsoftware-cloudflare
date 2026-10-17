@@ -6,8 +6,10 @@ Checks, in order:
   3. Every link: previous_hash is the hash of the block before; indexes count up; timestamps never go backwards.
   4. Proof of work: each hash starts with `difficulty` zero hex digits (the chain's difficulty is 2, so this is a light, nominal work step: it makes
      rewriting history cost a little and makes the chain tamper-evident, it is NOT Bitcoin-grade security. The Bitcoin anchors are what give an outside witness.)
-  5. Research anchors (blocks with a RESEARCH_ANCHOR transaction): rebuild the Merkle root from the public research records that existed at the block's time
-     (first_seen_at <= block time) and compare the root and the count. Rule: leaf = sha256(canonical JSON of id, source, title, url, topic_id, run_id,
+  5. Research anchors (blocks with a RESEARCH_ANCHOR transaction): when the block has a saved record set (maxwell/snapshots/block-NNNN.ndjson.gz, written
+     at mining time), rebuild the Merkle root from it: that works forever, even if a record is later edited at its source, and the script then also says how many
+     records differ from today's. Older blocks have no snapshot, so their root is rebuilt from the public research records that existed at the block's time
+     (first_seen_at <= block time); that only matches while those records are unchanged. Rule: leaf = sha256(canonical JSON of id, source, title, url, topic_id, run_id,
      first_seen_at), sorted by id, an odd node is duplicated. Skip with --no-records.
 
     python verify-maxwell.py                        # the public mirror in Google Cloud, and the public research records
@@ -15,6 +17,7 @@ Checks, in order:
 """
 
 import argparse
+import gzip
 import hashlib
 import json
 import sys
@@ -23,6 +26,7 @@ import urllib.request
 from datetime import datetime, timezone
 
 CHAIN_URL = "https://rabbitsoftware-io-ledger-public.storage.googleapis.com/maxwell/maxwell_chain.json"
+SNAPSHOT_URL = "https://rabbitsoftware-io-ledger-public.storage.googleapis.com/maxwell/snapshots/block-{:04d}.ndjson.gz"
 RECORDS_URL = "https://app.rabbitsoftware.io/api/data/research_records"
 HELLO_WORLD = "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"
 STABLE_FIELDS = ("id", "source", "title", "url", "topic_id", "run_id", "first_seen_at")
@@ -86,9 +90,11 @@ def to_epoch(text):
         return None
 
 
-def verify_research_anchors(blocks, rows):
-    """For every RESEARCH_ANCHOR block, rebuild the Merkle root from the records first seen at or before the block's time."""
+def verify_research_anchors(blocks, rows, snapshots=None):
+    """For every RESEARCH_ANCHOR block, rebuild the Merkle root. `snapshots` maps block index -> the saved record set (list of rows), when one exists:
+    that proves the block exactly and says how many records differ from `rows` (today's). Otherwise today's records first seen at or before the block's time are used."""
     results = []
+    snapshots = snapshots or {}
     stamped = [(to_epoch(r.get("first_seen_at")), r) for r in rows]
     for b in blocks:
         tx = next((t for t in b.get("transactions", []) if isinstance(t, dict) and t.get("sender") == "RESEARCH_ANCHOR"), None)
@@ -96,11 +102,20 @@ def verify_research_anchors(blocks, rows):
             continue
         subset = [r for t, r in stamped if t is not None and t <= b["timestamp"]]
         entry = {"block": b["index"], "claimed_count": tx.get("count"), "claimed_root": tx.get("root")}
-        if not subset:
+        saved = snapshots.get(b["index"])
+        if saved:
+            root, count = merkle_root(saved)
+            entry.update(source="saved records", rebuilt_count=count, rebuilt_root=root, ok=(root == tx.get("root") and count == tx.get("count")))
+            if not entry["ok"]:
+                entry["reason"] = "the saved record set does not reproduce the block's root"
+            today = {str(r["id"]): canonical(r) for r in subset}
+            entry["changed_since"] = sum(1 for r in saved if today.get(str(r["id"])) not in (None, canonical(r)))
+            entry["missing_today"] = sum(1 for r in saved if str(r["id"]) not in today)
+        elif not subset:
             entry.update(ok=False, reason="no public records existed at that time")
         else:
             root, count = merkle_root(subset)
-            entry.update(rebuilt_count=count, rebuilt_root=root, ok=(root == tx.get("root") and count == tx.get("count")))
+            entry.update(source="today's records", rebuilt_count=count, rebuilt_root=root, ok=(root == tx.get("root") and count == tx.get("count")))
             if not entry["ok"]:
                 entry["reason"] = "records were added, changed or removed since, or the rule differs" if count != tx.get("count") else "the root does not match"
         results.append(entry)
@@ -112,6 +127,20 @@ def fetch(url, want_headers=False):
     with urllib.request.urlopen(request, timeout=60) as response:
         body = response.read().decode("utf-8")
         return (body, dict(response.headers)) if want_headers else body
+
+
+def fetch_snapshots(blocks, url=SNAPSHOT_URL):
+    """Downloads the saved record set of every research-anchor block that has one (404 means an older block without a snapshot)."""
+    found = {}
+    for b in blocks:
+        if not any(isinstance(t, dict) and t.get("sender") == "RESEARCH_ANCHOR" for t in b.get("transactions", [])):
+            continue
+        try:
+            raw = urllib.request.urlopen(urllib.request.Request(url.format(b["index"]), headers={"user-agent": "rabbitos-verify-maxwell/1.0"}), timeout=60).read()
+            found[b["index"]] = [json.loads(line) for line in gzip.decompress(raw).decode("utf-8").splitlines() if line.strip()]
+        except Exception:
+            pass
+    return found
 
 
 def fetch_records(base=RECORDS_URL, max_pages=200):
@@ -140,9 +169,14 @@ def main():
         print("  -", line)
     anchors = []
     if not args.no_records:
-        anchors = verify_research_anchors(blocks, fetch_records())
+        anchors = verify_research_anchors(blocks, fetch_records(), fetch_snapshots(blocks))
         for a in anchors:
-            print(f"research anchor, block {a['block']}: {'OK' if a['ok'] else 'DOES NOT MATCH'} (claimed {a['claimed_count']} records, rebuilt {a.get('rebuilt_count')})" + ("" if a["ok"] else f" - {a.get('reason')}"))
+            line = f"research anchor, block {a['block']}: {'OK' if a['ok'] else 'DOES NOT MATCH'} (claimed {a['claimed_count']} records, rebuilt {a.get('rebuilt_count')} from {a.get('source', 'today' + chr(39) + 's records')})"
+            if not a["ok"]:
+                line += f" - {a.get('reason')}"
+            elif a.get("source") == "saved records" and (a.get("changed_since") or a.get("missing_today")):
+                line += f"; since then {a.get('changed_since', 0)} record(s) were edited and {a.get('missing_today', 0)} removed at the source"
+            print(line)
     return 1 if problems or any(not a["ok"] for a in anchors) else 0
 
 
