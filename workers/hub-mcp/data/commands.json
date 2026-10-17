@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-16T22:28:01.644Z",
+ "generatedAt": "2026-10-17T12:31:34.773Z",
  "commandMaxBytes": 4000,
  "projects": [
   "rabbit-web",
@@ -348,6 +348,30 @@
    "description": "Registers the Hub MCP with the agy CLI so Antigravity can call research_link and research_search. Public read-only tools, no key. Drop -WhatIf to apply; -Remove undoes it.",
    "project": "rabbit-web",
    "source": "scripts/powershell/Connect-Antigravity.ps1",
+   "runsIn": "computer"
+  },
+  {
+   "id": "web-gh-bundles",
+   "group": "Backups",
+   "label": "Bundle the GitHub mirrors and copy them to Google Cloud",
+   "scope": "owner",
+   "risk": "network",
+   "command": "pwsh -File scripts/powershell/Backup-GithubMirrors.ps1 -WhatIf",
+   "description": "Packs each mirror into a verified git bundle and uploads them to the private vault bucket. Nothing is deleted. Drop -WhatIf to run.",
+   "project": "rabbit-web",
+   "source": "scripts/powershell/Backup-GithubMirrors.ps1",
+   "runsIn": "computer"
+  },
+  {
+   "id": "web-gh-restore",
+   "group": "Backups",
+   "label": "List or restore a GitHub mirror from Google Cloud",
+   "scope": "owner",
+   "risk": "network",
+   "command": "pwsh -File scripts/powershell/Restore-GithubMirror.ps1 -List",
+   "description": "Lists the bundles in the cloud. Add -Repo NAME -Target FOLDER to restore one (checked against the manifest hash). Pushes nothing.",
+   "project": "rabbit-web",
+   "source": "scripts/powershell/Restore-GithubMirror.ps1",
    "runsIn": "computer"
   },
   {

@@ -354,7 +354,8 @@ def sync(root, setup, selected=None):
     if owner.lower() == user.lower():
         listing = api("user/repos?affiliation=owner&per_page=100&sort=full_name", pages=True)
     else:
-        membership = api(f"user/memberships/orgs/{owner}")
+        # orgs/<org>/memberships/<user> needs only read:org; user/memberships/orgs/<org> would need the broader "user" scope.
+        membership = api(f"orgs/{owner}/memberships/{user}")
         if membership.get("state") != "active" or membership.get("role") != "admin":
             raise RuntimeError(f"Policy owner {owner} is not an organization you administer")
         listing = api(f"orgs/{owner}/repos?type=all&per_page=100&sort=full_name", pages=True)
