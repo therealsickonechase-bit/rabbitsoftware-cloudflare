@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A live map of the RabbitSoftware chain: how research records and platform facts flow into Maxwell blocks, which anchors cover them and which Bitcoin blocks witness them.">
+  <title>Network | RabbitSoftware</title>
+  <link rel="icon" type="image/png" href="assets/rabbitsoftware.png">
+  <style>
+    :root { color-scheme: light dark; --paper:#f2f4ee; --ink:#172421; --muted:#53625c; --line:#bdc8bf; --green:#155c49; --bad:#b3402a; --warn:#8a5a00; --card:#fbfcf8; --unk:#8a958f;
+            --research:#2f6f8f; --web:#6b5b95; --cloud:#a8641c; --genesis:#6b6f68; --btc:#b36b00; }
+    @media (prefers-color-scheme: dark) { :root { --paper:#17211e; --ink:#f0f3ec; --muted:#bac7c0; --line:#52645a; --green:#9dd7b4; --bad:#f0907a; --warn:#e8c070; --card:#1d2a26; --unk:#7e8c85;
+            --research:#7fc1e0; --web:#b9a8e8; --cloud:#e8b070; --genesis:#aab0a8; --btc:#f0b860; } }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--paper); color:var(--ink); font:17px/1.6 "Aptos","Segoe UI",sans-serif; }
+    a { color:inherit; }
+    main { width:min(1100px, calc(100% - 32px)); margin:0 auto; padding:44px 0 64px; display:grid; gap:26px; }
+    h1 { margin:0 0 6px; font-size:2rem; line-height:1.2; text-wrap:balance; }
+    h2 { margin:0 0 8px; font-size:1.2rem; } h3 { margin:0 0 8px; font-size:1.05rem; }
+    p { color:var(--muted); margin:0; } .small { font-size:.88rem; }
+    .flow { padding:14px 18px; border:1px solid var(--line); border-radius:8px; background:var(--card); font:.9rem/1.6 ui-monospace,Consolas,monospace; color:var(--ink); overflow-x:auto; white-space:pre; }
+    .controls { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+    .controls button { font:inherit; font-size:.9rem; padding:6px 12px; border:1px solid var(--line); border-radius:999px; background:var(--card); color:var(--ink); cursor:pointer; }
+    .controls button[aria-pressed="true"] { background:var(--ink); color:var(--paper); }
+    .mapwrap { overflow-x:auto; border:1px solid var(--line); border-radius:8px; background:var(--card); }
+    .netsvg { display:block; }
+    .lane { fill:var(--muted); font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; }
+    .edge { stroke:var(--line); stroke-width:1.5; fill:none; }
+    .edge.prev { stroke:var(--ink); stroke-width:2; opacity:.7; } .edge.covers { stroke:var(--muted); } .edge.witness { stroke:var(--btc); stroke-width:1.8; }
+    .edge.feeds { opacity:.35; } .edge.ledger { opacity:.28; stroke-dasharray:5 4; }
+    .arrow { fill:var(--muted); }
+    .node rect { fill:var(--paper); stroke:var(--line); stroke-width:1.5; }
+    .node.block { cursor:pointer; } .node.block:focus { outline:none; } .node.block:focus rect, .node.block.selected rect { stroke:var(--ink); stroke-width:3; }
+    .node.block.research rect { stroke:var(--research); } .node.block.web rect { stroke:var(--web); } .node.block.genesis rect { stroke:var(--genesis); }
+    .node.bitcoin rect { stroke:var(--btc); } .node.anchor.ok rect { stroke:var(--green); } .node.anchor.bad rect { stroke:var(--bad); stroke-width:3; } .node.anchor.wait rect { stroke:var(--warn); stroke-dasharray:4 3; }
+    .nt { fill:var(--ink); font-size:12.5px; font-weight:700; } .ns { fill:var(--muted); font-size:10.5px; } .nh { fill:var(--muted); font:10px ui-monospace,Consolas,monospace; }
+    .badge { font-size:13px; font-weight:700; } .badge.ok { fill:var(--green); } .badge.bad { fill:var(--bad); } .badge.wait { fill:var(--warn); }
+    .legend { display:flex; flex-wrap:wrap; gap:6px 18px; font-size:.86rem; color:var(--muted); }
+    .legend i { display:inline-block; width:12px; height:12px; border-radius:3px; margin-right:6px; border:2px solid var(--line); vertical-align:-1px; }
+    .detail { padding:16px 20px; border:1px solid var(--line); border-radius:8px; background:var(--card); }
+    dl.facts { display:grid; grid-template-columns:minmax(150px,max-content) minmax(0,1fr); gap:4px 16px; margin:0; font-size:.92rem; }
+    dl.facts dt { color:var(--muted); } dl.facts dd { margin:0; overflow-wrap:anywhere; font-family:ui-monospace,Consolas,monospace; font-size:.86rem; }
+    table { width:100%; border-collapse:collapse; font-size:.92rem; }
+    th, td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); } th { color:var(--muted); font-weight:600; }
+    tbody tr { cursor:pointer; } tbody tr:focus { outline:2px solid var(--ink); } .mono { font-family:ui-monospace,Consolas,monospace; }
+    .tablewrap { overflow-x:auto; }
+    noscript p { color:var(--bad); }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Network</h1>
+      <p>How the project&rsquo;s facts become one chain, and who witnesses it. Every block, hash and anchor on this page is read live from files anyone can download; nothing here is stored on this site.</p>
+    </header>
+
+    <div class="flow" aria-label="The flow in one picture">research records ──► research anchor block ─┐
+platform state (ledger head, code, map...) ─► web-snapshot block ─┤► Maxwell chain head ──► anchor.json ──► Bitcoin block (+ FreeTSA)</div>
+
+    <section aria-labelledby="map-h">
+      <h2 id="map-h">The map</h2>
+      <p id="net-summary" class="small" aria-live="polite">Loading the chain…</p>
+      <p id="net-ledger" class="small"></p>
+      <noscript><p>This page needs JavaScript to draw the map. The same data is in the <a href="https://rabbitsoftware-io-ledger-public.storage.googleapis.com/maxwell/maxwell_chain.json">chain file</a> and the <a href="proof.html">proof page</a>.</p></noscript>
+      <div class="controls" role="group" aria-label="Show">
+        <button type="button" data-filter="all" aria-pressed="true">All blocks</button>
+        <button type="button" data-filter="research" aria-pressed="false">Research only</button>
+        <button type="button" data-filter="web" aria-pressed="false">Platform snapshots only</button>
+      </div>
+      <div class="mapwrap"><div id="net-map"></div></div>
+      <div class="legend">
+        <span><i style="border-color:var(--research)"></i>research anchor (Merkle root of the public records)</span>
+        <span><i style="border-color:var(--web)"></i>web snapshot (platform facts, mined on the PC or in Google Cloud)</span>
+        <span><i style="border-color:var(--btc)"></i>Bitcoin block that witnesses an anchor</span>
+        <span>✓ re-checked by our status job &middot; … waiting for Bitcoin &middot; ✕ does not match</span>
+      </div>
+      <p class="small">Solid dark arrows are the hash links: each block names the hash of the one before it. Thin grey lines show where a block&rsquo;s data comes from. Dashed lines mean a web snapshot also commits the RabbitOS ledger&rsquo;s head hash. Ethereum and XRP Ledger anchors are not switched on yet, so they are not drawn.</p>
+    </section>
+
+    <section aria-labelledby="detail-h">
+      <h2 id="detail-h">Follow one block</h2>
+      <div id="net-detail" class="detail"><p class="small">Click a block on the map, or a row below.</p></div>
+    </section>
+
+    <section aria-labelledby="list-h">
+      <h2 id="list-h">All blocks, newest first</h2>
+      <div class="tablewrap"><table>
+        <thead><tr><th>#</th><th>Kind</th><th>Hash</th><th>Follows</th><th>Mined</th><th>Witness</th></tr></thead>
+        <tbody id="net-rows"></tbody>
+      </table></div>
+      <p class="small" style="margin-top:10px">A hash proves a record existed in this order and has not changed. It does not prove the underlying research is true. See <a href="proof.html">the proof page</a> to check the Bitcoin witnesses, and <a href="blockchain.html">how the chain works</a>.</p>
+    </section>
+  </main>
+  <script type="module" src="network.js"></script>
+</body>
+</html>

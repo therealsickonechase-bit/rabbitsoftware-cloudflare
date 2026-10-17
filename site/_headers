@@ -10,6 +10,8 @@
   Content-Type: application/javascript; charset=utf-8
 /proof-view.mjs
   Content-Type: application/javascript; charset=utf-8
+/network-view.mjs
+  Content-Type: application/javascript; charset=utf-8
 /development.md
   Content-Type: text/plain; charset=utf-8
 /installers/setup.py

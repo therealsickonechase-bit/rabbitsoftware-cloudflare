@@ -1,0 +1,342 @@
+{
+  "anchor_sha256": "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+  "anchor_verified": true,
+  "anchor_message": "Genesis Anchor Verified.",
+  "difficulty": 2,
+  "blocks": [
+    {
+      "index": 0,
+      "timestamp": 1791531395.730412,
+      "transactions": [
+        {
+          "sender": "MAXWELL_GENESIS",
+          "recipient": "NETWORK",
+          "amount": 0,
+          "note": "hello world",
+          "immutable_anchor_sha": "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+          "verification": "This block proves the chain originated from the universal hello world hash."
+        }
+      ],
+      "previous_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "nonce": 0,
+      "hash": "976ed3bc7f20578a42e420691bf0bdf532141f265ac6132ef28fd6113ba844f0"
+    },
+    {
+      "index": 1,
+      "timestamp": 1792017966.4164183,
+      "transactions": [
+        {
+          "sender": "RESEARCH_ANCHOR",
+          "recipient": "NETWORK",
+          "amount": 0,
+          "note": "merkle root of public research records",
+          "root": "89a6ee3e5dad2ad2a4845e6356e039d51b00abba9bf353debc41270ff851e7e9",
+          "count": 407,
+          "source": "app.rabbitsoftware.io/api/data/research_records",
+          "leaf_rule": "sha256(canonical json of id,source,title,url,topic_id,run_id,first_seen_at); sorted by id; odd node duplicated"
+        }
+      ],
+      "previous_hash": "976ed3bc7f20578a42e420691bf0bdf532141f265ac6132ef28fd6113ba844f0",
+      "nonce": 14,
+      "hash": "00922bac1b430bfb253dab40cb4e50dfd4a3246ffe18fab4bcfa4085aef09b35"
+    },
+    {
+      "index": 2,
+      "timestamp": 1792071267.500733,
+      "transactions": [
+        {
+          "sender": "RABBITWEB_MINER",
+          "recipient": "NETWORK",
+          "amount": 0,
+          "note": "merkle root of the public RabbitOS web snapshot",
+          "root": "a68f6d79443ef2ac1c3d522937999948637f066a54cad983b465be364a10651a",
+          "count": 42,
+          "nodes_up": 27,
+          "nodes_total": 27,
+          "datasets": 11,
+          "research_rows": 407,
+          "chain_ok": 1,
+          "leaf_rule": "sha256(canonical json of leaf); leaves sorted by k; odd node duplicated; leaves: node, dataset, chain, research"
+        }
+      ],
+      "previous_hash": "00922bac1b430bfb253dab40cb4e50dfd4a3246ffe18fab4bcfa4085aef09b35",
+      "nonce": 228,
+      "hash": "00e1c6c5cc8d64277ded38559b794a867aa7a9e3e0f13a24e6afb086fe8a2997"
+    },
+    {
+      "index": 3,
+      "timestamp": 1792091401.478282,
+      "transactions": [
+        {
+          "sender": "RABBITWEB_MINER_CLOUD",
+          "recipient": "NETWORK",
+          "amount": 0,
+          "note": "merkle root of the public RabbitOS web snapshot",
+          "root": "14928de8e7fbf36299d120a6c44530159de9b89cf7cc627bbec952c8e2c16653",
+          "count": 44,
+          "nodes_up": 27,
+          "nodes_total": 27,
+          "datasets": 11,
+          "research_rows": 407,
+          "chain_ok": 1,
+          "leaf_rule": "sha256(canonical json of leaf); leaves sorted by k; odd node duplicated; leaves: node, dataset, chain, research, code, map, catalog, backup"
+        }
+      ],
+      "previous_hash": "00e1c6c5cc8d64277ded38559b794a867aa7a9e3e0f13a24e6afb086fe8a2997",
+      "nonce": 17,
+      "hash": "006290c62319a84de6c1152ed5c63fce6d780118045211cb117b800fe4b3fc0c"
+    },
+    {
+      "index": 4,
+      "timestamp": 1792149234.2076993,
+      "transactions": [
+        {
+          "sender": "RESEARCH_ANCHOR",
+          "recipient": "NETWORK",
+          "amount": 0,
+          "note": "merkle root of public research records",
+          "root": "77997afbfd43409b8b6bf6a7ca39847f6a928dfa4dd21ec79a45e596d599f5bf",
+          "count": 597,
+          "source": "app.rabbitsoftware.io/api/data/research_records",
+          "leaf_rule": "sha256(canonical json of id,source,title,url,topic_id,run_id,first_seen_at); sorted by id; odd node duplicated"
+        }
+      ],
+      "previous_hash": "006290c62319a84de6c1152ed5c63fce6d780118045211cb117b800fe4b3fc0c",
+      "nonce": 763,
+      "hash": "00448819513ed8a3a6dd4aa08b004895a8a98270c74f3f83177c59556bd90970"
+    },
+    {
+      "index": 5,
+      "timestamp": 1792149253.1033487,
+      "transactions": [
+        {
+          "sender": "RABBITWEB_MINER",
+          "recipient": "NETWORK",
+          "amount": 0,
+          "note": "merkle root of the public RabbitOS web snapshot",
+          "root": "fe32237bcaa39b86103a2487634224818e10d6c9517fc24e7ba7f7e95ba77cea",
+          "count": 51,
+          "nodes_up": 27,
+          "nodes_total": 27,
+          "datasets": 11,
+          "research_rows": 597,
+          "chain_ok": 1,
+          "leaf_rule": "sha256(canonical json of leaf); leaves sorted by k; odd node duplicated; leaves: node, dataset, chain, research, code, map, catalog, backup"
+        }
+      ],
+      "previous_hash": "00448819513ed8a3a6dd4aa08b004895a8a98270c74f3f83177c59556bd90970",
+      "nonce": 3,
+      "hash": "002372b0c3e8d3c046f8506cc22fee04dd0f0804c1d78a1e591db3854776fba6"
+    },
+    {
+      "index": 6,
+      "timestamp": 1792152015.8743103,
+      "transactions": [
+        {
+          "sender": "RABBITWEB_MINER_CLOUD",
+          "recipient": "NETWORK",
+          "amount": 0,
+          "note": "merkle root of the public RabbitOS web snapshot",
+          "root": "21f9341486d288572bec8fbd5456655ca3e7e5b78b23b7af0811ea921932d58e",
+          "count": 45,
+          "nodes_up": 27,
+          "nodes_total": 27,
+          "datasets": 11,
+          "research_rows": 597,
+          "chain_ok": 0,
+          "leaf_rule": "sha256(canonical json of leaf); leaves sorted by k; odd node duplicated; leaves: node, dataset, chain, research, code, map, catalog, backup"
+        }
+      ],
+      "previous_hash": "002372b0c3e8d3c046f8506cc22fee04dd0f0804c1d78a1e591db3854776fba6",
+      "nonce": 33,
+      "hash": "002eb29912dcc47085eb03df2ea4ace1464c5ea90cf6b6077ac2bfc477d1026b"
+    },
+    {
+      "index": 7,
+      "timestamp": 1792169012.3243058,
+      "transactions": [
+        {
+          "sender": "RESEARCH_ANCHOR",
+          "recipient": "NETWORK",
+          "amount": 0,
+          "note": "merkle root of public research records",
+          "root": "6f8ee784eb40d7ca50bd7f4fff4a06791ce1368dc79958bb0726702c07d34453",
+          "count": 918,
+          "source": "app.rabbitsoftware.io/api/data/research_records",
+          "leaf_rule": "sha256(canonical json of id,source,title,url,topic_id,run_id,first_seen_at); sorted by id; odd node duplicated"
+        }
+      ],
+      "previous_hash": "002eb29912dcc47085eb03df2ea4ace1464c5ea90cf6b6077ac2bfc477d1026b",
+      "nonce": 114,
+      "hash": "00bd0bae38a9f35c2ee4f19ba9adc5b56beaec159a7340b415856ec24c5d2d9f"
+    },
+    {
+      "index": 8,
+      "timestamp": 1792169026.292014,
+      "transactions": [
+        {
+          "sender": "RABBITWEB_MINER",
+          "recipient": "NETWORK",
+          "amount": 0,
+          "note": "merkle root of the public RabbitOS web snapshot",
+          "root": "276c62c168b921484766c5224867b3a62d698a3068ba23f262d67a44a5caa6e1",
+          "count": 56,
+          "nodes_up": 27,
+          "nodes_total": 27,
+          "datasets": 11,
+          "research_rows": 918,
+          "chain_ok": 1,
+          "leaf_rule": "sha256(canonical json of leaf); leaves sorted by k; odd node duplicated; leaves: node, dataset, chain, research, code, map, catalog, backup, anchor, echo, dna"
+        }
+      ],
+      "previous_hash": "00bd0bae38a9f35c2ee4f19ba9adc5b56beaec159a7340b415856ec24c5d2d9f",
+      "nonce": 64,
+      "hash": "00f7128e71731d86741169aa78629bd9d7bdf5a7c834f4a5569c12f51d7cba3e"
+    },
+    {
+      "index": 9,
+      "timestamp": 1792190294.6754067,
+      "transactions": [
+        {
+          "sender": "RESEARCH_ANCHOR",
+          "recipient": "NETWORK",
+          "amount": 0,
+          "note": "merkle root of public research records",
+          "root": "3a4d31ca2714edddcf581d7141c751f444c0bbc07d5986bdff6d0db6b2d86eef",
+          "count": 1436,
+          "source": "app.rabbitsoftware.io/api/data/research_records",
+          "leaf_rule": "sha256(canonical json of id,source,title,url,topic_id,run_id,first_seen_at); sorted by id; odd node duplicated"
+        }
+      ],
+      "previous_hash": "00f7128e71731d86741169aa78629bd9d7bdf5a7c834f4a5569c12f51d7cba3e",
+      "nonce": 321,
+      "hash": "00c9f45f322f472af548e549640a721c13c6150dac91db6352159b9ec96fcef2"
+    },
+    {
+      "index": 10,
+      "timestamp": 1792190554.8155015,
+      "transactions": [
+        {
+          "sender": "RABBITWEB_MINER",
+          "recipient": "NETWORK",
+          "amount": 0,
+          "note": "merkle root of the public RabbitOS web snapshot",
+          "root": "bee100c685e676505240ae52c57011b366785996b50f37b4c68ec2858f922b92",
+          "count": 57,
+          "nodes_up": 27,
+          "nodes_total": 27,
+          "datasets": 11,
+          "research_rows": 1436,
+          "chain_ok": 1,
+          "leaf_rule": "sha256(canonical json of leaf); leaves sorted by k; odd node duplicated; leaves: node, dataset, chain, research, code, map, catalog, backup, anchor, echo, dna, toolbox"
+        }
+      ],
+      "previous_hash": "00c9f45f322f472af548e549640a721c13c6150dac91db6352159b9ec96fcef2",
+      "nonce": 298,
+      "hash": "0062cade2209d8ced24c0d4dcf8be89a237bf95c8126c479a7661aa37d7a8c7b"
+    },
+    {
+      "index": 11,
+      "timestamp": 1792196433.1712408,
+      "transactions": [
+        {
+          "sender": "RESEARCH_ANCHOR",
+          "recipient": "NETWORK",
+          "amount": 0,
+          "note": "merkle root of public research records",
+          "root": "cb581bb70e3c6f75428d862d4e4cda53f14781aa6dc037b3ce0cf03473236789",
+          "count": 1511,
+          "source": "app.rabbitsoftware.io/api/data/research_records",
+          "leaf_rule": "sha256(canonical json of id,source,title,url,topic_id,run_id,first_seen_at); sorted by id; odd node duplicated"
+        }
+      ],
+      "previous_hash": "0062cade2209d8ced24c0d4dcf8be89a237bf95c8126c479a7661aa37d7a8c7b",
+      "nonce": 211,
+      "hash": "0061a8922a3ba753fa15cf68966844fc10c6165364e6dd7f33da0513c11743e3"
+    },
+    {
+      "index": 12,
+      "timestamp": 1792203441.725098,
+      "transactions": [
+        {
+          "sender": "RESEARCH_ANCHOR",
+          "recipient": "NETWORK",
+          "amount": 0,
+          "note": "merkle root of public research records",
+          "root": "49a3a7c3386a75902735fbe6c80244a151057faf5c55aff474cd6385e9f2f12c",
+          "count": 1512,
+          "source": "app.rabbitsoftware.io/api/data/research_records",
+          "leaf_rule": "sha256(canonical json of id,source,title,url,topic_id,run_id,first_seen_at); sorted by id; odd node duplicated"
+        }
+      ],
+      "previous_hash": "0061a8922a3ba753fa15cf68966844fc10c6165364e6dd7f33da0513c11743e3",
+      "nonce": 86,
+      "hash": "00f0047a6d292fedb0ecf84455d9301080a6c2ae223a96ba44abd3f12ae8b0ff"
+    },
+    {
+      "index": 13,
+      "timestamp": 1792238421.5930548,
+      "transactions": [
+        {
+          "sender": "RABBITWEB_MINER_CLOUD",
+          "recipient": "NETWORK",
+          "amount": 0,
+          "note": "merkle root of the public RabbitOS web snapshot",
+          "root": "7fa994538f53a69933c84df519199f09cd96ace27ccb528a412934d1279f0f08",
+          "count": 45,
+          "nodes_up": 27,
+          "nodes_total": 27,
+          "datasets": 11,
+          "research_rows": 1603,
+          "chain_ok": 1,
+          "leaf_rule": "sha256(canonical json of leaf); leaves sorted by k; odd node duplicated; leaves: node, dataset, chain, research, code, map, catalog, backup"
+        }
+      ],
+      "previous_hash": "00f0047a6d292fedb0ecf84455d9301080a6c2ae223a96ba44abd3f12ae8b0ff",
+      "nonce": 206,
+      "hash": "005e25b296bb338cd127ea42284e64ea5da7711a03af96c4afb8d2ad32dda499"
+    },
+    {
+      "index": 14,
+      "timestamp": 1792248699.5607817,
+      "transactions": [
+        {
+          "sender": "RESEARCH_ANCHOR",
+          "recipient": "NETWORK",
+          "amount": 0,
+          "note": "merkle root of public research records",
+          "root": "b111c0ec33b17fe5e90ded2ee94e1d3cb135e77315144724a06480835a115cde",
+          "count": 1603,
+          "source": "app.rabbitsoftware.io/api/data/research_records",
+          "leaf_rule": "sha256(canonical json of id,source,title,url,topic_id,run_id,first_seen_at); sorted by id; odd node duplicated"
+        }
+      ],
+      "previous_hash": "005e25b296bb338cd127ea42284e64ea5da7711a03af96c4afb8d2ad32dda499",
+      "nonce": 330,
+      "hash": "00da924fd5802111c3a7a57444887c26d6a778977efae692dca6952262de2bbd"
+    },
+    {
+      "index": 15,
+      "timestamp": 1792249233.0903502,
+      "transactions": [
+        {
+          "sender": "RABBITWEB_MINER",
+          "recipient": "NETWORK",
+          "amount": 0,
+          "note": "merkle root of the public RabbitOS web snapshot",
+          "root": "b3bcd61694320b50be323efddda1b2f2c14e6a52170f3e84ea0f6d6fd8bade9a",
+          "count": 57,
+          "nodes_up": 27,
+          "nodes_total": 27,
+          "datasets": 11,
+          "research_rows": 1603,
+          "chain_ok": 1,
+          "leaf_rule": "sha256(canonical json of leaf); leaves sorted by k; odd node duplicated; leaves: node, dataset, chain, research, code, map, catalog, backup, anchor, echo, dna, toolbox"
+        }
+      ],
+      "previous_hash": "00da924fd5802111c3a7a57444887c26d6a778977efae692dca6952262de2bbd",
+      "nonce": 469,
+      "hash": "0084af8664f3cc80b4933986073607e21ac8824add079081b1dfa1f6fc455855"
+    }
+  ]
+}
