@@ -12,6 +12,7 @@
 // It does not say the research is true, and it does not make the signer an authority. Nothing secret or personal is involved: the chain is public.
 import { createHash, createPrivateKey, createPublicKey, generateKeyPairSync, sign, verify } from 'node:crypto'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { pathToFileURL } from 'node:url'
 
 export const ORIGIN = 'rabbitsoftware.io/maxwell'
 export const CHAIN_URL = 'https://rabbitsoftware-io-ledger-public.storage.googleapis.com/maxwell/maxwell_chain.json'
@@ -240,6 +241,6 @@ async function main(argv) {
   return cmd ? 2 : 0
 }
 
-if (process.argv[1] && import.meta.url === new URL(`file:///${process.argv[1].replace(/\\/g, '/')}`).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   main(process.argv.slice(2)).then((c) => process.exit(c)).catch((e) => { console.error(`witness: ${e.message}`); process.exit(2) })
 }

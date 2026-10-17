@@ -1,0 +1,47 @@
+# docker compose up -d                       the private node (nothing is published on the network)
+# docker compose exec maxwell-core node maxwell-core.mjs cli getblockchaininfo
+# docker compose --profile gateway up -d     ALSO a public read-only gateway on http://127.0.0.1:8645 (put a reverse proxy with TLS in front before exposing it)
+services:
+  maxwell-core:
+    build: .
+    image: maxwell-core
+    restart: unless-stopped
+    volumes:
+      - maxwell-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 300m
+    healthcheck:
+      test: ["CMD", "node", "maxwell-core.mjs", "cli", "getblockcount"]
+      interval: 5m
+      timeout: 20s
+      start_period: 60s
+      retries: 3
+
+  maxwell-gateway:
+    profiles: ["gateway"]
+    build: .
+    image: maxwell-core
+    restart: unless-stopped
+    command: ["serve", "--public", "--bind", "0.0.0.0", "--port", "8645"]
+    ports:
+      - "127.0.0.1:8645:8645"
+    volumes:
+      - maxwell-gateway-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 300m
+
+volumes:
+  maxwell-data:
+  maxwell-gateway-data:

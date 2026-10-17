@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-17T16:02:16.832Z",
+ "generatedAt": "2026-10-17T16:30:15.926Z",
  "commandMaxBytes": 4000,
  "projects": [
   "rabbit-web",
@@ -1072,6 +1072,30 @@
    "risk": "deploy",
    "command": "pwsh -File scripts/powershell/Setup-GcpAnchor.ps1",
    "description": "Changes Google Cloud (project rabbitsoftware-io). Safe to run again. Cloud Run job rabbit-anchor: stamps the public ledger and Maxwell chain heads, stores proofs under anchors/ in the public ledger bucket, upgrades them once Bitcoin confirms. No keys, no fees.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-core-preview",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Maxwell Core public gateway: preview",
+   "scope": "owner",
+   "risk": "network",
+   "command": "pwsh -File scripts/powershell/Setup-GcpCore.ps1 -WhatIf",
+   "description": "Prints what Setup-GcpCore.ps1 would do and changes nothing (it may read from Google Cloud). Cloud Run service maxwell-core: the public read-only gateway of the Maxwell chain node (JSON-RPC and REST, CORS open, rate-limited). It has no roles, no secrets and scales to zero. rabbitsoftware.io/core reads it.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-core-run",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Maxwell Core public gateway: run",
+   "scope": "owner",
+   "risk": "deploy",
+   "command": "pwsh -File scripts/powershell/Setup-GcpCore.ps1",
+   "description": "Changes Google Cloud (project rabbitsoftware-io). Safe to run again. Cloud Run service maxwell-core: the public read-only gateway of the Maxwell chain node (JSON-RPC and REST, CORS open, rate-limited). It has no roles, no secrets and scales to zero. rabbitsoftware.io/core reads it.",
    "project": "rabbit-web",
    "source": "docs/gcp-platform.md",
    "runsIn": "computer"
@@ -2787,13 +2811,49 @@
    "runsIn": "computer"
   },
   {
+   "id": "mc-cloud-chain",
+   "group": "Maxwell Core",
+   "label": "Maxwell Core on Google Cloud: chain info (cloud shell)",
+   "scope": "owner",
+   "risk": "network",
+   "command": "curl -s https://maxwell-core-vxx5lz7c5a-wl.a.run.app/rest/chaininfo.json",
+   "description": "Reads the public Maxwell Core gateway on Google Cloud from the RabbitOS cloud shell: blocks, tip hash, difficulty, whether the node verified the chain. Read only.",
+   "project": "rabbitsoftware-cloudflare",
+   "source": "maxwell-core/maxwell-core.mjs",
+   "runsIn": "computer"
+  },
+  {
+   "id": "mc-cloud-block",
+   "group": "Maxwell Core",
+   "label": "Maxwell Core on Google Cloud: one block (cloud shell)",
+   "scope": "owner",
+   "risk": "network",
+   "command": "curl -s https://maxwell-core-vxx5lz7c5a-wl.a.run.app/rest/block/12.json",
+   "description": "Block 12 with its transactions. Replace 12 with any height or a 64-character block hash. Read only.",
+   "project": "rabbitsoftware-cloudflare",
+   "source": "maxwell-core/maxwell-core.mjs",
+   "runsIn": "computer"
+  },
+  {
+   "id": "mc-cloud-witnesses",
+   "group": "Maxwell Core",
+   "label": "Maxwell Core on Google Cloud: witnesses and anchors (cloud shell)",
+   "scope": "owner",
+   "risk": "network",
+   "command": "curl -s https://maxwell-core-vxx5lz7c5a-wl.a.run.app/rest/witnesses.json",
+   "description": "Which independent witnesses signed the current head and whether the rule is met. Also: /rest/anchors.json (Bitcoin anchors), /rest/mininginfo.json, /rest/peers.json. Read only.",
+   "project": "rabbitsoftware-cloudflare",
+   "source": "maxwell-core/maxwell-core.mjs",
+   "runsIn": "computer"
+  },
+  {
    "id": "mc-serve",
    "group": "Maxwell Core",
    "label": "Maxwell Core: run the node (RPC on 127.0.0.1)",
    "scope": "owner",
    "risk": "local",
    "command": "node maxwell-core/maxwell-core.mjs serve",
-   "description": "Serves a Bitcoin-Core-style JSON-RPC on the loopback address only, with a cookie file for authentication, and syncs every hour. Query it with: node maxwell-core/maxwell-core.mjs cli getblockchaininfo",
+   "description": "Serves a Bitcoin-Core-style JSON-RPC and REST interface on the loopback address only, with a cookie file for authentication, and syncs every hour. Query it with: node maxwell-core/maxwell-core.mjs cli getblockchaininfo",
    "project": "rabbitsoftware-cloudflare",
    "source": "maxwell-core/maxwell-core.mjs",
    "runsIn": "computer"

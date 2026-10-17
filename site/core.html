@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Maxwell Core: one live page for the Maxwell chain node, the research, the networks that witness it, the open data and the agents.">
+  <link rel="canonical" href="https://rabbitsoftware.io/core.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="RabbitSoftware">
+  <meta property="og:url" content="https://rabbitsoftware.io/core.html">
+  <meta property="og:title" content="Maxwell Core | RabbitSoftware">
+  <meta property="og:description" content="Maxwell Core: one live page for the Maxwell chain node, the research, the networks that witness it, the open data and the agents.">
+  <meta property="og:image" content="https://rabbitsoftware.io/assets/rabbitos-street.jpg">
+  <meta property="og:image:alt" content="A Teletubby figure in a black-and-white street scene holds up a rugged laptop while a horse-drawn carriage and a taxi pass behind.">
+  <meta name="twitter:card" content="summary_large_image">
+  <title>Maxwell Core | RabbitSoftware</title>
+  <link rel="icon" type="image/png" href="assets/rabbitsoftware.png">
+  <style>
+    :root { color-scheme: light dark; --paper:#f2f4ee; --ink:#172421; --muted:#53625c; --line:#bdc8bf; --green:#155c49; --bad:#b3402a; --warn:#8a5a00; --card:#fbfcf8; --unk:#8a958f; --bar:#2f6f8f; }
+    @media (prefers-color-scheme: dark) { :root { --paper:#17211e; --ink:#f0f3ec; --muted:#bac7c0; --line:#52645a; --green:#9dd7b4; --bad:#f0907a; --warn:#e8c070; --card:#1d2a26; --unk:#7e8c85; --bar:#7fc1e0; } }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--paper); color:var(--ink); font:17px/1.6 "Aptos","Segoe UI",sans-serif; }
+    a { color:inherit; }
+    main { width:min(1180px, calc(100% - 32px)); margin:0 auto; padding:44px 0 64px; display:grid; gap:22px; }
+    h1 { margin:0 0 6px; font-size:2rem; line-height:1.2; text-wrap:balance; }
+    h2 { margin:0 0 6px; font-size:1.1rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+    p { color:var(--muted); margin:0; } .small { font-size:.88rem; }
+    .grid { display:grid; gap:18px; grid-template-columns:repeat(auto-fit, minmax(min(100%, 420px), 1fr)); }
+    .panel { padding:18px 20px; border:1px solid var(--line); border-radius:8px; background:var(--card); display:grid; gap:10px; align-content:start; min-width:0; }
+    .lead { color:var(--ink); font-weight:600; margin:0; } .lead.bad, .lead.down { color:var(--bad); } .lead.wait { color:var(--warn); } .lead.ok { color:var(--green); }
+    dl { display:grid; grid-template-columns:minmax(120px,max-content) minmax(0,1fr); gap:3px 14px; margin:0; font-size:.9rem; }
+    dt { color:var(--muted); } dd { margin:0; overflow-wrap:anywhere; font-family:ui-monospace,Consolas,monospace; font-size:.84rem; }
+    ul { list-style:none; margin:0; padding:0; display:grid; gap:4px; }
+    li { overflow-wrap:anywhere; font-size:.93rem; } li small { color:var(--muted); font-size:.82rem; }
+    .dot { display:inline-block; width:9px; height:9px; border-radius:50%; background:var(--unk); margin-right:2px; } .dot.ok { background:var(--green); } .dot.bad { background:var(--bad); } .dot.wait { background:var(--warn); } .dot.idle { background:var(--unk); opacity:.55; }
+    .barrow { display:grid; grid-template-columns:minmax(80px,150px) 1fr auto; gap:8px; align-items:center; } .bar { display:block; height:8px; border-radius:4px; background:var(--bar); min-width:2px; } .bl, .bn { font-size:.84rem; color:var(--muted); }
+    .links { display:flex; flex-wrap:wrap; gap:6px 16px; font-size:.92rem; }
+    .scroll { max-height:340px; overflow:auto; }
+    code { font:.88em ui-monospace,Consolas,monospace; }
+    noscript p { color:var(--bad); }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Maxwell Core</h1>
+      <p>Everything in one place: the node that verifies the Maxwell chain, the research it records, the networks that witness it, the open data, and the agents doing the work. All of it is read live from public files; nothing here is stored on this site.</p>
+      <p class="small" id="core-when">Loading…</p>
+      <p class="links"><a href="network.html">Network map</a><a href="proof.html">Proof</a><a href="status.html">Status</a><a href="research.html">Research library</a><a href="data.html">Data hub</a><a href="https://github.com/therealsickonechase-bit/rabbitsoftware-cloudflare/tree/main/maxwell-core">Run your own node</a></p>
+      <noscript><p>This page needs JavaScript to read the live files. The node's answers are also at <a href="https://maxwell-core-vxx5lz7c5a-wl.a.run.app/rest/chaininfo.json">the gateway</a>.</p></noscript>
+    </header>
+
+    <div class="grid">
+      <section class="panel" aria-labelledby="h-node">
+        <h2 id="h-node">The node</h2>
+        <p class="lead" id="node-headline">Loading the node…</p>
+        <dl id="node-facts"></dl>
+        <ul id="node-kinds"></ul>
+        <p class="small" id="node-last"></p>
+        <p class="small">This is the public read-only gateway of Maxwell Core running on Google Cloud. A node you run yourself (Raspberry Pi or any Linux) is the same program and can also sign the head as a witness. The owner reaches the same node from the RabbitOS cloud shell.</p>
+      </section>
+
+      <section class="panel" aria-labelledby="h-net">
+        <h2 id="h-net">The networks</h2>
+        <p class="lead" id="net-wit-headline">Loading the witnesses…</p>
+        <ul id="net-wit-list"></ul>
+        <p class="small" id="net-anchors"></p>
+        <p class="small" id="net-services"></p>
+        <p class="small" id="net-ledger"></p>
+      </section>
+
+      <section class="panel" aria-labelledby="h-res">
+        <h2 id="h-res">The research</h2>
+        <p class="lead" id="res-total">Loading…</p>
+        <p class="small" id="res-when"></p>
+        <ul id="res-sources"></ul>
+        <h2 style="margin-top:6px">Newest records</h2>
+        <ul id="res-recent" class="scroll"></ul>
+      </section>
+
+      <section class="panel" aria-labelledby="h-agents">
+        <h2 id="h-agents">The agents</h2>
+        <p class="lead" id="agents-summary">Loading…</p>
+        <ul id="agents-list" class="scroll"></ul>
+        <p class="small">Agents are the research workers on the owner's PC and in Google Cloud. They send public findings only; personal data stays on the owner's computer.</p>
+      </section>
+
+      <section class="panel" aria-labelledby="h-data">
+        <h2 id="h-data">The open data</h2>
+        <p class="lead" id="data-total">Loading…</p>
+        <ul id="data-list" class="scroll"></ul>
+        <p class="small">Each dataset is a public, read-only JSON or CSV feed from the <a href="data.html">data hub</a>.</p>
+      </section>
+    </div>
+
+    <p class="small">A hash or a signature shows that data existed in this form at a time and has been checked by the parties named. It does not show that the research is true. Research records are pointers to public sources, not endorsements, and nothing here is medical advice.</p>
+  </main>
+  <script type="module" src="core.js"></script>
+</body>
+</html>

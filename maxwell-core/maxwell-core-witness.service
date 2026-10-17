@@ -1,0 +1,23 @@
+[Unit]
+Description=Maxwell Core witness: sign the head this node verified
+Documentation=https://github.com/therealsickonechase-bit/rabbitsoftware-cloudflare/blob/main/docs/peer-review.md
+After=maxwell-core.service
+# Only meaningful once you have made a witness key (see README.md, "Becoming a witness").
+
+[Service]
+Type=oneshot
+User=maxwell
+Group=maxwell
+Environment=MAXWELL_DATADIR=@DATADIR@
+# Brings the chain up to date, then signs the head with <datadir>/witness/<name>.key. Edit WITNESS_NAME if you named your witness differently.
+Environment=WITNESS_NAME=mynode
+ExecStart=@NODE@ @PREFIX@/maxwell-core.mjs sync
+ExecStart=@NODE@ @PREFIX@/maxwell-core.mjs witness --name ${WITNESS_NAME}
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=@DATADIR@
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+CapabilityBoundingSet=
+UMask=0077

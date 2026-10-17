@@ -1,0 +1,37 @@
+[Unit]
+Description=Maxwell Core: a node for the Maxwell chain (private RPC on 127.0.0.1)
+Documentation=https://github.com/therealsickonechase-bit/rabbitsoftware-cloudflare/tree/main/maxwell-core
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=maxwell
+Group=maxwell
+Environment=MAXWELL_DATADIR=@DATADIR@
+ExecStart=@NODE@ @PREFIX@/maxwell-core.mjs serve
+Restart=on-failure
+RestartSec=20
+# It only needs to read the network and write its own data folder.
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=@DATADIR@
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=false
+SystemCallArchitectures=native
+CapabilityBoundingSet=
+UMask=0077
+# A small node: this is far more than it needs.
+MemoryMax=300M
+TasksMax=64
+
+[Install]
+WantedBy=multi-user.target

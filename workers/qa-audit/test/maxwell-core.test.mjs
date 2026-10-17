@@ -6,8 +6,8 @@ import net from 'node:net'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
-import { Node, RpcError, VERSION, initDatadir, parseConfig, serve } from '../../../maxwell-core/maxwell-core.mjs'
-import { HELLO_WORLD, blockHash, generateKey, parseChainText, pythonJson, verifyCosignature } from '../../../maxwell-core/witness.mjs'
+import { ANCHORS_URL, Node, PUBLIC_METHODS, REGISTRY_URL, RpcError, VERSION, initDatadir, makePublicHandler, parseConfig, restRoute, serve } from '../../../maxwell-core/maxwell-core.mjs'
+import { HELLO_WORLD, ORIGIN, blockHash, cosign, generateKey, parseChainText, pythonJson, verifyCosignature } from '../../../maxwell-core/witness.mjs'
 
 const realText = readFileSync(new URL('./fixtures/maxwell_chain.json', import.meta.url), 'utf8')
 const real = JSON.parse(realText)
@@ -31,9 +31,9 @@ function smallChain(notes) {
 }
 
 test('the configuration is strict: only known settings, https sources, sane ports and intervals', () => {
-  assert.deepEqual(parseConfig('# comment\n\nrpcport=8700\nsyncinterval=600\nsource=https://example.org/chain.json\n'), { source: 'https://example.org/chain.json', rpcport: 8700, syncinterval: 600 })
+  assert.deepEqual(parseConfig('# comment\n\nrpcport=8700\nsyncinterval=600\nsource=https://example.org/chain.json\n'), { source: 'https://example.org/chain.json', rpcport: 8700, syncinterval: 600, registry: REGISTRY_URL, anchors: ANCHORS_URL })
   assert.equal(parseConfig('').rpcport, 8645)
-  for (const bad of ['source=http://example.org/x', 'rpcport=80', 'rpcport=abc', 'syncinterval=5', 'rpcbind=0.0.0.0', 'nonsense', 'allowremote=1']) assert.throws(() => parseConfig(bad), undefined, bad)
+  for (const bad of ['source=http://example.org/x', 'rpcport=80', 'rpcport=abc', 'syncinterval=5', 'registry=http://insecure.example/r.json', 'anchors=ftp://x', 'rpcbind=0.0.0.0', 'nonsense', 'allowremote=1']) assert.throws(() => parseConfig(bad), undefined, bad)
 })
 
 test('sync takes the real chain, and the RPC answers match it block for block', async () => {
@@ -125,7 +125,9 @@ test('the RPC server: loopback only, cookie required, DNS-rebinding and browser 
     assert.equal((await call('getblockcount', [], { cookie: '__cookie__:wrong' })).status, 401)
     assert.equal((await call('getblockcount', [], { headers: { host: 'evil.example' } })).status, 403)         // DNS rebinding
     assert.equal((await call('getblockcount', [], { headers: { origin: 'https://evil.example' } })).status, 403)   // a web page
-    assert.equal((await rpc(s.port, { method: 'GET', cookie })).status, 405)
+    assert.equal((await rpc(s.port, { method: 'GET', cookie })).status, 404)                                     // GET is the REST interface; the root is not a route
+    assert.equal((await rpc(s.port, { method: 'GET' })).status, 401)                                              // and it needs the cookie too
+    assert.equal((await rpc(s.port, { method: 'PUT', cookie })).status, 405)
     assert.equal((await rpc(s.port, { body: 'x'.repeat(70_000), cookie })).status, 413)
     assert.equal((await rpc(s.port, { body: '{not json', cookie })).body.error.code, -32700)
     assert.equal((await rpc(s.port, { body: JSON.stringify({ id: 1 }), cookie })).body.error.code, -32600)
@@ -178,4 +180,127 @@ test('the command line works end to end against a running node, and the program 
   const src = readFileSync(SCRIPT, 'utf8')
   assert.ok(!/0\.0\.0\.0|\.listen\([^)]*,\s*'::'/.test(src), 'it never binds beyond the loopback address')
   assert.equal(readFileSync(new URL('../../../maxwell-core/witness.mjs', import.meta.url), 'utf8'), readFileSync(new URL('../../../scripts/witness.mjs', import.meta.url), 'utf8'), 'run: cp scripts/witness.mjs maxwell-core/witness.mjs')
+})
+
+// ---------------------------------------------------------------- version 0.2: more methods, the REST interface and the public read-only gateway
+const head = real.blocks.at(-1)
+const KEY = generateKey()
+const witnessFiles = () => {
+  const cosig = cosign({ name: 'pc-witness', checkpoint: { origin: ORIGIN, size: real.blocks.length, hash: head.hash }, privateKeyPem: KEY.privateKeyPem, publicKey: KEY.publicKey, now: NOW() })
+  const registry = { v: 1, k: 1, witnesses: [{ name: 'pc-witness', kind: 'project', publicKey: KEY.publicKey, url: 'https://w.example/pc.json' }] }
+  const anchors = [{ id: '2026-10-17T130014Z', digest: 'a'.repeat(64), status: 'confirmed', bitcoinHeight: 971865, maxwellLength: 14, ledgerLength: 18, tsa: 'freetsa.org' }, { id: 'bad id', status: 'confirmed' }]
+  return { [REGISTRY_URL]: registry, 'https://w.example/pc.json': cosig, [ANCHORS_URL]: anchors }
+}
+const world = (over = {}) => async (url) => {
+  const u = String(url).split('?')[0]
+  if (u.endsWith('/maxwell/maxwell_chain.json')) return new Response(realText)
+  const f = { ...witnessFiles(), ...over }
+  if (f[u] === undefined) return new Response('', { status: 404 })
+  return new Response(JSON.stringify(f[u]))
+}
+
+test('the new methods describe the chain, the miners, the network, the peers (witnesses) and the anchors', async () => {
+  const node = new Node({ datadir: dir(), fetchImpl: world(), now: NOW }); await node.sync()
+  assert.deepEqual(await node.call('getchaintips', []), [{ height: real.blocks.length - 1, hash: head.hash, branchlen: 0, status: 'active' }])
+  const research = real.blocks.filter((b) => b.transactions[0].sender === 'RESEARCH_ANCHOR')
+  const mining = await node.call('getmininginfo', [])
+  assert.equal(mining.difficulty, 2)
+  assert.equal(mining.blocksbykind.RESEARCH_ANCHOR, research.length)
+  assert.equal(mining.lastresearchanchor.records, research.at(-1).transactions[0].count)
+  assert.ok(mining.lastwebsnapshot.height > 0)
+  const net = await node.call('getnetworkinfo', [])
+  assert.equal(net.subversion, `/MaxwellCore:${VERSION}/`)
+  assert.equal(net.localservices[0], 'node')
+  assert.equal(await node.call('uptime', []), 0)
+  const peers = await node.call('getpeerinfo', [])
+  assert.deepEqual(peers.map((p) => [p.addr, p.status, p.synced_blocks]), [['pc-witness', 'agrees', real.blocks.length]])
+  const w = await node.call('getwitnessinfo', [])
+  assert.equal(w.trusted, true)
+  assert.match(w.summary, /1 of 1 witnesses signed the current head, which meets the rule of 1/)
+  const a = await node.call('getanchorinfo', [])
+  assert.deepEqual(a.anchors.map((x) => [x.id, x.status, x.bitcoinheight, x.tsa]), [['2026-10-17T130014Z', 'confirmed', 971865, true]])      // the malformed row is dropped
+  assert.equal(a.latestconfirmed.bitcoinheight, 971865)
+  const dead = new Node({ datadir: dir(), fetchImpl: serveText(realText), now: NOW }); await dead.sync()          // witnesses unreachable: an error, not a wrong answer
+  await assert.rejects(dead.call('getpeerinfo', []))
+})
+
+test('the REST routes map to the right methods and nothing else', () => {
+  assert.deepEqual(restRoute('/rest/chaininfo.json').slice(0, 2), ['getblockchaininfo', []])
+  assert.deepEqual(restRoute('/rest/block/12.json').slice(0, 2), ['getblock', ['12']])
+  assert.deepEqual(restRoute(`/rest/block/${'ab'.repeat(32)}.json`).slice(0, 2), ['getblock', ['ab'.repeat(32)]])
+  assert.deepEqual(restRoute('/rest/blockhashbyheight/7.json').slice(0, 2), ['getblockhash', [7]])
+  assert.deepEqual(restRoute('/rest/blockhashbyheight/7.json')[2]('x'), { blockhash: 'x' })
+  for (const bad of ['/rest/sync.json', '/rest/block/xyz.json', '/rest/block/12', '/rest/../etc/passwd', '/rest/stop.json', '/']) assert.equal(restRoute(bad), null, bad)
+})
+
+function get(port, path, headers = {}, method = 'GET', body) {
+  return new Promise((resolve, reject) => {
+    const req = http.request({ host: '127.0.0.1', port, method, path, headers }, (res) => {
+      let text = ''; res.on('data', (c) => (text += c)); res.on('end', () => resolve({ status: res.statusCode, headers: res.headers, body: text ? JSON.parse(text) : null }))
+    })
+    req.on('error', reject); req.end(body)
+  })
+}
+
+test('the public gateway serves public chain data to anyone, read-only, with no cookie, and never exposes owner methods or the data folder', async () => {
+  const d = dir()
+  const s = await serve({ datadir: d, fetchImpl: world(), port: 0, publicMode: true, now: NOW })
+  try {
+    assert.equal(existsSync(join(d, '.cookie')), false)                                       // no secret exists in this mode
+    assert.equal((await get(s.port, '/health')).body.ok, true)                                // /healthz is reserved by Google's front end on Cloud Run, so /health must work too
+    const health = await get(s.port, '/healthz')
+    assert.deepEqual([health.status, health.body.mode, health.headers['access-control-allow-origin']], [200, 'public read-only gateway', '*'])
+    const info = await get(s.port, '/rest/chaininfo.json')
+    assert.deepEqual([info.status, info.body.blocks, info.body.bestblockhash, info.body.verified], [200, real.blocks.length - 1, head.hash, true])
+    assert.equal(info.headers['cache-control'], 'public, max-age=15')
+    assert.equal((await get(s.port, '/rest/block/12.json')).body.transactions[0].count, 1512)
+    assert.equal((await get(s.port, '/rest/blockhashbyheight/12.json')).body.blockhash, real.blocks[12].hash)
+    assert.equal((await get(s.port, '/rest/block/9999.json')).status, 404)
+    assert.equal((await get(s.port, '/rest/witnesses.json')).body.trusted, true)
+    assert.equal((await get(s.port, '/rest/anchors.json')).body.anchors.length, 1)
+    assert.equal((await get(s.port, '/rest/nope.json')).status, 404)
+    assert.equal((await get(s.port, '/', {}, 'OPTIONS')).status, 204)
+    const rpcCall = (method, params = []) => get(s.port, '/', { 'content-type': 'application/json', origin: 'https://rabbitsoftware.io' }, 'POST', JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }))
+    assert.equal((await rpcCall('getblockcount')).body.result, real.blocks.length - 1)       // a browser page may call it
+    for (const owner of ['sync', 'stop', 'witness', 'nosuch']) {
+      const r = await rpcCall(owner)
+      assert.equal(r.body.error.code, -32601, owner)
+    }
+    assert.match((await rpcCall('sync')).body.error.message, /not available on the public gateway/)
+    const nodeinfo = (await rpcCall('getnodeinfo')).body.result
+    assert.equal(nodeinfo.mode, 'public read-only gateway')
+    assert.ok(!JSON.stringify(nodeinfo).includes(d) && !('datadir' in nodeinfo))              // the server's folder is never revealed
+    assert.deepEqual((await rpcCall('help')).body.result.sort(), [...PUBLIC_METHODS].sort())
+    assert.equal((await get(s.port, '/', { 'content-type': 'application/json' }, 'POST', 'x'.repeat(20_000))).status, 413)
+    assert.equal((await get(s.port, '/', {}, 'DELETE')).status, 405)
+  } finally { await s.close().catch(() => {}) }
+})
+
+test('the public gateway is rate-limited per client address', async () => {
+  const node = new Node({ datadir: dir(), fetchImpl: world(), now: NOW, publicMode: true }); await node.sync()
+  const server = http.createServer(makePublicHandler(node, { perMinute: 3 }))
+  await new Promise((r) => server.listen(0, '127.0.0.1', r))
+  try {
+    const port = server.address().port
+    const codes = []
+    for (let i = 0; i < 5; i++) codes.push((await get(port, '/healthz', { 'x-forwarded-for': '203.0.113.9' })).status)
+    assert.deepEqual(codes, [200, 200, 200, 429, 429])
+    const other = await get(port, '/healthz', { 'x-forwarded-for': '203.0.113.10' })           // another client is not affected
+    assert.equal(other.status, 200)
+    const limited = await get(port, '/healthz', { 'x-forwarded-for': '203.0.113.9' })
+    assert.equal(limited.headers['retry-after'], '30')
+  } finally { await new Promise((r) => server.close(r)) }
+})
+
+test('the private RPC refuses to be bound beyond the loopback address, and a public cli can call a gateway by URL', async () => {
+  await assert.rejects(serve({ datadir: dir(), fetchImpl: world(), port: 0, bind: '0.0.0.0' }), /127\.0\.0\.1 only/)
+  const d = dir()
+  const s = await serve({ datadir: d, fetchImpl: world(), port: 0, publicMode: true })
+  try {
+    const cli = (...a) => new Promise((resolve) => execFile(process.execPath, [SCRIPT, ...a], { encoding: 'utf8', timeout: 20_000 }, (err, stdout, stderr) => resolve({ code: err ? 1 : 0, stdout, stderr })))
+    const out = await cli('cli', '--url', `http://127.0.0.1:${s.port}/`, 'getblockcount')
+    assert.equal(out.code, 0, out.stderr)
+    assert.equal(out.stdout.trim(), String(real.blocks.length - 1))
+    assert.equal((await cli('cli', '--url', 'file:///etc/passwd', 'getblockcount')).code, 1)
+  } finally { await s.close().catch(() => {}) }
 })
