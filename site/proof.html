@@ -59,6 +59,15 @@
       <ul id="proof-list" class="list"></ul>
     </section>
 
+    <section aria-labelledby="witness-h">
+      <h2 id="witness-h">Independent witnesses</h2>
+      <div class="headline" aria-live="polite"><p id="witness-headline">Loading the witnesses…</p></div>
+      <p id="witness-when" class="small"></p>
+      <p id="witness-rule" class="small"></p>
+      <ul id="witness-list" class="list"></ul>
+      <p class="small">Want to be a witness? It takes one command and no account: <code>node witness.mjs run --name yourname --key yourname.key</code> (script and steps in <a href="https://github.com/therealsickonechase-bit/rabbitsoftware-cloudflare/blob/main/scripts/witness.mjs">witness.mjs</a>). Publish the signature file anywhere with an https address and send a pull request adding your public key to <a href="witness/registry.json">the registry</a>.</p>
+    </section>
+
     <section aria-labelledby="digest-h">
       <h2 id="digest-h">In plain words</h2>
       <div class="card">

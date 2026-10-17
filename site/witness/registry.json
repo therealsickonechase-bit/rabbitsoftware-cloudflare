@@ -1,0 +1,21 @@
+{
+  "v": 1,
+  "k": 2,
+  "about": "Witnesses of the Maxwell chain (rabbitsoftware.io/maxwell). Each one downloads the public chain, re-checks every hash, link and work target, and signs the head it verified. A head counts as independently checked when k different registered witnesses have signed it. To be listed, open a pull request that adds your public key and the https address of your published cosignature file. See docs/peer-review.md.",
+  "witnesses": [
+    {
+      "name": "pc-witness",
+      "kind": "project",
+      "publicKey": "MCowBQYDK2VwAyEAKd65+xxPHoOwN79eJlRojsN+1KNZylkJKK/jL8mKFjg=",
+      "url": "https://rabbitsoftware-io-ledger-public.storage.googleapis.com/witness/pc-witness/cosignature.json",
+      "note": "The owner's PC; signs only if both the JavaScript witness and the Python verifier pass."
+    },
+    {
+      "name": "cloud-witness",
+      "kind": "project",
+      "publicKey": "MCowBQYDK2VwAyEAEp5TNwPN8rLhtQVFEeIdLbMsSaZGASnv9IaIyu3w9DA=",
+      "url": "https://rabbitsoftware-io-ledger-public.storage.googleapis.com/witness/cloud-witness/cosignature.json",
+      "note": "Google Cloud Run job with its own key in Secret Manager; runs every 6 hours."
+    }
+  ]
+}

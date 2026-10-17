@@ -1,0 +1,8 @@
+{
+  "name": "rabbit-witness-job",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The cloud witness of the Maxwell chain (see docs/peer-review.md)",
+  "engines": { "node": ">=22" }
+}

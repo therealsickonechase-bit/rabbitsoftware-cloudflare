@@ -63,3 +63,38 @@ export function digestView(data, now = Date.now()) {
   const newest = (Array.isArray(data.newest) ? data.newest : []).slice(0, 8).map((r) => ({ title: String(r.title ?? '').slice(0, 200), source: String(r.source ?? '').slice(0, 40), link: safeLink(r.url), ago: r.seenAt ? ageText(r.seenAt, now) : '' })).filter((r) => r.title)
   return { ok: true, text: data.text.slice(0, 1200), stats, newest }
 }
+
+export const WITNESS_URL = BASE + 'witness.json'
+const WITNESS_WORDS = Object.freeze({
+  agrees: 'signed the current head',
+  behind: 'signed an earlier head that is still part of this chain',
+  ahead: 'signed a longer chain than the copy we read (our copy may be a little old)',
+  stale: 'its signature is too old to count',
+  conflict: 'signed a DIFFERENT history: investigate',
+  invalid: 'its signature does not verify',
+  missing: 'could not be read just now',
+})
+
+/** The independent-witness panel: who re-checked the Maxwell chain on their own and signed the head, and whether enough of them agree. */
+export function witnessView(data, now = Date.now()) {
+  if (!data || data.version !== 1 || !Array.isArray(data.witnesses) || !data.rule) {
+    return { state: 'unknown', headline: 'The witness list could not be read just now.', when: '', rule: '', rows: [] }
+  }
+  const agreeing = whole(data.agreeing) ?? 0, n = whole(data.rule.n) ?? data.witnesses.length, k = whole(data.rule.k) ?? 2
+  const conflict = (whole(data.conflicts) ?? 0) > 0
+  const state = conflict || data.chainOk === false ? 'bad' : data.trusted ? 'ok' : 'wait'
+  const fresh = ageMinutes(data.generatedAt, now) <= STALE_AFTER_MIN
+  return {
+    state,
+    headline: data.chainOk === false ? 'The chain itself does not verify.'
+      : conflict ? 'A witness signed a different history from the one published. Do not trust the head until this is explained.'
+        : `${agreeing} of ${n} witnesses signed the current head${data.head && whole(data.head.size) !== null ? ` (${data.head.size} blocks)` : ''}${data.trusted ? `, which meets the rule of ${k}` : `; the rule needs ${k}`}.`,
+    when: fresh ? `Updated ${ageText(data.generatedAt, now)}.` : `Last refreshed ${ageText(data.generatedAt, now)}, so it may be out of date.`,
+    rule: `A head counts as independently checked when ${k} different registered witnesses have signed it. Each witness downloads the public chain, recomputes every hash, link and work target itself, and signs only what it verified.`,
+    rows: data.witnesses.slice(0, 25).filter((w) => w && /^[a-z0-9][a-z0-9._-]{0,39}$/.test(String(w.name))).map((w) => ({
+      name: String(w.name), kind: w.kind === 'project' ? 'run by the project' : 'outside peer', keyId: /^[0-9a-f]{16}$/.test(String(w.keyId)) ? w.keyId : '?',
+      state: w.status === 'agrees' ? 'ok' : w.status === 'conflict' || w.status === 'invalid' ? 'bad' : 'wait',
+      status: WITNESS_WORDS[w.status] ?? 'unknown', size: whole(w.size), signed: w.signedAt ? ageText(w.signedAt, now) : null, note: String(w.note ?? '').slice(0, 160),
+    })),
+  }
+}

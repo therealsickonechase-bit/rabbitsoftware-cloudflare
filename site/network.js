@@ -2,13 +2,14 @@
 // Reads only files the project already publishes, re-reads every minute. Everything is drawn with textContent and SVG nodes made with createElementNS, never HTML strings.
 // If a file cannot be read the page says so and keeps what it last had.
 import { ANCHORS_URL, CHAIN_URL, KIND_LABEL, LEDGER_HEAD_URL, PROOF_URL, buildNetwork, edgeLine, layoutNetwork } from './network-view.mjs'
+import { WITNESS_URL, witnessView } from './proof-view.mjs'
 
 const REFRESH_MS = 60_000
 const SVG = 'http://www.w3.org/2000/svg'
 const $ = (id) => document.getElementById(id)
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e }
 const sv = (tag, attrs = {}, text) => { const e = document.createElementNS(SVG, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, String(v)); if (text !== undefined) e.textContent = text; return e }
-let data = { chain: null, anchors: null, proof: null, ledgerHead: null }
+let data = { chain: null, anchors: null, proof: null, ledgerHead: null, witness: null }
 let net = null, filter = 'all', selected = null
 
 async function getJson(url) {
@@ -97,6 +98,8 @@ function render() {
   net = data.chain ? buildNetwork(data) : null
   $('net-summary').textContent = net ? net.summary : 'The chain could not be read just now. Nothing is shown rather than guessing.'
   $('net-ledger').textContent = net?.ledger ? `RabbitOS ledger: ${net.ledger.length} events, head ${net.ledger.head8}.` : ''
+  const wv = witnessView(data.witness)
+  $('net-witness').textContent = data.witness ? `Independent witnesses: ${wv.headline}` : ''
   draw(); table(); detail(selected)
 }
 
@@ -105,11 +108,12 @@ for (const btn of document.querySelectorAll('[data-filter]')) {
 }
 
 async function load() {
-  const [c, a, p, l] = await Promise.allSettled([getJson(CHAIN_URL), getJson(ANCHORS_URL), getJson(PROOF_URL), getJson(LEDGER_HEAD_URL)])
+  const [c, a, p, l, w] = await Promise.allSettled([getJson(CHAIN_URL), getJson(ANCHORS_URL), getJson(PROOF_URL), getJson(LEDGER_HEAD_URL), getJson(WITNESS_URL)])
   if (c.status === 'fulfilled') data.chain = c.value
   if (a.status === 'fulfilled') data.anchors = a.value
   if (p.status === 'fulfilled') data.proof = p.value
   if (l.status === 'fulfilled') data.ledgerHead = l.value
+  if (w.status === 'fulfilled') data.witness = w.value
   render()
 }
 

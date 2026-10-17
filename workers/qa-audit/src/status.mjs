@@ -4,6 +4,7 @@
 // It also writes status/research-live.json, the newest public research findings, which the website reads in the browser so new findings appear without deploying the site.
 // It also logs one "status_check" line, which Cloud Logging keeps and the BigQuery sink records. Nothing private goes in the feed: no addresses, no findings, no private services.
 import { buildDigest, buildProofLive } from './proof-live.mjs'
+import { buildWitnessLive } from './witness-live.mjs'
 import { checkPlatform } from './platform.mjs'
 import { uploadObject } from './gcs.mjs'
 
@@ -62,6 +63,11 @@ export async function recordStatus({ fetchImpl = fetch, bucket, upload = uploadO
       const digest = buildDigest({ researchLive: platform.researchLive, proofLive, previous: previousDigest, now })
       if (digest) await upload({ bucket, name: 'status/digest.json', body: JSON.stringify(digest), ...headers })
     }
+  } catch { /* the next run tries again */ }
+  // Who has independently checked the Maxwell chain (peer witnesses, see witness-live.mjs). Never allowed to stop the status feed either.
+  try {
+    const witness = await buildWitnessLive({ fetchImpl, now })
+    if (witness) await upload({ bucket, name: 'status/witness.json', body: JSON.stringify(witness), ...headers })
   } catch { /* the next run tries again */ }
   log(JSON.stringify({ event: 'status_check', up: feed.up, total: feed.total, chain_agrees: feed.chain.agree, down: feed.services.filter((s) => !s.ok).map((s) => s.key).join(',') || null }))
   return { feed, history }

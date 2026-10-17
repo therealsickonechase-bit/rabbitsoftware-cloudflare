@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-17T14:59:50.059Z",
+ "generatedAt": "2026-10-17T15:40:45.025Z",
  "commandMaxBytes": 4000,
  "projects": [
   "rabbit-web",
@@ -324,6 +324,18 @@
    "description": "Run in PowerShell on your PC after Import-Module. Pulls the public ledger into a local .jsonl, verifies the hash chain, refuses a broken one. Uploads nothing.",
    "project": "rabbit-web",
    "source": "scripts/powershell/RabbitNet.psd1",
+   "runsIn": "computer"
+  },
+  {
+   "id": "web-witness-pc",
+   "group": "Peer review",
+   "label": "Run the PC witness of the Maxwell chain",
+   "scope": "owner",
+   "risk": "network",
+   "command": "pwsh -File scripts/powershell/Run-Witness.ps1 -WhatIf",
+   "description": "Re-checks the public chain with the Python verifier and the JavaScript witness; only if both pass it signs the head with the PC witness key and publishes the signature. Drop -WhatIf to run. The private key never leaves the PC.",
+   "project": "rabbit-web",
+   "source": "scripts/powershell/Run-Witness.ps1",
    "runsIn": "computer"
   },
   {
@@ -1060,6 +1072,30 @@
    "risk": "deploy",
    "command": "pwsh -File scripts/powershell/Setup-GcpAnchor.ps1",
    "description": "Changes Google Cloud (project rabbitsoftware-io). Safe to run again. Cloud Run job rabbit-anchor: stamps the public ledger and Maxwell chain heads, stores proofs under anchors/ in the public ledger bucket, upgrades them once Bitcoin confirms. No keys, no fees.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-witness-preview",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Cloud witness of the Maxwell chain: preview",
+   "scope": "owner",
+   "risk": "network",
+   "command": "pwsh -File scripts/powershell/Setup-GcpWitness.ps1 -WhatIf",
+   "description": "Prints what Setup-GcpWitness.ps1 would do and changes nothing (it may read from Google Cloud). Cloud Run job rabbit-witness with its own key (kept only in Secret Manager): independently re-checks the public chain and signs the head it verified, every 6 hours. Writes only witness/cloud-witness/ in the public ledger bucket.",
+   "project": "rabbit-web",
+   "source": "docs/gcp-platform.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "gcp-witness-run",
+   "group": "Google Cloud setup (run on your PC)",
+   "label": "Cloud witness of the Maxwell chain: run",
+   "scope": "owner",
+   "risk": "deploy",
+   "command": "pwsh -File scripts/powershell/Setup-GcpWitness.ps1",
+   "description": "Changes Google Cloud (project rabbitsoftware-io). Safe to run again. Cloud Run job rabbit-witness with its own key (kept only in Secret Manager): independently re-checks the public chain and signs the head it verified, every 6 hours. Writes only witness/cloud-witness/ in the public ledger bucket.",
    "project": "rabbit-web",
    "source": "docs/gcp-platform.md",
    "runsIn": "computer"

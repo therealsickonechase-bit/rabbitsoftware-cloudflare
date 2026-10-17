@@ -1,12 +1,12 @@
 // proof.html: reads the two public files the Google Cloud status job writes (see proof-view.mjs) and draws them, re-reading every minute, so a new anchor appears without deploying the website.
 // Everything is drawn as plain text nodes; links go only to the project's public bucket, mempool.space and known research hosts. If a file cannot be read the page says so.
-import { DIGEST_URL, PROOF_URL, digestView, proofView } from './proof-view.mjs'
+import { DIGEST_URL, PROOF_URL, WITNESS_URL, digestView, proofView, witnessView } from './proof-view.mjs'
 
 const REFRESH_MS = 60_000
 const $ = (id) => document.getElementById(id)
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e }
 const link = (href, text) => { const a = el('a', null, text); a.href = href; a.rel = 'noopener noreferrer'; return a }
-let proof = null, digest = null
+let proof = null, digest = null, witness = null
 
 async function getJson(url) {
   const res = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(15_000) })
@@ -37,6 +37,19 @@ function render() {
     if (a.detail) li.append(el('div', 'detail', a.detail))
     list.append(li)
   }
+  const wv = witnessView(witness)
+  $('witness-headline').textContent = wv.headline
+  $('witness-when').textContent = wv.when
+  $('witness-rule').textContent = wv.rule
+  const wlist = $('witness-list')
+  wlist.replaceChildren()
+  for (const w of wv.rows) {
+    const li = el('li')
+    const top = el('div', 'row')
+    top.append(el('span', `dot ${w.state}`), el('strong', null, w.name), el('span', `verdict ${w.state}`, w.status))
+    li.append(top, el('div', 'meta', `${w.kind} · key ${w.keyId}${w.size ? ` · checked ${w.size} blocks` : ''}${w.signed ? ` · signed ${w.signed}` : ''}${w.note ? ` · ${w.note}` : ''}`))
+    wlist.append(li)
+  }
   const d = digestView(digest)
   $('digest-text').textContent = d.text
   $('digest-stats').textContent = d.stats.join(' · ')
@@ -51,9 +64,10 @@ function render() {
 }
 
 async function load() {
-  const [a, b] = await Promise.allSettled([getJson(PROOF_URL), getJson(DIGEST_URL)])
+  const [a, b, c] = await Promise.allSettled([getJson(PROOF_URL), getJson(DIGEST_URL), getJson(WITNESS_URL)])
   if (a.status === 'fulfilled') proof = a.value
   if (b.status === 'fulfilled') digest = b.value
+  if (c.status === 'fulfilled') witness = c.value
   render()
 }
 
