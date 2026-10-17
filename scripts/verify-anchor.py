@@ -4,7 +4,8 @@ An anchor is a small anchor.json (the head hashes of the RabbitOS ledger and the
 proof as anchor.json.ots. This script:
   1. checks that sha256(anchor.json) equals the digest the proof is for,
   2. replays the proof's hash steps (sha256 / append / prepend ...) from that digest,
-  3. finds the Bitcoin attestation (block height) and compares the replayed value with the Merkle root of that block, fetched from a public Bitcoin API (Blockstream, mempool.space).
+  3. finds the Bitcoin attestation (block height) and compares the replayed value with the Merkle root of that block. The root is asked of EVERY source (mempool.space, Blockstream
+     and, if you give --bitcoin-rpc, your own Bitcoin Core) and at least --min-sources (default 2) different sources must answer and agree; one lying or broken site cannot decide it.
   4. Newer anchors also commit to the saved research-record sets (maxwell/snapshots/block-NNNN.ndjson.gz): the script recomputes the manifest hash from
      anchors/snapshots.json, compares it with the one inside anchor.json, and re-downloads every covered file to check its SHA-256. So Bitcoin vouches for
      those record sets too, not only for the chain heads.
@@ -17,6 +18,7 @@ No private data is involved: only a hash and a block height go to the Bitcoin AP
 import argparse
 import hashlib
 import json
+import os
 import sys
 import urllib.request
 
@@ -140,29 +142,76 @@ def fetch(url, binary=False):
     return body if binary else body.decode()
 
 
-def block_merkle_root(height):
-    last = None
+def rest_answer(api, height, getter=None):
+    """One public REST source (mempool.space / Esplora style): {"source", "root", "block_hash"}."""
+    getter = getter or fetch
+    block_hash = getter(f"{api}/block-height/{height}").strip()
+    return {"source": api.split("//")[1].split("/")[0], "root": json.loads(getter(f"{api}/block/{block_hash}"))["merkle_root"], "block_hash": block_hash}
+
+
+def core_answer(url, height, post=None, user=None, password=None):
+    """Your own Bitcoin Core, over its JSON-RPC (getblockhash, getblockheader). Credentials come from BITCOIN_RPC_USER / BITCOIN_RPC_PASSWORD or the arguments, never from the command line."""
+    import base64
+    def call(method, params):
+        body = json.dumps({"jsonrpc": "1.0", "id": "verify-anchor", "method": method, "params": params}).encode()
+        if post:
+            return post(url, body)
+        request = urllib.request.Request(url, body, {"content-type": "application/json", "user-agent": "rabbitos-verify-anchor/1.0"})
+        u, pw = user or os.environ.get("BITCOIN_RPC_USER"), password or os.environ.get("BITCOIN_RPC_PASSWORD")
+        if u:
+            request.add_header("authorization", "Basic " + base64.b64encode(f"{u}:{pw or ''}".encode()).decode())
+        with urllib.request.urlopen(request, timeout=30) as response:
+            return json.loads(response.read().decode())
+    block_hash = call("getblockhash", [height])["result"]
+    header = call("getblockheader", [block_hash, True])["result"]
+    return {"source": "your Bitcoin Core", "root": header["merkleroot"], "block_hash": block_hash}
+
+
+def block_merkle_roots(height, rpc_url=None):
+    """Asks every source and returns the answers that came back (a source that fails is simply left out)."""
+    answers = []
     for api in APIS:
         try:
-            block_hash = fetch(f"{api}/block-height/{height}").strip()
-            return json.loads(fetch(f"{api}/block/{block_hash}"))["merkle_root"], block_hash, api
-        except Exception as error:  # try the next public API
-            last = error
-    raise RuntimeError(f"no Bitcoin API answered: {last}")
+            answers.append(rest_answer(api, height))
+        except Exception:
+            pass
+    if rpc_url:
+        try:
+            answers.append(core_answer(rpc_url, height))
+        except Exception:
+            pass
+    return answers
 
 
-def verify(anchor_bytes, ots_bytes, lookup=block_merkle_root):
+def verify(anchor_bytes, ots_bytes, lookup=block_merkle_roots, min_sources=2):
+    """lookup(height) returns a list of answers {"source", "root", "block_hash"}. A Bitcoin attestation counts only if at least `min_sources` different sources
+    answered, they all agree, and the replayed proof equals their root."""
     digest, leaves = parse_ots(ots_bytes)
-    report = {"digest": digest.hex(), "digest_matches_anchor": hashlib.sha256(anchor_bytes).digest() == digest, "attestations": []}
+    report = {"digest": digest.hex(), "digest_matches_anchor": hashlib.sha256(anchor_bytes).digest() == digest, "min_sources": min_sources, "attestations": []}
     for kind, message, detail in leaves:
         if kind == "bitcoin":
-            root, block_hash, api = lookup(detail)
-            report["attestations"].append({"type": "bitcoin", "height": detail, "block_hash": block_hash, "merkle_root_in_block": root,
-                                           "replayed": message[::-1].hex(), "matches": message[::-1].hex() == root})
+            answers = lookup(detail)
+            sources = sorted({a["source"] for a in answers})
+            roots = {a["root"] for a in answers}
+            agree = len(roots) == 1
+            replayed = message[::-1].hex()
+            entry = {"type": "bitcoin", "height": detail, "sources": sources, "sources_agree": agree, "replayed": replayed,
+                     "merkle_root_in_block": next(iter(roots)) if agree else None,
+                     "block_hash": answers[0]["block_hash"] if answers else None}
+            entry["matches"] = agree and replayed in roots
+            entry["enough_sources"] = len(sources) >= min_sources
+            entry["ok"] = entry["matches"] and entry["enough_sources"]
+            if not agree:
+                entry["problem"] = "the Bitcoin sources disagree with each other"
+            elif not entry["enough_sources"]:
+                entry["problem"] = f"only {len(sources)} Bitcoin source(s) answered; {min_sources} must agree"
+            elif not entry["matches"]:
+                entry["problem"] = "the proof does not match the block's Merkle root"
+            report["attestations"].append(entry)
         else:
             report["attestations"].append({"type": kind, "detail": detail})
     bitcoin = [a for a in report["attestations"] if a["type"] == "bitcoin"]
-    report["verified"] = report["digest_matches_anchor"] and bool(bitcoin) and all(a["matches"] for a in bitcoin)
+    report["verified"] = report["digest_matches_anchor"] and bool(bitcoin) and all(a["ok"] for a in bitcoin)
     return report
 
 
@@ -181,6 +230,8 @@ def main():
     parser.add_argument("anchor_id", nargs="?")
     parser.add_argument("--json")
     parser.add_argument("--ots")
+    parser.add_argument("--bitcoin-rpc", help="URL of your own Bitcoin Core JSON-RPC (for example http://127.0.0.1:8332); credentials from BITCOIN_RPC_USER / BITCOIN_RPC_PASSWORD")
+    parser.add_argument("--min-sources", type=int, default=2, help="how many different Bitcoin sources must answer and agree (default 2)")
     args = parser.parse_args()
     if args.anchor_id:
         anchor_bytes = fetch(f"{BUCKET}/{args.anchor_id}/anchor.json", True)
@@ -189,7 +240,7 @@ def main():
         anchor_bytes, ots_bytes = open(args.json, "rb").read(), open(args.ots, "rb").read()
     else:
         parser.error("give an anchor id, or --json and --ots")
-    report = verify(anchor_bytes, ots_bytes)
+    report = verify(anchor_bytes, ots_bytes, lookup=lambda h: block_merkle_roots(h, args.bitcoin_rpc), min_sources=max(1, args.min_sources))
     doc = json.loads(anchor_bytes.decode("utf-8"))
     if doc.get("snapshots"):
         try:

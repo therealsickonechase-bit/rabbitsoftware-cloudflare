@@ -60,39 +60,51 @@ export function parseOts(bytes) {
   return { digest, leaves }
 }
 
-/** Looks up the Merkle root of a Bitcoin block (hex, display order) in public APIs. Throws if none answers. */
-export function bitcoinLookup(fetchImpl = fetch, timeoutMs = 12_000) {
+export const BITCOIN_SOURCES = Object.freeze(['https://mempool.space/api', 'https://blockstream.info/api'])
+export const MIN_SOURCES = 2
+
+/**
+ * Asks EVERY public Bitcoin source for the Merkle root of a block (hex, display order) and returns the answers that came back: [{ source, root }].
+ * A source that fails is left out. verifyAnchor needs MIN_SOURCES different sources that agree, so one lying or broken website cannot decide the result.
+ */
+export function bitcoinLookup(fetchImpl = fetch, timeoutMs = 12_000, sources = BITCOIN_SOURCES) {
   return async (height) => {
-    let last
-    for (const api of ['https://mempool.space/api', 'https://blockstream.info/api']) {
+    const answers = await Promise.all(sources.map(async (api) => {
       try {
         const hash = (await (await fetchImpl(`${api}/block-height/${height}`, { signal: AbortSignal.timeout(timeoutMs) })).text()).trim()
         if (!HEX64.test(hash)) throw new Error('unexpected block hash')
         const block = await (await fetchImpl(`${api}/block/${hash}`, { signal: AbortSignal.timeout(timeoutMs) })).json()
         if (!HEX64.test(block.merkle_root)) throw new Error('unexpected merkle root')
-        return block.merkle_root
-      } catch (e) { last = e }
-    }
-    throw new Error(`no Bitcoin API answered: ${last?.message ?? 'unknown'}`)
+        return { source: new URL(api).hostname, root: block.merkle_root }
+      } catch { return null }
+    }))
+    return answers.filter(Boolean)
   }
 }
 
 /** @returns {Promise<{verified: boolean|null, reason: string, heights: number[]}>} verified is null when the check could not run. */
-export async function verifyAnchor(anchorBytes, otsBytes, lookup) {
+export async function verifyAnchor(anchorBytes, otsBytes, lookup, minSources = MIN_SOURCES) {
   let parsed
   try { parsed = parseOts(otsBytes) } catch (e) { return { verified: false, reason: `the proof file is not readable: ${e.message}`, heights: [] } }
   if (!createHash('sha256').update(anchorBytes).digest().equals(parsed.digest)) return { verified: false, reason: 'the anchor file does not match the digest in the proof', heights: [] }
   const bitcoin = parsed.leaves.filter((l) => l.kind === 'bitcoin')
   if (!bitcoin.length) return { verified: null, reason: 'the proof is still waiting for a Bitcoin block', heights: [] }
-  let matched = 0, unknown = 0
+  let matched = 0, unknown = 0, thin = 0
   for (const leaf of bitcoin) {
-    let root
-    try { root = await lookup(leaf.height) } catch { unknown++; continue }
+    let answers
+    try { answers = await lookup(leaf.height) } catch { unknown++; continue }
+    answers = (Array.isArray(answers) ? answers : []).filter((a) => a && HEX64.test(String(a.root)))
+    if (!answers.length) { unknown++; continue }
+    const roots = new Set(answers.map((a) => a.root))
+    if (roots.size > 1) return { verified: false, reason: `the Bitcoin sources disagree with each other about block ${leaf.height}`, heights: bitcoin.map((l) => l.height) }
+    const root = answers[0].root
     if (Buffer.from(leaf.msg).reverse().toString('hex') !== root) return { verified: false, reason: `the proof does not match the Merkle root of Bitcoin block ${leaf.height}`, heights: bitcoin.map((l) => l.height) }
+    if (new Set(answers.map((a) => a.source)).size < minSources) { thin++; continue }      // it matches, but too few independent sources said so to count
     matched++
   }
   const heights = bitcoin.map((l) => l.height)
-  if (matched) return { verified: true, reason: `matches the Merkle root of ${matched} Bitcoin block${matched === 1 ? '' : 's'}`, heights }
+  if (matched && !thin) return { verified: true, reason: `matches the Merkle root of ${matched} Bitcoin block${matched === 1 ? '' : 's'}, confirmed by ${minSources} independent sources`, heights }
+  if (thin) return { verified: null, reason: `only one Bitcoin source answered; ${minSources} independent sources must agree, so this was not counted`, heights }
   return { verified: null, reason: 'a Bitcoin API could not be reached, so this was not checked', heights }
 }
 

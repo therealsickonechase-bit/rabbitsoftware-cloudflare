@@ -1,0 +1,9 @@
+{
+  "name": "maxwell-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A read-only node for the Maxwell chain (see docs/maxwell-core.md)",
+  "bin": { "maxwell-core": "maxwell-core.mjs" },
+  "engines": { "node": ">=22" }
+}

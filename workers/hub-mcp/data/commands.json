@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-17T15:40:45.025Z",
+ "generatedAt": "2026-10-17T16:02:16.832Z",
  "commandMaxBytes": 4000,
  "projects": [
   "rabbit-web",
@@ -2772,6 +2772,30 @@
    "description": "DEVELOPMENT.md: builds the site development page from the vault.",
    "project": "rabbitsoftware-cloudflare",
    "source": "DEVELOPMENT.md",
+   "runsIn": "computer"
+  },
+  {
+   "id": "mc-sync",
+   "group": "Maxwell Core",
+   "label": "Maxwell Core: sync and verify the public chain",
+   "scope": "owner",
+   "risk": "network",
+   "command": "node maxwell-core/maxwell-core.mjs sync",
+   "description": "Downloads the public Maxwell chain into ~/.maxwell, verifies every hash, link and work target, and refuses a chain that is invalid, shorter, or contradicts the one already stored.",
+   "project": "rabbitsoftware-cloudflare",
+   "source": "maxwell-core/maxwell-core.mjs",
+   "runsIn": "computer"
+  },
+  {
+   "id": "mc-serve",
+   "group": "Maxwell Core",
+   "label": "Maxwell Core: run the node (RPC on 127.0.0.1)",
+   "scope": "owner",
+   "risk": "local",
+   "command": "node maxwell-core/maxwell-core.mjs serve",
+   "description": "Serves a Bitcoin-Core-style JSON-RPC on the loopback address only, with a cookie file for authentication, and syncs every hour. Query it with: node maxwell-core/maxwell-core.mjs cli getblockchaininfo",
+   "project": "rabbitsoftware-cloudflare",
+   "source": "maxwell-core/maxwell-core.mjs",
    "runsIn": "computer"
   },
   {

@@ -1,4 +1,5 @@
 import hashlib
+import json
 import importlib.util
 import unittest
 from pathlib import Path
@@ -16,6 +17,11 @@ def varbytes(b):
 
 def proof(digest, steps_then_leaf):
     return va.MAGIC + b"\x01\x08" + digest + steps_then_leaf
+
+
+def two(root):
+    """What two independent public sources would answer for one block."""
+    return [{"source": "mempool.space", "root": root, "block_hash": "ab" * 32}, {"source": "blockstream.info", "root": root, "block_hash": "ab" * 32}]
 
 
 def replay(digest, salt):
@@ -38,16 +44,17 @@ class Verify(unittest.TestCase):
         _, leaves = va.parse_ots(ots)
         self.assertEqual([k for k, _, _ in leaves], ["pending", "bitcoin"])
         root = merged[::-1].hex()
-        report = va.verify(ANCHOR, ots, lookup=lambda h: (root, "blockhash", "api"))
+        report = va.verify(ANCHOR, ots, lookup=lambda h: two(root))
         self.assertTrue(report["verified"] and report["digest_matches_anchor"])
         self.assertEqual(report["attestations"][1]["height"], 100)
+        self.assertEqual(report["attestations"][1]["sources"], ["blockstream.info", "mempool.space"])
 
     def test_wrong_root_wrong_anchor_and_garbage_fail(self):
         digest, ots, merged = self.build(height=100)
-        report = va.verify(ANCHOR, ots, lookup=lambda h: ("00" * 32, "b", "api"))
+        report = va.verify(ANCHOR, ots, lookup=lambda h: two("00" * 32))
         self.assertFalse(report["verified"])
         root = merged[::-1].hex()
-        report = va.verify(ANCHOR + b" ", ots, lookup=lambda h: (root, "b", "api"))
+        report = va.verify(ANCHOR + b" ", ots, lookup=lambda h: two(root))
         self.assertFalse(report["verified"])                       # the anchor file was changed
         for bad in (b"", b"not a proof", ots[:40], ots[:-1]):
             with self.assertRaises(ValueError):
@@ -56,9 +63,36 @@ class Verify(unittest.TestCase):
     def test_pending_only_is_not_verified(self):
         digest = hashlib.sha256(ANCHOR).digest()
         pending = b"\x00" + va.PENDING + varbytes(varbytes(b"https://alice.btc.calendar.opentimestamps.org"))
-        report = va.verify(ANCHOR, proof(digest, pending), lookup=lambda h: ("", "", ""))
+        report = va.verify(ANCHOR, proof(digest, pending), lookup=lambda h: [])
         self.assertFalse(report["verified"])
         self.assertEqual(report["attestations"][0]["type"], "pending")
+
+    def test_one_source_is_not_enough_and_two_that_disagree_are_a_red_flag(self):
+        digest, ots, merged = self.build(height=100)
+        root = merged[::-1].hex()
+        one = va.verify(ANCHOR, ots, lookup=lambda h: two(root)[:1])
+        self.assertFalse(one["verified"])
+        self.assertIn("only 1 Bitcoin source", one["attestations"][1]["problem"])
+        self.assertTrue(va.verify(ANCHOR, ots, lookup=lambda h: two(root)[:1], min_sources=1)["verified"])      # the reader may lower the bar on purpose
+        split = va.verify(ANCHOR, ots, lookup=lambda h: [two(root)[0], two("11" * 32)[1]])
+        self.assertFalse(split["verified"])
+        self.assertFalse(split["attestations"][1]["sources_agree"])
+        self.assertIn("disagree", split["attestations"][1]["problem"])
+        none = va.verify(ANCHOR, ots, lookup=lambda h: [])                                                       # no source answered at all
+        self.assertFalse(none["verified"])
+
+    def test_your_own_bitcoin_core_counts_as_a_source(self):
+        calls = []
+        def post(url, body):
+            req = json.loads(body); calls.append(req["method"])
+            return {"result": "ab" * 32} if req["method"] == "getblockhash" else {"result": {"merkleroot": "cd" * 32}}
+        a = va.core_answer("http://127.0.0.1:8332", 100, post=post)
+        self.assertEqual((a["source"], a["root"], a["block_hash"], calls), ("your Bitcoin Core", "cd" * 32, "ab" * 32, ["getblockhash", "getblockheader"]))
+        digest, ots, merged = self.build(height=100)
+        root = merged[::-1].hex()
+        mixed = va.verify(ANCHOR, ots, lookup=lambda h: [two(root)[0], {"source": "your Bitcoin Core", "root": root, "block_hash": "ab" * 32}])
+        self.assertTrue(mixed["verified"])
+        self.assertEqual(mixed["attestations"][1]["sources"], ["mempool.space", "your Bitcoin Core"])
 
 
 PINNED = "c6867caacb63ad03604780cc5ca64c0a2cb7bbffe603bfaa0bc7562fe017b3d4"      # the same vector is pinned in workers/anchor-job/test/test_anchor.py

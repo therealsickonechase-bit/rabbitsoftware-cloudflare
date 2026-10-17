@@ -11,7 +11,8 @@ const ROOTS = {
   971838: '7d6b40fe5dc0903ebad9cf5fad9a7948d73fbb705b15be4dff083a125273cf6d',
   971845: '9fee538410ff346b0d0625efef9cf9639c76437bdc78426e6f7a06fe864401b5',
 }
-const lookup = async (h) => { if (!ROOTS[h]) throw new Error('unknown block'); return ROOTS[h] }
+const answer = (root) => [{ source: 'mempool.space', root }, { source: 'blockstream.info', root }]      // two independent public sources
+const lookup = async (h) => { if (!ROOTS[h]) throw new Error('unknown block'); return answer(ROOTS[h]) }
 const NOW = new Date('2026-10-17T15:00:00Z')
 
 test('a real anchor proof is parsed and checks out against the real Bitcoin block roots', async () => {
@@ -22,9 +23,33 @@ test('a real anchor proof is parsed and checks out against the real Bitcoin bloc
   assert.match(r.reason, /3 Bitcoin blocks/)
 })
 
+test('one Bitcoin source is not enough, two that disagree are a red flag, and a single source can be allowed on purpose', async () => {
+  const one = await verifyAnchor(anchor, ots, async (h) => answer(ROOTS[h]).slice(0, 1))
+  assert.equal(one.verified, null)                                              // it matches, but is not counted: never a failure
+  assert.match(one.reason, /only one Bitcoin source answered/)
+  assert.equal((await verifyAnchor(anchor, ots, async (h) => answer(ROOTS[h]).slice(0, 1), 1)).verified, true)
+  const split = await verifyAnchor(anchor, ots, async (h) => [{ source: 'mempool.space', root: ROOTS[h] }, { source: 'blockstream.info', root: 'f'.repeat(64) }])
+  assert.equal(split.verified, false)
+  assert.match(split.reason, /sources disagree/)
+  assert.equal((await verifyAnchor(anchor, ots, async () => [])).verified, null)        // nobody answered: unknown, not failed
+  assert.equal((await verifyAnchor(anchor, ots, async (h) => [{ source: 'a', root: ROOTS[h] }, { source: 'a', root: ROOTS[h] }])).verified, null)   // the same source twice is still one source
+})
+
+test('the real lookup asks every source, leaves out the ones that fail, and reports which sources answered', async () => {
+  const { bitcoinLookup } = await import('../src/proof-live.mjs')
+  const root = 'ab'.repeat(32), hash = 'cd'.repeat(32)
+  const fake = (down) => async (url) => {
+    if (String(url).includes(down)) throw new Error('offline')
+    return String(url).includes('/block-height/') ? new Response(hash) : new Response(JSON.stringify({ merkle_root: root }))
+  }
+  assert.deepEqual(await bitcoinLookup(fake('nothing'))(1), [{ source: 'mempool.space', root }, { source: 'blockstream.info', root }])
+  assert.deepEqual(await bitcoinLookup(fake('blockstream'))(1), [{ source: 'mempool.space', root }])
+  assert.deepEqual(await bitcoinLookup(async () => new Response('not a hash'))(1), [])
+})
+
 test('a changed anchor, a wrong block root, garbage, and an unreachable Bitcoin API are told apart', async () => {
   assert.equal((await verifyAnchor(Buffer.concat([anchor, Buffer.from(' ')]), ots, lookup)).verified, false)       // the anchor file was altered
-  const wrong = await verifyAnchor(anchor, ots, async () => '0'.repeat(64))
+  const wrong = await verifyAnchor(anchor, ots, async () => answer('0'.repeat(64)))
   assert.equal(wrong.verified, false)
   assert.match(wrong.reason, /Merkle root of Bitcoin block/)
   for (const bad of [Buffer.alloc(0), Buffer.from('not a proof'), ots.subarray(0, 60)]) assert.equal((await verifyAnchor(anchor, bad, lookup)).verified, false)
@@ -76,7 +101,7 @@ test('an anchor that already checked out is not checked again, and a failed look
 })
 
 test('a failing check is published as failed, an unreadable index gives null, and the per-run budget is respected', async () => {
-  const bad = await buildProofLive({ fetchImpl: serve(), now: NOW, lookup: async () => '0'.repeat(64) })
+  const bad = await buildProofLive({ fetchImpl: serve(), now: NOW, lookup: async () => answer('0'.repeat(64)) })
   assert.equal(bad.anchors[0].verified, false)
   assert.equal(bad.summary.failed, 1)
   const indexUrl = `https://rabbitsoftware-io-ledger-public.storage.googleapis.com/anchors/index.json?cb=${Math.floor(NOW / 60_000)}`
