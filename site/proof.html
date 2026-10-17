@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Proof for RabbitSoftware: which records were witnessed by Bitcoin, re-checked live against the real blocks, with no wallet or funds involved, plus a plain-language summary of the research.">
+  <title>Proof | RabbitSoftware</title>
+  <link rel="icon" type="image/png" href="assets/rabbitsoftware.png">
+  <style>
+    :root { color-scheme: light dark; --paper:#f2f4ee; --ink:#172421; --muted:#53625c; --line:#bdc8bf; --green:#155c49; --bad:#b3402a; --warn:#8a5a00; --card:#fbfcf8; --unk:#8a958f; }
+    @media (prefers-color-scheme: dark) { :root { --paper:#17211e; --ink:#f0f3ec; --muted:#bac7c0; --line:#52645a; --green:#9dd7b4; --bad:#f0907a; --warn:#e8c070; --card:#1d2a26; --unk:#7e8c85; } }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--paper); color:var(--ink); font:17px/1.6 "Aptos","Segoe UI",sans-serif; }
+    a { color:inherit; }
+    main { width:min(960px, calc(100% - 32px)); margin:0 auto; padding:48px 0 64px; display:grid; gap:30px; }
+    h1 { margin:0 0 6px; font-size:2rem; line-height:1.2; text-wrap:balance; }
+    h2 { margin:0 0 10px; font-size:1.25rem; text-wrap:balance; }
+    p { color:var(--muted); margin:0; }
+    .small { font-size:.88rem; } .warn { color:var(--warn); }
+    .headline { padding:18px 20px; border:1px solid var(--line); border-radius:8px; background:var(--card); }
+    .headline p { color:var(--ink); font-weight:600; }
+    ul.list { list-style:none; margin:0; padding:0; border-top:1px solid var(--line); }
+    ul.list li { padding:12px 0; border-bottom:1px solid var(--line); overflow-wrap:anywhere; }
+    .row { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; }
+    .dot { flex:none; width:10px; height:10px; border-radius:50%; background:var(--unk); } .dot.ok { background:var(--green); } .dot.bad { background:var(--bad); } .dot.wait { background:var(--warn); }
+    .verdict { font-size:.9rem; color:var(--muted); } .verdict.ok { color:var(--green); } .verdict.bad { color:var(--bad); font-weight:700; }
+    .meta, .detail { color:var(--muted); font-size:.88rem; margin-top:2px; }
+    .recent small { display:block; color:var(--muted); font-size:.82rem; }
+    ol.steps { color:var(--muted); padding-left:1.2rem; margin:0; display:grid; gap:6px; }
+    .card { padding:16px 20px; border:1px solid var(--line); border-radius:8px; background:var(--card); display:grid; gap:8px; }
+    code { font:.88em ui-monospace,Consolas,monospace; }
+    noscript p { color:var(--bad); }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Proof</h1>
+      <p>RabbitSoftware keeps a public, tamper-evident record of its research and its chains. This page shows which fingerprints the Bitcoin network has witnessed, and our own re-check of each one against the real Bitcoin blocks. It costs nothing to produce and needs no wallet.</p>
+    </header>
+
+    <section aria-labelledby="proof-h">
+      <h2 id="proof-h">Anchors</h2>
+      <div class="headline" aria-live="polite"><p id="proof-headline">Loading the latest proofs…</p></div>
+      <p id="proof-when" class="small"></p>
+      <p id="proof-witnesses" class="small"></p>
+      <p id="proof-heads" class="small"></p>
+      <p id="proof-notyet" class="small"></p>
+      <noscript><p>This page needs JavaScript to read the live proofs. The files and the checking steps below do not.</p></noscript>
+      <ul id="proof-list" class="list"></ul>
+    </section>
+
+    <section aria-labelledby="digest-h">
+      <h2 id="digest-h">In plain words</h2>
+      <div class="card">
+        <p id="digest-text" style="color:var(--ink)">Loading the latest summary…</p>
+        <p id="digest-stats" class="small"></p>
+        <ul id="digest-recent" class="list recent"></ul>
+      </div>
+    </section>
+
+    <section aria-labelledby="check-h">
+      <h2 id="check-h">Check it yourself</h2>
+      <ol class="steps">
+        <li>Download an anchor&rsquo;s <code>anchor.json</code> and <code>anchor.json.ots</code> from the list above. The anchor is a small file holding the newest head hashes of the RabbitOS ledger and the Maxwell chain.</li>
+        <li>Run <a href="https://github.com/therealsickonechase-bit/rabbitsoftware-cloudflare/blob/main/scripts/verify-anchor.py">verify-anchor.py</a> (Python, standard library only): <code>python verify-anchor.py &lt;anchor id&gt;</code>. It replays the proof and compares it with the Merkle root of the Bitcoin block it names, fetched from a public Bitcoin API.</li>
+        <li>Or use the standard <code>ots verify anchor.json.ots</code> tool from OpenTimestamps with your own Bitcoin node.</li>
+        <li>The <code>.tsr</code> file is a second witness: a standard signed timestamp from the free FreeTSA authority. Verify it with <code>openssl ts -verify</code> and the certificates published at freetsa.org.</li>
+      </ol>
+      <p class="small" style="margin-top:10px">A timestamp proves a fingerprint existed by that time. It does not prove the underlying record is true, and a research record listed here is a pointer to a public source, not an endorsement. See <a href="blockchain.html">how the chain works</a> and the <a href="status.html">live status</a>.</p>
+    </section>
+  </main>
+  <script type="module" src="proof.js"></script>
+</body>
+</html>

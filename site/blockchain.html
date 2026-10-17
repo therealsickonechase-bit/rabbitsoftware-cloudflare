@@ -97,7 +97,7 @@
       <li>Compare it with the independent copy in Google Cloud: <a href="https://rabbitsoftware-io-ledger-public.storage.googleapis.com/ledger/chain_head.json">chain_head.json</a>. The two should match.</li>
       <li>Read the Maxwell chain and check that each block names the hash of the one before it: <a href="https://rabbitsoftware-io-ledger-public.storage.googleapis.com/maxwell/maxwell_chain.json">maxwell_chain.json</a>.</li>
       <li>Open the <a href="https://rabbitsoftware-io-ledger-public.storage.googleapis.com/anchors/index.json">anchor index</a>. Download one entry&rsquo;s <code>anchor.json</code> and <code>anchor.json.ots</code>, then run the standard <code>ots verify anchor.json.ots</code> tool (with a Bitcoin node or a block explorer connection). It reports the Bitcoin block that contains the fingerprint. The files are named <code>anchors/&lt;id&gt;/anchor.json</code> and <code>anchors/&lt;id&gt;/anchor.json.ots</code> in the same bucket.</li>
-      <li>Or just open the <a href="status.html">status page</a>, which checks the copies every five minutes.</li>
+      <li>Or open the <a href="proof.html">proof page</a>, where our status job re-checks every anchor against the real Bitcoin blocks, or the <a href="status.html">status page</a>, which checks the copies every five minutes.</li>
     </ol>
 
     <h2>Honest limits</h2>
