@@ -58,7 +58,7 @@
       <div class="layer">
         <span class="tag">Layer 2</span>
         <h3>The Maxwell chain</h3>
-        <p>A small proof-of-work chain written by the project itself. Its blocks hold fingerprints (Merkle roots) of the public research records and of the state of the whole platform: which pages and services answered, how big the open datasets are, and whether the chain copies agreed. A block is added only when something actually changed. It is mirrored into the public ledger.</p>
+        <p>A small proof-of-work chain written by the project itself. Its blocks hold fingerprints (Merkle roots) of the public research records and of the state of the whole platform: which pages and services answered, how big the open datasets are, and whether the chain copies agreed. A block is added only when something actually changed. It is mirrored into the public ledger. Its work step is deliberately light (a block hash must start with two zero hex digits), so it makes tampering visible rather than expensive; the outside witness is Bitcoin, below. Anyone can re-check every hash, every link and every research root with <a href="https://github.com/therealsickonechase-bit/rabbitsoftware-cloudflare/blob/main/scripts/verify-maxwell.py">verify-maxwell.py</a>. A research root is rebuilt from today&rsquo;s public records, so if a record was edited in place after it was anchored (for example a title&rsquo;s capitalisation fixed at its source), that older anchor stops rebuilding exactly and the script says so.</p>
       </div>
       <div class="layer">
         <span class="tag">Layer 3</span>
