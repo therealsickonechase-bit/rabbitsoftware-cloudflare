@@ -63,7 +63,7 @@
       <div class="layer">
         <span class="tag">Layer 3</span>
         <h3>Bitcoin timestamps</h3>
-        <p>Every few hours, if the ledger or Maxwell chain changed, a SHA-256 fingerprint of their latest heads is sent to the public OpenTimestamps calendars, which commit it into Bitcoin. Once Bitcoin confirms it, the proof shows the record existed by that block, witnessed by a network the project does not control. Proofs are public in the <a href="https://rabbitsoftware-io-ledger-public.storage.googleapis.com/anchors/index.json">anchor index</a>.</p>
+        <p>Every few hours, if the ledger or Maxwell chain changed, a SHA-256 fingerprint of their latest heads is sent to the public OpenTimestamps calendars, which commit it into Bitcoin. Once Bitcoin confirms it, the proof shows the record existed by that block, witnessed by a network the project does not control. Proofs are public in the <a href="https://rabbitsoftware-io-ledger-public.storage.googleapis.com/anchors/index.json">anchor index</a>. Each anchor also gets a second, independent witness: a standard RFC 3161 timestamp from the free FreeTSA authority (<code>anchor.json.tsr</code>). That one is a signed statement from a timestamp authority, not a blockchain. No one has to take our word for the Bitcoin part: the <a href="https://github.com/therealsickonechase-bit/rabbitsoftware-cloudflare/blob/main/scripts/verify-anchor.py">verify-anchor.py</a> script replays the proof and compares it with the Merkle root of the real Bitcoin block.</p>
       </div>
       <div class="layer">
         <span class="tag">Layer 4 &middot; planned</span>

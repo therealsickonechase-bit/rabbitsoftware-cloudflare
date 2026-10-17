@@ -11,6 +11,7 @@ standard `ots verify` tool and a Bitcoin node. What is proved: this exact docume
 Files, all public, in gs://<ledger bucket>/anchors/ :
   anchors/<id>/anchor.json   the document
   anchors/<id>/anchor.json.ots  the proof (replaced once, when it is upgraded)
+  anchors/<id>/anchor.json.tsr  a second, independent witness: an RFC 3161 timestamp from the free FreeTSA authority (best effort; not a blockchain)
   anchors/index.json         newest first: id, digest, status ("pending" | "confirmed"), bitcoinHeight
   anchors/latest.json        the newest entry
 
@@ -36,6 +37,11 @@ from opentimestamps.core.timestamp import DetachedTimestampFile, Timestamp
 
 CALENDARS = ("https://alice.btc.calendar.opentimestamps.org", "https://bob.btc.calendar.opentimestamps.org", "https://finney.calendar.eternitywall.com")
 APP = "https://app.rabbitsoftware.io"
+TSA_URL = "https://freetsa.org/tsr"
+TSA_NAME = "freetsa.org"
+# DER prefix of an RFC 3161 TimeStampReq for a SHA-256 digest (version 1, hash algorithm sha256, 32-byte imprint) and its suffix (certReq = TRUE).
+TSQ_PREFIX = bytes.fromhex("30390201013031300d060960864801650304020105000420")
+TSQ_SUFFIX = bytes.fromhex("0101ff")
 MAX_INDEX = 90
 ID_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{6}Z$")
 
@@ -81,6 +87,42 @@ def stamp(digest: bytes, calendars=CALENDARS, make_calendar=RemoteCalendar, nonc
     if not ok:
         raise ConnectionError("no OpenTimestamps calendar accepted the digest")
     return serialize(detached), ok
+
+
+def tsa_request(digest: bytes) -> bytes:
+    if len(digest) != 32:
+        raise ValueError("a SHA-256 digest is 32 bytes")
+    return TSQ_PREFIX + digest + TSQ_SUFFIX
+
+
+def tsa_response_ok(resp: bytes, digest: bytes) -> bool:
+    """A cheap sanity check, not a signature check: a DER SEQUENCE whose PKIStatus is granted (0) or grantedWithMods (1) and that names our digest.
+    Full verification is `openssl ts -verify` against the FreeTSA certificates (docs/anchoring.md)."""
+    try:
+        if len(resp) < 100 or resp[0] != 0x30:
+            return False
+        i = 2 if resp[1] < 0x80 else 2 + (resp[1] & 0x7F)          # skip the outer SEQUENCE header
+        if resp[i] != 0x30:
+            return False
+        j = i + 2 if resp[i + 1] < 0x80 else i + 2 + (resp[i + 1] & 0x7F)  # skip the PKIStatusInfo header
+        if resp[j:j + 2] != b"" or resp[j + 2] not in (0, 1):
+            return False
+        return digest in resp
+    except IndexError:
+        return False
+
+
+def tsa_stamp(digest: bytes, url: str = TSA_URL, timeout: int = 20, post=None) -> bytes:
+    """Asks the free TSA for a signed timestamp of the digest. Returns the DER reply, or raises."""
+    if post is None:
+        def post(u, body):
+            req = urllib.request.Request(u, body, {"Content-Type": "application/timestamp-query", "User-Agent": "rabbitos-anchor/1.0"})
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                return r.read(200_000)
+    resp = post(url, tsa_request(digest))
+    if not tsa_response_ok(resp, digest):
+        raise ValueError("the timestamp authority did not grant a timestamp for this digest")
+    return resp
 
 
 def serialize(detached: DetachedTimestampFile) -> bytes:
@@ -171,7 +213,7 @@ def log(event: str, **fields) -> None:
     print(json.dumps({"severity": "ERROR" if event.endswith("_failed") else "INFO", "event": event, **fields}), flush=True)
 
 
-def run(*, bucket: Bucket, fetch_json=http_json, now: datetime | None = None, stamp_fn=stamp, upgrade_fn=upgrade, ledger_bucket_url: str | None = None) -> int:
+def run(*, bucket: Bucket, fetch_json=http_json, now: datetime | None = None, stamp_fn=stamp, upgrade_fn=upgrade, tsa_fn=tsa_stamp, ledger_bucket_url: str | None = None) -> int:
     now = now or datetime.now(timezone.utc)
     ledger_url = ledger_bucket_url or f"https://{bucket.name}.storage.googleapis.com"
     try:
@@ -208,8 +250,14 @@ def run(*, bucket: Bucket, fetch_json=http_json, now: datetime | None = None, st
         ots, answered = stamp_fn(digest)
         bucket.put(f"anchors/{run_id}/anchor.json", canonical(doc), "application/json")
         bucket.put(f"anchors/{run_id}/anchor.json.ots", ots, "application/octet-stream")
+        tsa = None
+        try:   # the second witness is best effort: if the authority is down the Bitcoin anchor still goes ahead
+            bucket.put(f"anchors/{run_id}/anchor.json.tsr", tsa_fn(digest), "application/timestamp-reply")
+            tsa = TSA_NAME
+        except Exception as e:
+            log("tsa_failed", reason=e.__class__.__name__ + ": " + str(e)[:100])
         created = {"id": run_id, "digest": digest.hex(), "inputs": key, "status": "pending", "bitcoinHeight": None, "calendars": answered,
-                   "ledgerLength": doc["ledger"]["length"], "maxwellLength": doc["maxwell"]["length"]}
+                   "ledgerLength": doc["ledger"]["length"], "maxwellLength": doc["maxwell"]["length"], "tsa": tsa}
         index.insert(0, created)
 
     index = index[:MAX_INDEX]

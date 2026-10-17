@@ -56,9 +56,15 @@ def fetch(url):
     return HEAD if url.endswith("/api/chain/head") else {"blocks": BLOCKS}
 
 
-def go(bucket, now=NOW):
+def fake_tsr(digest):
+    """A DER-shaped TimeStampResp: SEQUENCE { SEQUENCE { INTEGER 0 (granted) } ... the digest ... }."""
+    inner = bytes.fromhex("3003020100") + bytes([0x04, 0x20]) + digest + bytes(80)
+    return bytes([0x30, 0x82]) + len(inner).to_bytes(2, "big") + inner
+
+
+def go(bucket, now=NOW, tsa_fn=fake_tsr):
     return A.run(bucket=bucket, fetch_json=fetch, now=now, stamp_fn=lambda d: A.stamp(d, calendars=("https://cal.one", "https://cal.two"), make_calendar=FakeCalendar, nonce=b"n" * 16),
-                 upgrade_fn=lambda o: A.upgrade(o, make_calendar=FakeCalendar))
+                 upgrade_fn=lambda o: A.upgrade(o, make_calendar=FakeCalendar), tsa_fn=tsa_fn)
 
 
 class Anchor(unittest.TestCase):
@@ -145,6 +151,60 @@ class Anchor(unittest.TestCase):
 
         self.assertEqual(A.run(bucket=b, fetch_json=broken, now=NOW), 1)
         self.assertEqual(b.writes, [])
+
+class SecondWitness(unittest.TestCase):
+    def setUp(self):
+        FakeCalendar.confirmed = set()
+
+    def test_the_request_is_a_valid_rfc3161_query_for_the_digest(self):
+        d = bytes(range(32))
+        q = A.tsa_request(d)
+        self.assertEqual(len(q), 59)
+        self.assertEqual(q[:2], bytes([0x30, 0x39]))
+        self.assertTrue(q.endswith(bytes.fromhex("0101ff")))
+        self.assertIn(d, q)
+        with self.assertRaises(ValueError):
+            A.tsa_request(b"short")
+
+    def test_only_a_granted_reply_naming_the_digest_is_accepted(self):
+        d = bytes(range(32))
+        self.assertTrue(A.tsa_response_ok(fake_tsr(d), d))
+        self.assertFalse(A.tsa_response_ok(fake_tsr(bytes(32)), d))                    # reply for a different digest
+        rejected = bytearray(fake_tsr(d)); rejected[8] = 2                              # PKIStatus: rejection
+        self.assertFalse(A.tsa_response_ok(bytes(rejected), d))
+        for bad in (b"", b"<html>error</html>" * 20, fake_tsr(d)[:50]):
+            self.assertFalse(A.tsa_response_ok(bad, d))
+
+    def test_tsa_stamp_posts_the_query_and_refuses_a_bad_reply(self):
+        d = bytes(range(32))
+        sent = {}
+        def ok(url, body):
+            sent["url"], sent["body"] = url, body
+            return fake_tsr(d)
+        self.assertEqual(A.tsa_stamp(d, post=ok), fake_tsr(d))
+        self.assertEqual((sent["url"], sent["body"]), (A.TSA_URL, A.tsa_request(d)))
+        with self.assertRaises(ValueError):
+            A.tsa_stamp(d, post=lambda u, b: b"nope")
+
+    def test_every_new_anchor_gets_a_tsr_and_the_index_says_so(self):
+        b = FakeBucket()
+        self.assertEqual(go(b), 0)
+        index = json.loads(b.objects["anchors/index.json"])
+        self.assertEqual(index[0]["tsa"], "freetsa.org")
+        self.assertIn(f"anchors/{index[0]['id']}/anchor.json.tsr", b.objects)
+        digest = bytes.fromhex(index[0]["digest"])
+        self.assertTrue(A.tsa_response_ok(b.objects[f"anchors/{index[0]['id']}/anchor.json.tsr"], digest))
+
+    def test_a_dead_authority_never_blocks_the_bitcoin_anchor(self):
+        def down(d):
+            raise OSError("freetsa is down")
+        b = FakeBucket()
+        self.assertEqual(go(b, tsa_fn=down), 0)
+        index = json.loads(b.objects["anchors/index.json"])
+        self.assertIsNone(index[0]["tsa"])
+        self.assertIn(f"anchors/{index[0]['id']}/anchor.json.ots", b.objects)
+        self.assertNotIn(f"anchors/{index[0]['id']}/anchor.json.tsr", b.objects)
+
 
 
 if __name__ == "__main__":
